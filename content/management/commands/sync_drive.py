@@ -32,6 +32,10 @@ class Command(BaseCommand):
             return
 
         for item in items:
+            # Omite carpetas estructurales de Drive
+            if item.get('mimeType') == 'application/vnd.google-apps.folder':
+                continue
+
             # Creamos o actualizamos sin sobreescribir el estado de aprobación
             content, created = ManagedContent.objects.get_or_create(
                 drive_file_id=item['id'],
