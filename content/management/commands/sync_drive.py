@@ -1,26 +1,50 @@
+import os
 from django.core.management.base import BaseCommand
-from content.drive_service import sync_file_to_db
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from content.models import ManagedContent, ContentStatus, ContentCategory
 
 class Command(BaseCommand):
-    help = 'Sincroniza las secciones desde Google Drive.'
+    help = 'Sincroniza archivos desde Google Drive hacia ManagedContent en estado PENDING'
 
-    def handle(self, *args, **options):
-        self.stdout.write(self.style.WARNING('Iniciando sincronización con Google Drive...'))
-        
-        DRIVE_FILES = {
-            'INICIO': '11A3lbnu6BhU8-fnrEnkm9Btq2gKk6F6q',
-            'MARCA': '1jwz_-W-AyWyR-pP8AW4UMOyoZaITxUVo',
-            'SERVICIOS': '1U4u-Me81gPgMAuLfIS30RdJE6IrYgLtN',
-        }
+    def handle(self, *args, **kwargs):
+        self.stdout.write("Iniciando sincronización con Google Drive...")
 
-        for section_key, file_id in DRIVE_FILES.items():
-            if 'ID_DE_' in file_id:
-                continue
+        # 1. Cargar credenciales desde credentials.json
+        creds_path = os.path.join(os.path.dirname(__file__), '../../../credentials.json')
+        if not os.path.exists(creds_path):
+            self.stderr.write("Error: No se encontró el archivo credentials.json")
+            return
 
-            try:
-                sync_file_to_db(file_id, section_key)
-                self.stdout.write(self.style.SUCCESS(f'✅ Sección "{section_key}" sincronizada.'))
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f'❌ Error al sincronizar "{section_key}": {str(e)}'))
+        scopes = ['https://www.googleapis.com/auth/drive.readonly']
+        creds = Credentials.from_service_account_file(creds_path, scopes=scopes)
+        service = build('drive', 'v3', credentials=creds)
 
-        self.stdout.write(self.style.SUCCESS('Sincronización finalizada.'))
+        # 2. Consultar archivos en Drive
+        results = service.files().list(
+            pageSize=20, 
+            fields="nextPageToken, files(id, name, mimeType)"
+        ).execute()
+        items = results.get('files', [])
+
+        if not items:
+            self.stdout.write("No se encontraron archivos en Google Drive.")
+            return
+
+        for item in items:
+            # Creamos o actualizamos sin sobreescribir el estado de aprobación
+            content, created = ManagedContent.objects.get_or_create(
+                drive_file_id=item['id'],
+                defaults={
+                    'title': item['name'],
+                    'slug': item['name'].lower().replace(' ', '-').replace('.', '-'),
+                    'category': ContentCategory.BLOG,
+                    'status': ContentStatus.PENDING,  # REGLA NO NEGOCIABLE: Entra como pendiente
+                    'body_text': f"Contenido importado desde Drive (ID: {item['id']})"
+                }
+            )
+
+            if created:
+                self.stdout.write(self.style.SUCCESS(f" [NUEVO] Guardado como pendiente: {item['name']}"))
+            else:
+                self.stdout.write(f" [EXISTENTE] Se omite reescritura de {item['name']}")
