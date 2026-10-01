@@ -1,39 +1,40 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-class ContentSection(models.Model):
-    STATUS_CHOICES = [
-        ('BORRADOR_IA', 'Borrador IA'),
-        ('PENDIENTE', 'Pendiente de Aprobación'),
-        ('APROBADO', 'Aprobado'),
-        ('PUBLICADO', 'Publicado'),
-    ]
+class ContentStatus(models.TextChoices):
+    DRAFT = 'DRAFT', 'Borrador IA'
+    PENDING = 'PENDING', 'Pendiente de Aprobación'
+    APPROVED = 'APPROVED', 'Aprobado'
+    PUBLISHED = 'PUBLISHED', 'Publicado'
 
-    section_key = models.CharField(max_length=100, unique=True) # ej: MARCA, INICIO, SERVICIOS, BLOG
-    content_payload = models.JSONField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDIENTE')
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_sections')
+class ContentCategory(models.TextChoices):
+    PAGINA = 'PAGINA', 'Página Web (Sección)'
+    BLOG = 'BLOG', 'Entrada de Blog'
+    REDES = 'REDES', 'Redes Sociales'
+
+class ManagedContent(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    category = models.CharField(max_length=20, choices=ContentCategory.choices, default=ContentCategory.BLOG)
+    
+    # Contenido traído de Google Drive
+    body_text = models.TextField(blank=True, null=True)
+    media_url = models.URLField(blank=True, null=True)
+    drive_file_id = models.CharField(max_length=255, unique=True, help_text="ID original del archivo en Google Drive")
+    
+    # Flujo de aprobación obligatorio (Regla No Negociable)
+    status = models.CharField(
+        max_length=20, 
+        choices=ContentStatus.choices, 
+        default=ContentStatus.PENDING
+    )
+    
+    # Registro de auditoría humana
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_contents')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.section_key} [{self.status}]"
-
-
-class SocialPost(models.Model):
-    STATUS_CHOICES = [
-        ('BORRADOR_IA', 'Borrador IA'),
-        ('PENDIENTE', 'Pendiente de Aprobación'),
-        ('APROBADO', 'Aprobado para Publicar'),
-        ('PUBLICADO', 'Publicado en Meta'),
-    ]
-
-    platform = models.CharField(max_length=20, choices=[('FACEBOOK', 'Facebook'), ('INSTAGRAM', 'Instagram'), ('BOTH', 'Ambas')])
-    copy_text = models.TextField()
-    media_url = models.URLField(blank=True, null=True)
-    scheduled_for = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDIENTE')
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_posts')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Post {self.platform} - {self.status}"
+        return f"{self.title} [{self.get_status_display()}]"

@@ -1,7 +1,6 @@
 from django.urls import path
-from .views import ApprovedContentListView, ApprovedSocialPostListView
+from .views import PublicContentViewSet
 
 urlpatterns = [
-    path('content/', ApprovedContentListView.as_view(), name='approved-content'),
-    path('social-posts/', ApprovedSocialPostListView.as_view(), name='approved-social-posts'),
+    path('content/', PublicContentViewSet.as_view(), name='public-content'),
 ]
