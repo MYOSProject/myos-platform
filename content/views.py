@@ -28,15 +28,29 @@ class GenerateAIContentView(APIView):
             - "prompt_imagen": Descripción detallada para generar la imagen o arte
             """
 
-            # Actualizado al modelo gemini-3.8-flash
-            response = client.models.generate_content(
-                model='gemini-3.8-flash',
-                contents=prompt
-            )
-            
+            # Lista de modelos a probar en caso de saturación (503)
+            modelos_disponibles = ['gemini-2.5-flash', 'gemini-2.5-pro']
+            response = None
+            ultimo_error = None
+
+            for modelo in modelos_disponibles:
+                try:
+                    response = client.models.generate_content(
+                        model=modelo,
+                        contents=prompt
+                    )
+                    if response and response.text:
+                        break
+                except Exception as err:
+                    ultimo_error = err
+                    continue
+
+            if not response:
+                raise ultimo_error or Exception("No se pudo conectar con ningún modelo disponible.")
+
             cleaned_text = response.text.strip().replace('```json', '').replace('```', '')
 
-            # Se crea el registro en estado PENDING
+            # Se crea el registro en estado PENDING (Human-in-the-loop)
             nuevo_contenido = ManagedContent.objects.create(
                 title=f"Propuesta: {brief[:30]}",
                 slug=f"propuesta-{ManagedContent.objects.count() + 1}",
@@ -52,7 +66,7 @@ class GenerateAIContentView(APIView):
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': f'Servidor saturado temporalmente: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ApproveContentView(APIView):
