@@ -1,96 +1,148 @@
-import './App.css';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 function App() {
-  const [contents, setContents] = useState([]);
-  const [brand, setBrand] = useState(null);
-  const [inicio, setInicio] = useState(null);
-  const [servicios, setServicios] = useState([]);
+  const [brief, setBrief] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [proposal, setProposal] = useState(null);
+  const [approvedSuccess, setApprovedSuccess] = useState(false);
 
-  useEffect(() => {
-    // Reemplaza por la URL real de tu backend si estás en producción
-    fetch('https://myos-platform.onrender.com/api/content/')
-      .then((res) => res.json())
-      .then((data) => {
-        setContents(data);
+  const BACKEND_URL = 'https://myos-platform.onrender.com/api'; // O http://127.0.0.1:8000/api en local
 
-        // 1. Extraer Guía de Marca si existe
-        const brandItem = data.find((item) => item.title.includes('guia_marca'));
-        if (brandItem) {
-          try { setBrand(JSON.parse(brandItem.body_text)); } catch (e) {}
-        }
+  // 1. Enviar brief a la IA
+  const handleGenerate = async () => {
+    if (!brief.trim()) return;
+    setLoading(true);
+    setApprovedSuccess(false);
 
-        // 2. Extraer Configuración de Inicio
-        const inicioItem = data.find((item) => item.title.includes('inicio'));
-        if (inicioItem) {
-          try { setInicio(JSON.parse(inicioItem.body_text)); } catch (e) {}
-        }
+    try {
+      const res = await fetch(`${BACKEND_URL}/generate/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProposal(data);
+      } else {
+        alert(data.error || 'Error al generar propuesta');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error conectando con el servidor');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // 3. Extraer Servicios
-        const serviciosItem = data.find((item) => item.title.includes('servicios'));
-        if (serviciosItem) {
-          try { setServicios(JSON.parse(serviciosItem.body_text)); } catch (e) {}
-        }
-      })
-      .catch((err) => console.error('Error cargando contenido:', err));
-  }, []);
-
-  // Estilos primarios basados en la marca o defaults corporativos
-  const primaryColor = brand?.color_primario || '#2563eb';
+  // 2. Aprobar propuesta
+  const handleApprove = async () => {
+    if (!proposal) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/approve/${proposal.id}/`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        setApprovedSuccess(true);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
-      {/* Header / Navegación */}
-      <header className="border-b border-slate-800 p-6 flex justify-between items-center max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold tracking-tight" style={{ color: primaryColor }}>
-          {brand?.nombre_marca || 'MYOS Platform'}
-        </h1>
-        <nav className="space-x-6 text-sm text-slate-400">
-          <a href="#inicio" className="hover:text-white transition">Inicio</a>
-          <a href="#servicios" className="hover:text-white transition">Servicios</a>
-          <a href="#blog" className="hover:text-white transition">Blog</a>
-        </nav>
-      </header>
+    <div className="min-h-screen bg-slate-900 text-slate-100 p-6 font-sans">
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Header */}
+        <header className="border-b border-slate-800 pb-4">
+          <h1 className="text-3xl font-bold text-blue-500">🧠 Cerebro Digital — Generador & Aprobación</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Genera borradores con IA. Ningún contenido se publica hasta que presiones <strong>Aprobar</strong>.
+          </p>
+        </header>
 
-      {/* Hero Section (Sección de Inicio) */}
-      <section id="inicio" className="py-20 px-6 max-w-4xl mx-auto text-center">
-        <h2 className="text-4xl sm:text-6xl font-extrabold mb-6 leading-tight">
-          {inicio?.titulo || 'Generación Autónoma de Sitios Web con IA'}
-        </h2>
-        <p className="text-lg text-slate-400 mb-8 max-w-2xl mx-auto">
-          {inicio?.descripcion || 'Plataforma de alta conversión con gestión de contenidos dinámicos desde Google Drive y flujo estricto de aprobación humana.'}
-        </p>
-        <button 
-          className="px-8 py-3 rounded-lg font-semibold text-white shadow-lg transition"
-          style={{ backgroundColor: primaryColor }}
-        >
-          {inicio?.cta || 'Explorar Plataforma'}
-        </button>
-      </section>
+        {/* Formulario de Entrada */}
+        <section className="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+          <label className="block text-sm font-medium text-slate-300">
+            ¿Qué contenido deseas generar hoy?
+          </label>
+          <textarea
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            placeholder="Ej: Hazme una promoción para una cafetería que ofrece 2x1 en capuchinos los viernes..."
+            className="w-full h-28 p-3 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !brief.trim()}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 font-semibold rounded-lg transition"
+          >
+            {loading ? 'Pensando propuesta con IA...' : 'Generar Propuesta'}
+          </button>
+        </section>
 
-      {/* Sección de Servicios */}
-      <section id="servicios" className="py-16 bg-slate-800/50 border-y border-slate-800 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h3 className="text-2xl font-bold mb-8 text-center">Nuestros Servicios</h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            {Array.isArray(servicios) && servicios.length > 0 ? (
-              servicios.map((srv, idx) => (
-                <div key={idx} className="p-6 bg-slate-800 rounded-xl border border-slate-700">
-                  <h4 className="text-xl font-semibold mb-2">{srv.titulo}</h4>
-                  <p className="text-slate-400 text-sm">{srv.descripcion}</p>
-                </div>
-              ))
+        {/* Vista Previa de la Propuesta (Estado PENDING) */}
+        {proposal && (
+          <section className="bg-slate-800/80 p-6 rounded-xl border border-blue-500/30 space-y-6">
+            <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                ESTADO: {approvedSuccess ? 'APROBADO' : 'PENDIENTE DE APROBACIÓN'}
+              </span>
+              <span className="text-xs text-slate-400">ID Registro: #{proposal.id}</span>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Título Web</h3>
+                <p className="text-lg font-bold text-white">{proposal.content.titulo}</p>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Resumen para Web</h3>
+                <p className="text-slate-300 text-sm mt-1">{proposal.content.resumen_web}</p>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Copy Redes Sociales</h3>
+                <p className="text-slate-300 text-sm bg-slate-900 p-3 rounded border border-slate-700 mt-1 whitespace-pre-line">
+                  {proposal.content.copy_redes}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sugerencia / Prompt de Imagen</h3>
+                <p className="text-xs font-mono text-blue-300 bg-blue-950/40 p-3 rounded border border-blue-800/50 mt-1">
+                  🎨 {proposal.content.prompt_imagen}
+                </p>
+              </div>
+            </div>
+
+            {/* Botones de Acción */}
+            {!approvedSuccess ? (
+              <div className="flex gap-4 pt-4 border-t border-slate-700">
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading}
+                  className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 font-semibold rounded-lg transition"
+                >
+                  🔄 Volver a generar (Regenerar)
+                </button>
+                <button
+                  onClick={handleApprove}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-lg transition"
+                >
+                  ✅ Aprobar y Publicar
+                </button>
+              </div>
             ) : (
-              <p className="text-slate-500 text-center col-span-3">Cargando servicios dinámicos...</p>
+              <div className="p-4 bg-emerald-950/50 border border-emerald-500/40 rounded-lg text-emerald-300 text-center text-sm font-semibold">
+                ¡Contenido Aprobado con éxito! Ya está disponible en la API para publicarse en la web o redes.
+              </div>
             )}
-          </div>
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* Footer */}
-      <footer className="py-8 text-center text-xs text-slate-500">
-        © 2026 MYOS — Merkatics Growth Operating System
-      </footer>
+      </div>
     </div>
   );
 }
