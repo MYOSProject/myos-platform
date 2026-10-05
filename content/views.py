@@ -28,14 +28,15 @@ class GenerateAIContentView(APIView):
             - "prompt_imagen": Descripción detallada para generar la imagen o arte
             """
 
+            # Actualizado al modelo gemini-3.8-flash
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3.8-flash',
                 contents=prompt
             )
             
             cleaned_text = response.text.strip().replace('```json', '').replace('```', '')
 
-            # Se crea el registro siempre en PENDING
+            # Se crea el registro en estado PENDING
             nuevo_contenido = ManagedContent.objects.create(
                 title=f"Propuesta: {brief[:30]}",
                 slug=f"propuesta-{ManagedContent.objects.count() + 1}",

@@ -43,8 +43,8 @@ class Command(BaseCommand):
 
         try:
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt_sistema,
+            model='gemini-3.8-flash',
+            contents=prompt_sistema,
             )
             
             # Limpieza del texto por si la IA incluye markdown ```json

@@ -5,4 +5,6 @@ frontend/dist/
 credentials.json
 node_modules/
 venv/
-db.sqlite3
+db.sqlite3git add .
+git commit -m "Feat: instalacion y configuracion de Tailwind CSS en el frontend"
+git push origin main
