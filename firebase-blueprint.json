@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile for registered staff and approvers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["approver", "admin", "creator"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "role"]
+    },
+    "ManagedContent": {
+      "title": "ManagedContent",
+      "description": "Content piece with required human approval audit trail",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "slug": { "type": "string", "maxLength": 256 },
+        "category": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["DRAFT", "PENDING", "APPROVED", "PUBLISHED"] },
+        "brief": { "type": "string", "maxLength": 2048 },
+        "body_text": { "type": "string", "maxLength": 8192 },
+        "copy_redes": { "type": "string", "maxLength": 4096 },
+        "prompt_imagen": { "type": "string", "maxLength": 2048 },
+        "resumen_web": { "type": "string", "maxLength": 4096 },
+        "approved_by": { "type": "string", "maxLength": 128 },
+        "approved_by_email": { "type": "string", "maxLength": 256 },
+        "approved_at": { "type": "string" },
+        "created_at": { "type": "string" },
+        "drive_file_id": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["title", "status", "created_at"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles indexed by UID"
+    },
+    "/managed_contents/{contentId}": {
+      "schema": { "$ref": "#/entities/ManagedContent" },
+      "description": "All generated proposals and approved publications"
+    }
+  }
+}

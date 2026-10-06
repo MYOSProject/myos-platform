@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection test doc
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId)
+        && incoming().email is string
+        && incoming().email.size() <= 256;
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // Managed contents with strict human approval workflow
+    match /managed_contents/{contentId} {
+      // Anyone can read approved content; authenticated users can read all (including pending proposals)
+      allow read: if resource == null || resource.data.status == 'APPROVED' || resource.data.status == 'PUBLISHED' || isSignedIn();
+      
+      // Creating new proposals (initially PENDING or DRAFT)
+      allow create: if isSignedIn()
+        && incoming().title is string && incoming().title.size() <= 256
+        && incoming().status in ['PENDING', 'DRAFT', 'APPROVED']
+        && incoming().created_at is string;
+
+      // Updating status (Approval step: recording human approver)
+      allow update: if isSignedIn()
+        && (
+          // Standard approval transition
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'approved_by', 'approved_by_email', 'approved_at', 'body_text', 'title'])
+          || incoming().diff(existing()).affectedKeys().hasOnly(['status', 'approved_by', 'approved_by_email', 'approved_at'])
+        );
+
+      allow delete: if isSignedIn();
+    }
+  }
+}

@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --iot-primary: #1d7eae;
+  --iot-black: #231f20;
+  --iot-deep: #0032a0;
+  --iot-cyan: #98dae9;
+  --iot-orange: #ff661b;
+  --iot-gray: #bdc6c3;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: 'Open Sans', sans-serif;
+}

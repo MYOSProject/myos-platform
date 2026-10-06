@@ -1,0 +1,7 @@
+{
+  "name": "MYOS Platform - IOT Technologies",
+  "description": "Plataforma MYOS — Soluciones en Innovación para su negocio con Cerebro Digital IA y flujo de aprobación humana centralizada.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
