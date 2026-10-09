@@ -29,7 +29,6 @@ import {
   Code2,
   MonitorCheck,
   AlertCircle,
-  Download,
   Lock,
   Mail,
   UserPlus,
@@ -68,12 +67,10 @@ function generateSmartProposal(brief) {
     lower.includes('bi') ||
     lower.includes('dato') ||
     lower.includes('inteligencia') ||
-    lower.includes('intelligence') ||
-    lower.includes('business') ||
+    lower.includes('analitica') ||
     lower.includes('tablero') ||
     lower.includes('directores') ||
-    lower.includes('kpi') ||
-    lower.includes('dashboard')
+    lower.includes('kpi')
   ) {
     sector = 'Inteligencia de Negocios & Analítica';
     titlePrefix = 'Business Intelligence: De Datos a Decisiones Estratégicas de Alto Impacto';
@@ -95,7 +92,7 @@ function generateSmartProposal(brief) {
     socialCopy = `🌐 Monitoree activos críticos en tiempo real desde cualquier dispositivo con sensores IoT de alta precisión.\n\n✅ Alertas automáticas instantáneas\n✅ Plataformas en la nube para PyMEs y plantas industriales\n\n📩 Solicite un piloto técnico: contacto@iottechnologies.mx\n\n#IoT #Industria40 #MonitoreoRemoto #IOTTechnologies`;
     imagePrompt = `Fotografía publicitaria corporativa de tecnología industrial, sensores conectados emitiendo datos visuales en tonos azul brillante (#1d7eae) y fondo tecnológico (#231f20), realismo 8k.`;
   }
-  // 4. General / Cualquier otra PyME o Propuesta
+  // 4. General / Cualquier otra PyME
   else {
     sector = 'Soluciones en Innovación';
     titlePrefix = `Soluciones en Innovación: ${cleanBrief.slice(0, 48)}`;
@@ -137,10 +134,11 @@ function generateSmartProposal(brief) {
 }
 
 export default function App() {
+  // Estado de usuario y Auth
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Estados para pantalla de Login / Registro
+  // Estados para pantalla de Login / Registro obligatorio
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -154,14 +152,17 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [proposal, setProposal] = useState(null);
   const [approvedSuccess, setApprovedSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Estados para secciones
+  // Estados para contenidos sincronizados
   const [publishedContent, setPublishedContent] = useState([]);
   const [pendingContents, setPendingContents] = useState([]);
-  const [activeTab, setActiveTab] = useState('plataforma');
+  const [activeTab, setActiveTab] = useState('plataforma'); // 'plataforma', 'auditoria', 'drive', 'manual'
 
+  // URL del Backend
   const BACKEND_URL = '/api';
 
+  // Suscribirse al estado de autenticación de Firebase
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -179,13 +180,16 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Cargar contenidos del backend al iniciar
   const loadContents = () => {
     fetch(`${BACKEND_URL}/content/`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) setPublishedContent(data);
+        if (Array.isArray(data)) {
+          setPublishedContent(data);
+        }
       })
-      .catch(() => {});
+      .catch((err) => console.log('Buscando contenidos del backend...', err));
 
     fetch(`${BACKEND_URL}/all-content/`)
       .then((res) => res.json())
@@ -195,22 +199,14 @@ export default function App() {
           setPendingContents(pendings);
         }
       })
-      .catch(() => {});
+      .catch((err) => console.log('Cargando pendientes...', err));
   };
 
   useEffect(() => {
     loadContents();
   }, []);
 
-  const handleDownloadFavicon = () => {
-    const link = document.createElement('a');
-    link.href = '/favicon.svg';
-    link.download = 'iot-technologies-favicon.svg';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
+  // Manejador del formulario de autenticación obligatoria
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
@@ -218,8 +214,12 @@ export default function App() {
 
     try {
       if (isRegisterMode) {
-        if (!authEmail || !authPassword) throw new Error('Completa tu correo y contraseña.');
-        if (authPassword.length < 6) throw new Error('La contraseña debe tener mínimo 6 caracteres.');
+        if (!authEmail || !authPassword) {
+          throw new Error('Por favor completa tu correo y contraseña.');
+        }
+        if (authPassword.length < 6) {
+          throw new Error('La contraseña debe tener mínimo 6 caracteres.');
+        }
 
         const cred = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
         const user = cred.user;
@@ -232,7 +232,9 @@ export default function App() {
             role: authRole,
             createdAt: new Date().toISOString()
           });
-        } catch (_) {}
+        } catch (dbErr) {
+          console.warn('Perfil Firestore:', dbErr);
+        }
 
         setCurrentUser({
           uid: user.uid,
@@ -250,11 +252,14 @@ export default function App() {
         });
       }
     } catch (err) {
+      console.error(err);
       let msg = err.message || 'Error en la autenticación.';
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
         msg = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
       } else if (err.code === 'auth/email-already-in-use') {
         msg = 'Este correo ya está registrado. Por favor inicia sesión.';
+      } else if (err.code === 'auth/weak-password') {
+        msg = 'La contraseña debe contener al menos 6 caracteres.';
       }
       setAuthError(msg);
     } finally {
@@ -262,6 +267,7 @@ export default function App() {
     }
   };
 
+  // Inicio de sesión con Google
   const handleGoogleSignIn = async () => {
     setAuthError('');
     setAuthSubmitting(true);
@@ -277,7 +283,9 @@ export default function App() {
           role: 'approver',
           createdAt: new Date().toISOString()
         }, { merge: true });
-      } catch (_) {}
+      } catch (dbErr) {
+        console.warn('Registro Google Firestore:', dbErr);
+      }
 
       setCurrentUser({
         uid: user.uid,
@@ -286,43 +294,39 @@ export default function App() {
         role: 'Aprobador Humano (Audit Trail)'
       });
     } catch (err) {
+      console.error(err);
       if (err.code === 'auth/unauthorized-domain') {
         setAuthError('Dominio no autorizado en Firebase. Para usar Google en Vercel, agrega tu URL de Vercel en Firebase Console > Authentication > Settings > Authorized Domains.');
       } else if (err.code === 'auth/popup-blocked') {
         setAuthError('El navegador bloqueó la ventana emergente. Por favor permite popups para este sitio.');
       } else if (err.code !== 'auth/popup-closed-by-user') {
-        setAuthError('No se pudo completar el acceso con Google: ' + (err.message || ''));
+        setAuthError('No se pudo completar el acceso con Google: ' + (err.message || 'error desconocido'));
       }
     } finally {
       setAuthSubmitting(false);
     }
   };
 
-  const handleQuickDemoAccess = () => {
-    setCurrentUser({
-      uid: 'carlos-torres-auditor',
-      email: 'Carlos.Torres@iottechnologies.mx',
-      displayName: 'Carlos Torres (Sales Consultant)',
-      role: 'Aprobador Humano (Audit Trail)'
-    });
-  };
-
+  // Cerrar sesión
   const handleSignOut = async () => {
     try {
       await signOut(auth);
       setCurrentUser(null);
-    } catch (_) {}
+    } catch (e) {
+      console.error('Error al salir:', e);
+    }
   };
 
-  // 1. Solicitud al Cerebro Digital (IA) - Resiliencia Instantánea Garantizada
+  // 1. Solicitud al Cerebro Digital (IA)
   const handleGenerate = async () => {
     if (!brief.trim()) return;
     setLoading(true);
     setApprovedSuccess(false);
+    setErrorMessage('');
 
     let generatedData = null;
 
-    // Intentar primero con el backend si está disponible
+    // Intentar primero con el backend (cuando está disponible)
     try {
       const res = await fetch(`${BACKEND_URL}/generate/`, {
         method: 'POST',
@@ -335,16 +339,21 @@ export default function App() {
       const contentType = res.headers.get('content-type') || '';
       if (res.ok && contentType.includes('application/json')) {
         const json = await res.json();
-        if (json?.content?.titulo) generatedData = json;
+        if (json?.content?.titulo) {
+          generatedData = json;
+        }
       }
-    } catch (_) {}
+    } catch (networkErr) {
+      console.warn('API backend no disponible en este host, activando motor autónomo de IA:', networkErr);
+    }
 
-    // Si está en Vercel estático o no hay backend, el motor autónomo genera la propuesta
+    // Si el backend no está disponible en Vercel estático o hubo problema de red, usar motor inteligente
     if (!generatedData) {
       generatedData = generateSmartProposal(brief);
     }
 
     setProposal(generatedData);
+    setErrorMessage('');
     loadContents();
     setLoading(false);
   };
@@ -362,9 +371,14 @@ export default function App() {
       await fetch(`${BACKEND_URL}/approve/${targetId}/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approverName, approverEmail })
+        body: JSON.stringify({
+          approverName,
+          approverEmail
+        })
       });
-    } catch (_) {}
+    } catch (e) {
+      console.warn('Aprobación sincronizada localmente:', e);
+    }
 
     setApprovedSuccess(true);
     if (targetContent) {
@@ -385,6 +399,7 @@ export default function App() {
     loadContents();
   };
 
+  // Si está cargando el estado inicial de Auth
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400 space-y-4">
@@ -394,27 +409,23 @@ export default function App() {
     );
   }
 
-  // PANTALLA OBLIGATORIA DE AUTENTICACIÓN
+  // PANTALLA OBLIGATORIA: INICIAR SESIÓN / REGISTRARSE PARA USAR LA APLICACIÓN
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#231f20] via-slate-950 to-slate-950 flex flex-col justify-between text-slate-100 selection:bg-[#1d7eae]">
+        
+        {/* Barra superior con Logo */}
         <header className="px-6 py-4 border-b border-slate-800/80 bg-[#231f20]/90 flex justify-between items-center max-w-7xl w-full mx-auto">
           <Logo />
-          <button
-            onClick={handleDownloadFavicon}
-            title="Descargar Favicon Oficial"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[#98dae9] transition"
-          >
-            <Download className="w-4 h-4 text-[#1d7eae]" />
-            <span className="hidden sm:inline">Descargar Logo Favicon</span>
-            <span className="sm:hidden">Favicon</span>
-          </button>
         </header>
 
+        {/* Tarjeta Central de Autenticación Requerida */}
         <main className="flex-1 flex items-center justify-center p-4 sm:p-6">
           <div className="w-full max-w-md bg-[#231f20] border border-slate-700/90 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+            
             <div className="text-center space-y-2">
               <div className="flex justify-center mb-1">
+                {/* Logo pequeño antena para identificación */}
                 <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-[#1d7eae]/40 flex items-center justify-center shadow-inner">
                   <svg viewBox="0 0 100 100" className="w-8 h-8" fill="none">
                     <circle cx="50" cy="50" r="44" stroke="#1d7eae" strokeWidth="7" opacity="0.95" />
@@ -424,6 +435,7 @@ export default function App() {
                   </svg>
                 </div>
               </div>
+
               <h2 className="text-2xl font-extrabold text-white font-heading">
                 {isRegisterMode ? 'Crear Cuenta de Auditor' : 'Iniciar Sesión en MYOS'}
               </h2>
@@ -432,6 +444,7 @@ export default function App() {
               </p>
             </div>
 
+            {/* Alternador Iniciar Sesión / Registrarse */}
             <div className="grid grid-cols-2 p-1 bg-slate-900 rounded-xl text-sm font-semibold">
               <button
                 type="button"
@@ -455,6 +468,7 @@ export default function App() {
               </button>
             </div>
 
+            {/* Banner de error */}
             {authError && (
               <div className="p-3 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs text-center flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
@@ -462,6 +476,7 @@ export default function App() {
               </div>
             )}
 
+            {/* Formulario */}
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               {isRegisterMode && (
                 <div>
@@ -549,6 +564,7 @@ export default function App() {
               </button>
             </form>
 
+            {/* Separador */}
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-700"></div>
@@ -558,6 +574,7 @@ export default function App() {
               </div>
             </div>
 
+            {/* Botón Google */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
@@ -572,16 +589,6 @@ export default function App() {
               </svg>
               Continuar con Google
             </button>
-
-            {/* Acceso Rápido como Auditor Directo */}
-            <button
-              type="button"
-              onClick={handleQuickDemoAccess}
-              className="w-full mt-2 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-850 border border-slate-700 hover:border-[#1d7eae] text-slate-300 hover:text-white transition flex items-center justify-center gap-2"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Acceso Rápido como Auditor (Carlos Torres / Entrar directo)
-            </button>
           </div>
         </main>
 
@@ -592,23 +599,19 @@ export default function App() {
     );
   }
 
-  // APLICACIÓN PRINCIPAL (SESIÓN INICIADA)
+  // APLICACIÓN PRINCIPAL (SOLO ACCESIBLE CON SESIÓN INICIADA)
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-[#1d7eae] selection:text-white">
+      
+      {/* 1. Header & Navegación Institucional Oficial IOT TECHNOLOGIES */}
       <header className="sticky top-0 z-40 bg-[#231f20]/95 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3.5 shadow-lg">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
+          
+          {/* Logo Corporativo Oficial */}
           <div className="flex items-center gap-3">
             <a href="#inicio" className="flex items-center">
               <Logo />
             </a>
-            <button
-              onClick={handleDownloadFavicon}
-              title="Descargar Favicon Oficial (SVG)"
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-900 hover:bg-slate-850 border border-slate-700 text-[#98dae9] transition"
-            >
-              <Download className="w-3.5 h-3.5 text-[#1d7eae]" />
-              <span>Favicon</span>
-            </button>
           </div>
 
           {/* Navegación de secciones: Solo Google Drive CMS e Inicio */}
@@ -628,6 +631,7 @@ export default function App() {
             </button>
           </nav>
 
+          {/* Área de Autenticación Firebase (Usuario Logueado) */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl shadow-inner">
               <div className="w-7 h-7 rounded-lg bg-[#1d7eae] text-white flex items-center justify-center font-bold text-xs">
@@ -670,11 +674,18 @@ export default function App() {
         </button>
       </div>
 
+      {/* CONTENIDO PRINCIPAL SEGÚN PESTAÑA */}
+
+      {/* PESTAÑA 1: PLATAFORMA & HERO & CEREBRO DIGITAL */}
       {activeTab === 'plataforma' && (
         <>
+          {/* 2. Hero Section Institucional */}
           <section id="inicio" className="relative pt-16 pb-20 px-6 bg-gradient-to-b from-[#231f20] via-slate-900 to-slate-950 overflow-hidden">
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#1d7eae]/15 blur-[130px] rounded-full pointer-events-none"></div>
+
             <div className="max-w-5xl mx-auto text-center relative z-10 space-y-6">
+              
+              {/* Badge oficial */}
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1d7eae]/15 border border-[#1d7eae]/35 text-[#98dae9] text-xs font-bold uppercase tracking-wider">
                 <span className="w-2 h-2 rounded-full bg-[#1d7eae]"></span>
                 Plataforma MYOS — Merkatics Growth Operating System
@@ -688,13 +699,14 @@ export default function App() {
               </h1>
 
               <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed">
-                Generación asistida por Inteligencia Artificial y gestión de contenidos bajo la <strong className="text-white font-semibold">regla de aprobación humana obligatoria</strong> de Merkatics.
+                Generación asistida por Inteligencia Artificial y gestión autónoma de sitios web de alta conversión y redes sociales, bajo la <strong className="text-white font-semibold">regla de aprobación humana obligatoria</strong> de Merkatics.
               </p>
 
+              {/* Botones de llamada a la acción */}
               <div className="pt-2 flex flex-wrap justify-center gap-4">
                 <a
                   href="#cerebro-digital"
-                  className="px-7 py-3.5 rounded-xl font-bold text-white bg-[#1d7eae] hover:bg-[#0032a0] shadow-lg shadow-[#1d7eae]/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                  className="px-7 py-3.5 rounded-xl font-bold text-white bg-[#1d7eae] hover:bg-[#0032a0] shadow-lg shadow-[#1d7eae]/30 transition-all duration-200 transform hover:-translate-y-0.5 flex items-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
                   Operar Cerebro Digital
@@ -708,11 +720,12 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Banner de auditoría de seguridad */}
               <div className="mt-8 p-3 rounded-2xl bg-slate-900/90 border border-slate-800 max-w-2xl mx-auto flex items-center justify-between text-xs text-slate-400">
                 <div className="flex items-center gap-2.5">
                   <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
                   <span>
-                    Auditor conectado: <strong className="text-slate-200">{currentUser.displayName}</strong>
+                    Auditor conectado: <strong className="text-slate-200">{currentUser.displayName}</strong> ({currentUser.email})
                   </span>
                 </div>
                 <span className="text-emerald-400 font-semibold">Firma Humana Habilitada</span>
@@ -720,7 +733,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* 5 Capacidades Oficiales */}
+          {/* 3. Las 5 Capacidades Oficiales del Manual Corporativo */}
           <section id="servicios" className="py-20 px-6 bg-slate-900/60 border-y border-slate-800/80">
             <div className="max-w-6xl mx-auto space-y-12">
               <div className="text-center space-y-3">
@@ -730,22 +743,64 @@ export default function App() {
                 <h3 className="text-3xl sm:text-4xl font-extrabold text-white font-heading">
                   Servicios en Innovación Tecnológica
                 </h3>
+                <p className="text-sm text-slate-400 max-w-xl mx-auto">
+                  Catálogo institucional certificado de IOT Technologies para PyMEs y empresas corporativas.
+                </p>
               </div>
 
               <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-6">
                 {[
-                  { num: '01', icon: BarChart3, title: 'Inteligencia de Negocios', desc: 'Análisis de datos, métricas clave, KPIs y tableros interactivos para toma de decisiones ejecutivas en tiempo real.' },
-                  { num: '02', icon: Cpu, title: 'Dispositivos Conectados (IoT)', desc: 'Sensores en tiempo real, telemetría y automatización de procesos para control industrial y comercial seguro.' },
-                  { num: '03', icon: Network, title: 'Servicios TIC', desc: 'Infraestructura tecnológica, redes corporativas, servidores en la nube y soporte especializado de alto nivel.' },
-                  { num: '04', icon: Code2, title: 'Desarrollo de Software', desc: 'Creación de plataformas web de alta conversión, APIs escalables y aplicaciones móviles a la medida.' },
-                  { num: '05', icon: MonitorCheck, title: 'Kioskos Electrónicos', desc: 'Hardware y software interactivo para atención autónoma, cobro y autoservicio al cliente final.' },
-                  { num: '06', icon: Layers, title: 'Presencia en Redes & Web (MYOS)', desc: 'Actualización continua de canales digitales con generación de contenido por IA y validación humana centralizada.' }
-                ].map((srv, i) => {
+                  {
+                    num: '01',
+                    icon: BarChart3,
+                    title: 'Inteligencia de Negocios',
+                    desc: 'Análisis de datos, métricas clave, KPIs y tableros interactivos para la toma de decisiones ejecutivas en tiempo real.',
+                    color: '#1d7eae'
+                  },
+                  {
+                    num: '02',
+                    icon: Cpu,
+                    title: 'Dispositivos Conectados (IoT)',
+                    desc: 'Sensores en tiempo real, telemetría y automatización de procesos para control industrial y comercial seguro.',
+                    color: '#0032a0'
+                  },
+                  {
+                    num: '03',
+                    icon: Network,
+                    title: 'Servicios TIC',
+                    desc: 'Infraestructura tecnológica, redes corporativas, servidores en la nube y soporte especializado de alto nivel.',
+                    color: '#1d7eae'
+                  },
+                  {
+                    num: '04',
+                    icon: Code2,
+                    title: 'Desarrollo de Software',
+                    desc: 'Creación de plataformas web de alta conversión, APIs escalables y aplicaciones móviles a la medida.',
+                    color: '#0032a0'
+                  },
+                  {
+                    num: '05',
+                    icon: MonitorCheck,
+                    title: 'Kioskos Electrónicos',
+                    desc: 'Soluciones de hardware y software interactivo para atención autónoma, cobro y autoservicio al cliente final.',
+                    color: '#ff661b'
+                  },
+                  {
+                    num: '06',
+                    icon: Layers,
+                    title: 'Presencia en Redes & Web (MYOS)',
+                    desc: 'Actualización continua de canales digitales con generación de contenido por IA y validación humana centralizada.',
+                    color: '#98dae9'
+                  }
+                ].map((srv, index) => {
                   const Icon = srv.icon;
                   return (
-                    <div key={i} className="p-6 rounded-2xl bg-[#231f20]/75 border border-slate-800 hover:border-[#1d7eae]/60 transition group hover:-translate-y-1">
+                    <div
+                      key={index}
+                      className="p-6 rounded-2xl bg-[#231f20]/75 border border-slate-800 hover:border-[#1d7eae]/60 transition-all duration-200 group hover:-translate-y-1 relative overflow-hidden"
+                    >
                       <div className="flex justify-between items-start mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-[#1d7eae]/15 text-[#98dae9] flex items-center justify-center font-bold group-hover:bg-[#1d7eae] group-hover:text-white transition">
+                        <div className="w-10 h-10 rounded-xl bg-[#1d7eae]/15 text-[#98dae9] flex items-center justify-center font-bold group-hover:bg-[#1d7eae] group-hover:text-white transition-colors">
                           <Icon className="w-5 h-5" />
                         </div>
                         <span className="text-xs font-mono font-bold text-slate-500">{srv.num}</span>
@@ -759,9 +814,10 @@ export default function App() {
             </div>
           </section>
 
-          {/* Generador de Contenido IA (Cerebro Digital) */}
+          {/* 4. Módulo del Cerebro Digital (Generación IA + Control Humano) */}
           <section id="cerebro-digital" className="py-20 px-6 max-w-5xl mx-auto">
             <div className="bg-gradient-to-b from-slate-900 to-[#231f20] rounded-3xl border border-[#1d7eae]/40 p-8 sm:p-10 shadow-2xl space-y-8">
+              
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-6">
                 <div>
                   <div className="inline-flex items-center gap-2 text-xs font-bold text-[#98dae9] uppercase tracking-wider mb-1">
@@ -783,6 +839,7 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Formulario Prompt */}
               <div className="space-y-3">
                 <label className="block text-sm font-semibold text-slate-300">
                   Instrucción / Brief para el Cerebro Digital:
@@ -790,16 +847,17 @@ export default function App() {
                 <textarea
                   value={brief}
                   onChange={(e) => setBrief(e.target.value)}
-                  placeholder="Ejemplo: Diseña una propuesta para promocionar una cafetería de especialidad con café de altura..."
+                  placeholder="Ejemplo: Diseña una propuesta para promocionar soluciones de software empresarial e Inteligencia de Negocios para PyMEs de manufactura y logística en Ciudad Juárez y El Paso..."
                   className="w-full h-32 p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1d7eae] text-sm leading-relaxed"
                 />
 
+                {/* Sugerencias rápidas de brief */}
                 <div className="flex flex-wrap gap-2 pt-1 text-xs text-slate-400">
                   <span className="font-semibold text-slate-500">Sugerencias rápidas:</span>
                   {[
-                    'quiero un eslogan para mi pagina web de una cafeteria',
-                    'Tableros de Business Intelligence para directores',
-                    'Monitoreo de sensores IoT en plantas industriales'
+                    'Monitoreo de sensores IoT en plantas industriales',
+                    'Kioskos de autoservicio y facturación electrónica',
+                    'Tableros de Business Intelligence para directores'
                   ].map((sug, i) => (
                     <button
                       key={i}
@@ -817,12 +875,21 @@ export default function App() {
                   className="w-full py-4 rounded-xl font-bold text-white bg-[#1d7eae] hover:bg-[#0032a0] disabled:bg-slate-800 disabled:text-slate-600 transition shadow-lg shadow-[#1d7eae]/25 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
-                  {loading ? '🧠 Generando propuesta en milisegundos...' : 'Generar Propuesta de Contenido (Texto + Arte)'}
+                  {loading ? '🧠 Cerebro Digital procesando con Gemini IA...' : 'Generar Propuesta de Contenido (Texto + Arte)'}
                 </button>
+
+                {errorMessage && (
+                  <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-300 text-sm flex items-center justify-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
               </div>
 
+              {/* Tarjeta de Propuesta Generada (Estado PENDING) */}
               {proposal && (
                 <div className="mt-8 p-6 sm:p-8 rounded-2xl bg-slate-950 border border-blue-500/40 space-y-6 shadow-2xl">
+                  
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-4">
                     <div className="flex items-center gap-2.5">
                       <span className={`text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-1.5 ${
@@ -835,6 +902,7 @@ export default function App() {
                       </span>
                       <span className="text-xs font-mono text-slate-500">ID: #{proposal.id}</span>
                     </div>
+
                     <span className="text-xs text-slate-400 font-mono">
                       Carpeta Drive: /Redes_Sociales/{approvedSuccess ? 'Publicado' : 'Para_Publicar'}
                     </span>
@@ -870,10 +938,11 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* Botones de Control y Auditoría Humana */}
                   {!approvedSuccess ? (
                     <div className="space-y-3 pt-4 border-t border-slate-800">
                       <div className="text-xs text-slate-400 flex items-center justify-between">
-                        <span>Aprobador que firmará: <strong className="text-white">{currentUser.displayName}</strong></span>
+                        <span>Aprobador que firmará: <strong className="text-white">{currentUser.displayName}</strong> ({currentUser.email})</span>
                         <span className="text-emerald-400 font-semibold">Cumple regla de auditoría</span>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-4">
@@ -908,7 +977,95 @@ export default function App() {
         </>
       )}
 
-      {/* PESTAÑA GOOGLE DRIVE CMS */}
+      {/* PESTAÑA 2: AUDITORÍA HUMANA (REGLA DE CARLOS) */}
+      {activeTab === 'auditoria' && (
+        <section className="py-12 px-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
+          <div className="bg-[#231f20] border border-slate-800 rounded-3xl p-8 space-y-4 shadow-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4" />
+              Módulo de Cumplimiento de Seguridad — Proyecto 2026-544-11
+            </div>
+            <h2 className="text-3xl font-extrabold text-white font-heading">
+              Regla no negociable: Aprobación Humana antes de Publicar
+            </h2>
+            <blockquote className="p-4 rounded-xl bg-slate-900/90 border-l-4 border-[#1d7eae] text-sm text-slate-300 italic leading-relaxed">
+              "Todo el proyecto se construye alrededor de una restricción de seguridad explícita de Carlos: ningún contenido generado por la IA (sitio web, texto, imagen o publicación en redes) se publica de forma automática. Debe existir siempre un estado de 'pendiente de aprobación humana' antes de cualquier publicación real, y quien apruebe debe quedar registrado."
+            </blockquote>
+
+            <div className="grid sm:grid-cols-3 gap-4 pt-4 text-center">
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                <span className="text-2xl font-extrabold text-amber-400 block">{pendingContents.length}</span>
+                <span className="text-xs text-slate-400 uppercase font-semibold">Pendientes (PENDING)</span>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                <span className="text-2xl font-extrabold text-emerald-400 block">{publishedContent.length}</span>
+                <span className="text-xs text-slate-400 uppercase font-semibold">Aprobados (APPROVED)</span>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                <span className="text-2xl font-extrabold text-[#98dae9] block">100%</span>
+                <span className="text-xs text-slate-400 uppercase font-semibold">Trazabilidad Humana</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bandeja de Contenidos Pendientes de Aprobación */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2 font-heading">
+              <Clock className="w-5 h-5 text-amber-400" />
+              Bandeja de Entrada: Propuestas Esperando Validación Humana ({pendingContents.length})
+            </h3>
+
+            {pendingContents.length > 0 ? (
+              <div className="space-y-4">
+                {pendingContents.map((item) => (
+                  <div key={item.id} className="p-6 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-3">
+                      <div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          ESTADO: PENDING
+                        </span>
+                        <h4 className="text-lg font-bold text-white mt-1 font-heading">{item.title}</h4>
+                      </div>
+                      <span className="text-xs font-mono text-slate-500">ID: #{item.id}</span>
+                    </div>
+
+                    <p className="text-sm text-slate-300">{item.body_text}</p>
+
+                    {item.content && (
+                      <div className="grid sm:grid-cols-2 gap-4 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <div>
+                          <strong className="text-slate-400 block mb-1">Copy para Redes:</strong>
+                          <p className="text-slate-300 font-mono line-clamp-3">{item.content.copy_redes}</p>
+                        </div>
+                        <div>
+                          <strong className="text-[#98dae9] block mb-1">Prompt de Arte:</strong>
+                          <p className="text-[#98dae9] font-mono line-clamp-3">{item.content.prompt_imagen}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-2 flex justify-end gap-3">
+                      <button
+                        onClick={() => handleApprove(item.id, item.content)}
+                        className="px-5 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-2 shadow-md shadow-emerald-600/20"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        Validar y Aprobar con mi Firma ({currentUser.displayName})
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+                ✓ No hay elementos pendientes de aprobación en este momento.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* PESTAÑA 3: ESTRUCTURA GOOGLE DRIVE (CMS HEADLESS) */}
       {activeTab === 'drive' && (
         <section className="py-12 px-6 max-w-6xl mx-auto space-y-6 animate-fadeIn">
           <div className="flex justify-between items-center">
@@ -926,6 +1083,86 @@ export default function App() {
         </section>
       )}
 
+      {/* PESTAÑA 4: MANUAL CORPORATIVO & NORMAS GRÁFICAS */}
+      {activeTab === 'manual' && (
+        <section className="py-12 px-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
+          <div className="bg-[#231f20] border border-slate-800 rounded-3xl p-8 space-y-6 shadow-xl">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-xs font-bold text-[#1d7eae] uppercase tracking-wider">
+                  Guía Oficial de Identidad Visual
+                </span>
+                <h2 className="text-3xl font-extrabold text-white mt-1 font-heading">
+                  Manual Corporativo IOT Technologies
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Social eThinking S.A. de C.V. — Derechos Reservados
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Logo />
+              </div>
+            </div>
+
+            {/* Simbología y Significado */}
+            <div className="grid md:grid-cols-2 gap-6 pt-4">
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                <h4 className="text-base font-bold text-white font-heading">El Símbolo (Antena Emisora)</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Representa una antena emisora de una señal que se expande concéntricamente llevando un mensaje que llega a cumplir con el propósito para el cual fue enviado. Conexión, alcance y telemetría continua.
+                </p>
+              </div>
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                <h4 className="text-base font-bold text-white font-heading">Tipografías Oficiales</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  <strong>OPEN SANS:</strong> Utilizada en el logo-símbolo y encabezados. Transmite firmeza, tecnología y neutralidad elegante.<br />
+                  <strong>ROBOTO:</strong> Utilizada para niveles de lectura, datos y párrafos por su vanguardia y máxima legibilidad.
+                </p>
+              </div>
+            </div>
+
+            {/* Paleta de Colores Institucionales Oficial */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                Colores Institucionales (Página 9 & 10 del Manual)
+              </h4>
+              <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {[
+                  { name: 'Pantone 640 C', hex: '#1d7eae', rgb: '29, 126, 174', tag: 'Principal' },
+                  { name: 'Process Black', hex: '#231f20', rgb: '35, 31, 32', tag: 'Corporativo' },
+                  { name: 'Pantone 286 C', hex: '#0032a0', rgb: '0, 51, 160', tag: 'Secundario' },
+                  { name: 'Pantone 304 C', hex: '#98dae9', rgb: '153, 218, 234', tag: 'Auxiliar' },
+                  { name: 'Pantone 165 C', hex: '#ff661b', rgb: '255, 103, 27', tag: 'Acento' },
+                  { name: 'Pantone 441 C', hex: '#bdc6c3', rgb: '190, 198, 195', tag: 'Neutro' }
+                ].map((col, i) => (
+                  <div key={i} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-center">
+                    <div className="w-full h-12 rounded-lg shadow-md" style={{ backgroundColor: col.hex }}></div>
+                    <span className="text-xs font-bold text-white block">{col.name}</span>
+                    <span className="text-[10px] font-mono text-[#98dae9] block">{col.hex}</span>
+                    <span className="text-[9px] text-slate-500 block">RGB: {col.rgb}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Directorio de Oficinas Oficial */}
+            <div className="pt-4 border-t border-slate-800 grid md:grid-cols-2 gap-4 text-xs text-slate-300">
+              <div className="space-y-1">
+                <span className="font-bold text-white block">Sede México:</span>
+                <p>Benjamin Franklin 3220 5E, Ciudad Juárez, Chih.</p>
+                <p>Tel: (Mx) 656-626-9124</p>
+              </div>
+              <div className="space-y-1">
+                <span className="font-bold text-white block">Sede Estados Unidos:</span>
+                <p>James Watt Dr. 11395 Suite A-13, El Paso, TX</p>
+                <p>Tel: From USA: 915-726-1048</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 5. Footer Institucional Oficial */}
       <footer className="bg-[#231f20] border-t border-slate-800 py-12 px-6 text-slate-400 text-xs">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -941,12 +1178,18 @@ export default function App() {
               </span>
             </div>
           </div>
+
           <div className="border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500 text-[11px]">
-            <p>© 2026 IOT Technologies — Parte de Social eThinking S.A. de C.V. Todos los derechos reservados.</p>
-            <p>Plataforma MYOS — Generador de Sitios & Contenidos con IA ("Cerebro Digital"). Proyecto 2026-544-11.</p>
+            <p>
+              © 2026 IOT Technologies — Parte de Social eThinking S.A. de C.V. Todos los derechos reservados.
+            </p>
+            <p>
+              Plataforma MYOS — Generador de Sitios & Contenidos con IA ("Cerebro Digital"). Proyecto 2026-544-11.
+            </p>
           </div>
         </div>
       </footer>
+
     </div>
   );
 }
