@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="64" height="64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2a2526" />
+      <stop offset="100%" stop-color="#181516" />
+    </radialGradient>
+  </defs>
+  <!-- Fondo redondeado elegante en Process Black (#231f20) -->
+  <rect width="100" height="100" rx="24" fill="url(#bg)" />
+  <rect width="100" height="100" rx="24" fill="none" stroke="#1d7eae" stroke-width="2" opacity="0.3" />
+  
+  <!-- Símbolo Antena Emisora Oficial IOT Technologies -->
+  <!-- Onda exterior (Pantone 640 C #1d7eae) -->
+  <circle cx="50" cy="50" r="34" stroke="#1d7eae" stroke-width="6.5" fill="none" opacity="0.95" />
+  
+  <!-- Onda intermedia (Pantone 304 C #98dae9) -->
+  <circle cx="50" cy="50" r="22" stroke="#98dae9" stroke-width="5.5" fill="none" />
+  
+  <!-- Núcleo de la antena (Pantone 286 C / 640 C) -->
+  <circle cx="50" cy="50" r="11" fill="#1d7eae" />
+  
+  <!-- Punto emisor central -->
+  <circle cx="50" cy="50" r="4.5" fill="#ffffff" />
+</svg>

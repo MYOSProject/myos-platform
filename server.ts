@@ -72,10 +72,54 @@ function generateSmartContent(brief: string) {
   const cleanBrief = brief.trim();
   const lower = cleanBrief.toLowerCase();
 
+  // 1. Cafeterías, Restaurantes y Gastronomía
+  if (
+    lower.includes('cafeteria') ||
+    lower.includes('café') ||
+    lower.includes('cafe') ||
+    lower.includes('restaurante') ||
+    lower.includes('comida') ||
+    lower.includes('panaderia') ||
+    lower.includes('bar')
+  ) {
+    return {
+      titulo: 'Cafetería de Especialidad: Aroma, Tradición y Experiencia Gourmet',
+      resumen_web: 'Bienvenido a una experiencia donde cada taza cuenta una historia. Seleccionamos granos de origen único, tostados artesanalmente a la perfección para brindarle notas aromáticas inigualables en un ambiente acogedor diseñado para inspirar sus mejores momentos.\n\nDisfrute de nuestra selecta barra de café de especialidad, repostería artesanal recién horneada y un menú balanceado para comenzar su día con energía o tomar un respiro en su jornada. Espacios con Wi-Fi de alta velocidad pensados tanto para reuniones casuales como para concentrarse con su bebida favorita.',
+      copy_redes: '☕ ¿Listo para tu próxima pausa perfecta?\n\nEn nuestra barra preparamos café de especialidad con granos de altura, extracciones precisas y el toque dulce de nuestra repostería recién horneada. Ven a vivir el verdadero ritual del buen café.\n\n📍 Te esperamos todos los días con el mejor ambiente y aroma de la ciudad.\n\n👉 ¡Ven por tu favorito o pide para llevar!\n\n#CafeDeEspecialidad #CoffeeLover #CafeteriaArtesanal #BrunchTime #CoffeeTime #ExperienciaGourmet',
+      prompt_imagen: 'Fotografía publicitaria profesional de una taza de café latte con latte art refinado en taza de cerámica artesanal sobre mesa de madera rústica, granos de café tostados dispersos con elegancia, luz natural cálida de mañana entrando por un ventanal de cafetería moderna, estilo editorial 8k.'
+    };
+  }
+
+  // 2. Salud, Fitness, Deporte y Bienestar
+  if (
+    lower.includes('gimnasio') ||
+    lower.includes('gym') ||
+    lower.includes('fitness') ||
+    lower.includes('salud') ||
+    lower.includes('spa') ||
+    lower.includes('clinica')
+  ) {
+    return {
+      titulo: 'Transforma tu Bienestar: Salud, Energía y Resultados Reales',
+      resumen_web: 'Tu salud y vitalidad son tu mayor activo. Diseñamos programas personalizados con tecnología de vanguardia y profesionales certificados que te acompañan paso a paso hacia tus metas físicas y mentales.\n\nInstalaciones equipadas, atención humana cercana y métodos probados para elevar tu rendimiento y calidad de vida.',
+      copy_redes: '💪 El mejor momento para empezar a cuidar de ti es hoy.\n\nDescubre una metodología enfocada en tus objetivos con acompañamiento experto en cada sesión.\n\n🔥 Agenda tu primera sesión de valoración sin costo.\n\n#SaludYBienestar #FitnessMotivation #VidaSaludable #Entrenamiento #EstiloDeVida',
+      prompt_imagen: 'Fotografía publicitaria limpia y enérgica en instalaciones modernas de entrenamiento y bienestar, iluminación cinematográfica en tonos cian y ámbar, calidad fotográfica 8k.'
+    };
+  }
+
+  // 3. IoT y Dispositivos Conectados
   let area = 'Innovación Tecnológica';
   if (lower.includes('iot') || lower.includes('sensor') || lower.includes('dispositivo')) {
     area = 'Dispositivos Conectados e Internet de las Cosas (IoT)';
-  } else if (lower.includes('datos') || lower.includes('inteligencia') || lower.includes('bi')) {
+  } else if (
+    lower.includes('datos') ||
+    lower.includes('inteligencia') ||
+    lower.includes('intelligence') ||
+    lower.includes('business') ||
+    lower.includes('tablero') ||
+    lower.includes('dashboard') ||
+    lower.includes('bi')
+  ) {
     area = 'Inteligencia de Negocios y Analítica Avanzada';
   } else if (lower.includes('software') || lower.includes('app') || lower.includes('web')) {
     area = 'Desarrollo de Software y Plataformas Digitales';
@@ -116,7 +160,7 @@ app.post(['/api/generate', '/api/generate/'], async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   let parsedContent: any = null;
 
-  if (apiKey) {
+  if (apiKey && apiKey.startsWith('AIza')) {
     const candidateModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
     const ai = new GoogleGenAI({
       apiKey,
@@ -127,14 +171,14 @@ app.post(['/api/generate', '/api/generate/'], async (req, res) => {
       }
     });
 
-    const systemPrompt = `Eres el Cerebro Digital de IOT Technologies (empresa de Business Innovation Solutions especializada en Inteligencia de Negocios, Dispositivos Conectados IoT, Servicios TIC, Desarrollo de Software y Kioskos Electrónicos).
+    const systemPrompt = `Eres el Cerebro Digital del Growth Operating System (Merkatics y MYOS Platform).
 A partir de la instrucción o brief del usuario: "${brief.trim()}"
-Genera una propuesta integral de contenido formal y atractiva.
+Genera una propuesta integral de contenido formal y atractiva adaptada a la industria solicitada.
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
 - "titulo": Título corporativo atractivo y profesional
 - "resumen_web": Texto en 2 párrafos enfocado en conversión para el sitio web
 - "copy_redes": Publicación para Instagram/LinkedIn con gancho, viñetas de beneficios, CTA y hashtags
-- "prompt_imagen": Descripción detallada en lenguaje fotográfico y artístico para generar la imagen promocional (incorporando colores institucionales azul #1d7eae y grafito #231f20)`;
+- "prompt_imagen": Descripción detallada en lenguaje fotográfico y artístico para generar la imagen promocional`;
 
     for (const modelName of candidateModels) {
       try {
@@ -149,8 +193,8 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
         const cleaned = text.replace(/```json/gi, '').replace(/```/gi, '').trim();
         parsedContent = JSON.parse(cleaned);
         if (parsedContent?.titulo) break;
-      } catch (err: any) {
-        console.warn(`Model ${modelName} error:`, err?.message || err);
+      } catch {
+        // Fallback silencioso sin volcar mensajes a consola
       }
     }
   }
@@ -234,4 +278,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;

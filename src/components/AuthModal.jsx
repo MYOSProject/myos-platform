@@ -98,8 +98,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       onClose();
     } catch (err) {
       console.error(err);
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError('No se pudo completar el inicio de sesión con Google.');
+      if (err.code === 'auth/unauthorized-domain') {
+        setError('Dominio no autorizado en Firebase. Para usar Google en Vercel, agrega tu URL de Vercel en Firebase Console > Authentication > Settings > Authorized Domains.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('El navegador bloqueó la ventana emergente. Por favor permite popups para este sitio.');
+      } else if (err.code !== 'auth/popup-closed-by-user') {
+        setError('No se pudo completar el inicio de sesión con Google: ' + (err.message || 'error desconocido'));
       }
     } finally {
       setLoading(false);
