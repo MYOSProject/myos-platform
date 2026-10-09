@@ -12,6 +12,7 @@ import {
 import { doc, setDoc } from 'firebase/firestore';
 import Logo from './components/Logo';
 import DriveExplorer from './components/DriveExplorer';
+import GeneratedWebsitePreview from './components/GeneratedWebsitePreview';
 import {
   Sparkles,
   CheckCircle2,
@@ -35,16 +36,68 @@ import {
   LogIn
 } from 'lucide-react';
 
-// Motor Autónomo de Inteligencia Artificial para MYOS (Soporta Cafeterías, BI, IoT, Retail y cualquier PyME)
+// Motor Autónomo de Inteligencia Artificial para MYOS (Generador de Sitios Web de Alta Conversión)
 function generateSmartProposal(brief) {
   const cleanBrief = (brief || '').trim();
   const lower = cleanBrief.toLowerCase();
 
-  let sector = 'Negocio & Servicios';
-  let titlePrefix = 'Soluciones en Innovación';
-  let webSummary = '';
-  let socialCopy = '';
-  let imagePrompt = '';
+  let siteName = 'Nexus Soluciones & Growth';
+  let industry = 'Servicios Empresariales & Tecnología';
+  let tagline = 'Elevamos el rendimiento y rentabilidad de su negocio con estrategias de alta conversión.';
+  let primaryColor = '#1d7eae';
+  let secondaryColor = '#0032a0';
+  let accentColor = '#98dae9';
+
+  let hero = {
+    badge: '🚀 Solución de Alta Conversión',
+    title: `Potencie su Empresa con ${siteName}`,
+    subtitle: 'Diseñado bajo estándares corporativos para capturar leads calificados, automatizar operaciones y posicionar su marca en el mercado.',
+    primary_cta: 'Solicitar Demostración Sin Costo',
+    secondary_cta: 'Conocer Nuestros Servicios',
+    trust_badges: ['Atención 24/7', 'Garantía de Satisfacción', 'Soporte Especializado']
+  };
+
+  let services = [
+    { title: 'Solución Integral de Negocio', description: 'Metodologías probadas para optimizar costos y maximizar resultados comerciales.', icon: 'Sparkles', badge: 'Destacado' },
+    { title: 'Automatización & Plataformas', description: 'Sistemas conectados para eliminar tareas manuales y errores operativos.', icon: 'ShieldCheck', badge: 'Popular' },
+    { title: 'Consultoría y Crecimiento', description: 'Acompañamiento estratégico continuo para alcanzar sus metas de rentabilidad.', icon: 'TrendingUp', badge: 'Garantizado' }
+  ];
+
+  let about = {
+    title: 'Compromiso Ético y Excelencia Comercial',
+    content: 'Ayudamos a PyMEs y corporativos a superar desafíos operativos mediante soluciones a la medida.\n\nCreemos en relaciones comerciales a largo plazo respaldadas por resultados tangibles y métricas transparentes.',
+    metrics: [
+      { label: 'Clientes Atendidos', value: '+750' },
+      { label: 'Tasa de Recomendación', value: '99.2%' },
+      { label: 'Años de Experiencia', value: '10+' }
+    ]
+  };
+
+  let blogPosts = [
+    { title: '5 Estrategias para Aumentar la Tasa de Conversión en su Sitio Web', excerpt: 'Cómo diseñar llamadas a la acción irresistibles y elementos de confianza para clientes potenciales.', read_time: '4 min', date: 'Esta semana' },
+    { title: 'Automatización Operativa para PyMEs: Dónde empezar para ahorrar costos', excerpt: 'Guía práctica para eliminar cuellos de botella y enfocar su tiempo en ventas.', read_time: '3 min', date: 'Hace unos días' }
+  ];
+
+  let contact = {
+    title: 'Comience la Transformación Hoy',
+    subtitle: 'Nuestros consultores están listos para analizar su proyecto sin compromiso.',
+    phone: '+52 (656) 613-0000',
+    email: 'contacto@empresa.com',
+    address: 'Av. Tecnológico #1234, Parque Industrial Juárez'
+  };
+
+  let social = {
+    facebook: {
+      copy: `🚀 ¿Listo para hacer crecer su negocio? En ${siteName} diseñamos soluciones de alta conversión orientadas a resultados comerciales tangibles.\n\n✅ Diagnóstico sin costo\n✅ Acompañamiento de especialistas\n\n📩 Contáctenos hoy mismo y conozca lo que podemos lograr juntos.`,
+      cta: 'Solicitar Información'
+    },
+    instagram: {
+      copy: 'La verdadera ventaja competitiva radica en operar con herramientas ágiles y una presencia digital impecable. ✨ Descubre nuestras soluciones a la medida.',
+      hashtags: '#NegocioExitoso #InnovacionComercial #PyMEsDeAltoImpacto #Liderazgo #Crecimiento'
+    }
+  };
+
+  let imagePrompt = 'Fotografía publicitaria corporativa de alta fidelidad con iluminación elegante, ejecutivos colaborando en ambiente contemporáneo, estilo editorial 8k.';
 
   // 1. Cafeterías, Restaurantes y Gastronomía
   if (
@@ -56,79 +109,226 @@ function generateSmartProposal(brief) {
     lower.includes('panaderia') ||
     lower.includes('bar')
   ) {
-    sector = 'Cafetería de Especialidad & Gastronomía';
-    titlePrefix = 'Cafetería de Especialidad: Aroma, Tradición y Experiencia Gourmet';
-    webSummary = `Bienvenido a una experiencia donde cada taza cuenta una historia. Seleccionamos granos de origen único, tostados artesanalmente a la perfección para brindarle notas aromáticas inigualables en un ambiente acogedor diseñado para inspirar sus mejores momentos.\n\nDisfrute de nuestra selecta barra de café de especialidad, repostería artesanal recién horneada y un menú balanceado para comenzar su día con energía o tomar un respiro en su jornada. Espacios con Wi-Fi de alta velocidad pensados tanto para reuniones casuales como para concentrarse con su bebida favorita.`;
-    socialCopy = `☕ ¿Listo para tu próxima pausa perfecta?\n\nEn nuestra barra preparamos café de especialidad con granos de altura, extracciones precisas y el toque dulce de nuestra repostería recién horneada. Ven a vivir el verdadero ritual del buen café.\n\n📍 Te esperamos todos los días. Espacios cómodos, ambiente relajado y el mejor aroma de la ciudad.\n\n👉 ¡Ven por tu favorito o pide para llevar!\n\n#CafeDeEspecialidad #CoffeeLover #CafeteriaArtesanal #BrunchTime #CoffeeTime #ExperienciaGourmet`;
-    imagePrompt = `Fotografía publicitaria profesional de una taza de café latte con latte art refinado en taza de cerámica artesanal sobre mesa de madera rústica, granos de café tostados dispersos con elegancia, luz natural cálida de mañana entrando por un ventanal de cafetería moderna, estilo editorial 8k.`;
+    siteName = 'Aroma & Grano - Specialty Coffee';
+    industry = 'Gastronomía & Cafetería Gourmet';
+    tagline = 'El ritual del café de especialidad tostado artesanalmente para inspirar tus mejores momentos.';
+    primaryColor = '#b45309';
+    secondaryColor = '#78350f';
+    accentColor = '#fef3c7';
+    hero = {
+      badge: '☕ Granos 100% de Origen Único',
+      title: 'Despierta tus sentidos con el mejor café de especialidad de la ciudad',
+      subtitle: 'Tostado artesanalmente cada semana, extracciones con baristas certificados y repostería gourmet recién horneada en un ambiente diseñado para inspirarte.',
+      primary_cta: 'Ver Nuestro Menú & Promociones',
+      secondary_cta: 'Visítanos o Pide para Llevar',
+      trust_badges: ['Granos Éticos & Orgánicos', 'Wi-Fi de Alta Velocidad', 'Baristas Certificados']
+    };
+    services = [
+      { title: 'Barra de Extracciones de Especialidad', description: 'V60, Chemex, Aeropress y espresso con perfiles de notas florales y achocolatadas.', icon: 'Coffee', badge: 'Estrella de la Casa' },
+      { title: 'Repostería Francesa Artesanal', description: 'Croissants de mantequilla, tartas de frutos rojos y panes horneados cada mañana.', icon: 'Sparkles', badge: 'Recién Horneado' },
+      { title: 'Espacio Co-Working & Reuniones', description: 'Mesas con tomas de corriente, iluminación natural y ambiente acústico relajado.', icon: 'Users', badge: 'Wi-Fi Gratuito' }
+    ];
+    about = {
+      title: 'Nuestra Pasión por el Grano Perfecto',
+      content: 'Nacimos con la misión de democratizar el café de alta especialidad. Trabajamos directamente con pequeños productores en regiones montañosas para garantizar comercio justo y frescura insuperable en cada taza.\n\nCreemos que una buena taza de café tiene el poder de conectar ideas y transformar el día de quien la disfruta.',
+      metrics: [
+        { label: 'Tazas Servidas con Pasión', value: '+45,000' },
+        { label: 'Variedades de Grano Único', value: '12 Orígenes' },
+        { label: 'Clientes Satisfechos', value: '99.4%' }
+      ]
+    };
+    blogPosts = [
+      { title: 'Guía Rápida: Diferencias entre Cold Brew y Café Helado Tradicional', excerpt: 'Descubre por qué la extracción en frío durante 18 horas produce una bebida con menor acidez y dulzor natural superior.', read_time: '3 min', date: 'Esta semana' },
+      { title: 'El Arte del Maridaje: Qué café elegir según tu postre favorito', excerpt: 'Aprende a combinar cafés cítricos con repostería de chocolate oscuro para una experiencia de sabor inolvidable.', read_time: '4 min', date: 'Hace unos días' }
+    ];
+    contact = {
+      title: 'Ven a Disfrutar el Ritual del Café',
+      subtitle: 'Abierto todos los días de 7:30 AM a 10:00 PM. ¡Te esperamos!',
+      phone: '+52 (656) 456-7890',
+      email: 'hola@aromaygrano.com',
+      address: 'Calle Primavera #402, Zona Dorada, Ciudad Juárez'
+    };
+    social = {
+      facebook: {
+        copy: '☕ ¿Listo para tu próxima pausa perfecta? En Aroma & Grano preparamos café de especialidad con granos de altura, extracciones precisas y repostería artesanal recién horneada.\n\n📍 Te esperamos todos los días con el mejor aroma de la ciudad.\n\n👉 ¡Ven por tu favorito o pide para llevar!',
+        cta: 'Ver Menú y Ubicación'
+      },
+      instagram: {
+        copy: 'El secreto de una gran mañana está en los detalles: notas achocolatadas, crema sedosa y el sonido de una extracción perfecta. ✨\n\n¿Ya probaste nuestro Flat White?',
+        hashtags: '#CafeDeEspecialidad #CoffeeLover #CafeteriaArtesanal #BrunchTime #CoffeeTime #ExperienciaGourmet'
+      }
+    };
+    imagePrompt = 'Fotografía publicitaria profesional de una taza de café latte con latte art refinado en taza de cerámica artesanal sobre mesa de madera rústica, granos de café tostados dispersos con elegancia, luz natural cálida de mañana, estilo editorial 8k.';
   }
-  // 2. Inteligencia de Negocios y Tableros Directivos (BI)
+  // 2. Salud, Odontología, Clínicas y Belleza
   else if (
-    lower.includes('bi') ||
-    lower.includes('dato') ||
-    lower.includes('inteligencia') ||
-    lower.includes('analitica') ||
-    lower.includes('tablero') ||
-    lower.includes('directores') ||
-    lower.includes('kpi')
+    lower.includes('clinica') ||
+    lower.includes('dental') ||
+    lower.includes('diente') ||
+    lower.includes('salud') ||
+    lower.includes('medico') ||
+    lower.includes('spa') ||
+    lower.includes('gimnasio') ||
+    lower.includes('fitness')
   ) {
-    sector = 'Inteligencia de Negocios & Analítica';
-    titlePrefix = 'Business Intelligence: De Datos a Decisiones Estratégicas de Alto Impacto';
-    webSummary = `Transforme el flujo de datos dispersos de su empresa en tableros ejecutivos claros y accionables en minutos. Integre sus fuentes comerciales, operativas y financieras en una consola unificada para empoderar a la alta dirección con métricas clave en tiempo real.\n\nElimine la dependencia de reportes manuales desactualizados y tome decisiones estratégicas respaldadas por evidencia inmediata y visualización en alta fidelidad.`;
-    socialCopy = `📊 ¿Su equipo directivo toma decisiones con datos en tiempo real o con reportes del mes pasado?\n\nCon los tableros ejecutivos de Business Intelligence de IOT Technologies, centralice KPIs críticos en un solo clic:\n\n✅ Visualización ejecutiva 360° en tiempo real\n✅ Integración automática de ERPs, CRMs y bases de datos\n✅ Alertas predictivas y control financiero instantáneo\n\n📩 Solicite una demo ejecutiva personalizada: contacto@iottechnologies.mx\n\n#BusinessIntelligence #DataDriven #KPIs #DashboardEjecutivo #IOTTechnologies #TransformacionDigital`;
-    imagePrompt = `Fotografía publicitaria de un tablero moderno de Business Intelligence proyectado en pantalla de alta definición en sala de juntas ejecutiva corporativa, iluminación en azul Pantone 640C (#1d7eae) y azul marino (#0032a0), fondo minimalista slate (#231f20), estilo editorial 8k.`;
+    siteName = 'Sonrisas & Salud Pro';
+    industry = 'Salud Odontológica & Bienestar Integral';
+    tagline = 'Tu salud y tranquilidad en manos de especialistas certificados con tecnología de punta.';
+    primaryColor = '#0284c7';
+    secondaryColor = '#0369a1';
+    accentColor = '#e0f2fe';
+    hero = {
+      badge: '🩺 Diagnóstico Integral Sin Costo',
+      title: 'Recupera tu confianza y bienestar con atención médica de primer nivel',
+      subtitle: 'Instalaciones modernas, especialistas certificados en cada área y tratamientos personalizados sin dolor pensados para toda tu familia.',
+      primary_cta: 'Agendar Consulta de Valoración',
+      secondary_cta: 'Conocer Especialistas y Tratamientos',
+      trust_badges: ['Certificación Sanitaria', 'Tecnología Láser Sin Dolor', 'Planes de Pago Flexibles']
+    };
+    services = [
+      { title: 'Odontología Estética y Ortodoncia', description: 'Diseño de sonrisa digital, alineadores invisibles y blanqueamiento seguro de alta duración.', icon: 'Sparkles', badge: 'Más Solicitado' },
+      { title: 'Implantes y Rehabilitación Oral', description: 'Restauración funcional y estética permanente con materiales biocompatibles de grado médico.', icon: 'ShieldCheck', badge: 'Garantía 5 Años' },
+      { title: 'Odontopediatría y Cuidado Familiar', description: 'Ambiente amigable y técnicas no invasivas para que los niños disfruten su visita al dentista.', icon: 'Heart', badge: 'Para Niños' }
+    ];
+    about = {
+      title: 'Compromiso Ético y Tecnología Avanzada',
+      content: 'Con más de 12 años transformando vidas, combinamos la calidez humana con equipamiento de radiología digital 3D y esterilización hospitalaria.\n\nNos aseguramos de que cada paciente comprenda con transparencia su tratamiento y reciba seguimiento integral durante todo su proceso.',
+      metrics: [
+        { label: 'Pacientes Satisfechos', value: '+8,500' },
+        { label: 'Tasa de Éxito en Tratamientos', value: '99.8%' },
+        { label: 'Años de Experiencia Clínica', value: '12 Años' }
+      ]
+    };
+    blogPosts = [
+      { title: 'Mitos y Realidades sobre los Alineadores Invisibles vs Brackets', excerpt: 'Todo lo que necesitas saber sobre comodidad, higiene y tiempo de tratamiento para tomar la mejor decisión.', read_time: '4 min', date: 'Esta semana' },
+      { title: '5 Consejos para Evitar la Sensibilidad Dental al Tomar Bebidas Frías', excerpt: 'Aprende hábitos simples para proteger tu esmalte y sonreír sin molestias.', read_time: '3 min', date: 'Hace unos días' }
+    ];
+    contact = {
+      title: 'Agenda tu Cita Hoy Mismo',
+      subtitle: 'Atención de Lunes a Sábado con horarios flexibles. Ubicados en zona céntrica con estacionamiento.',
+      phone: '+52 (656) 789-0123',
+      email: 'citas@sonrisasysalud.com',
+      address: 'Av. Paseo Triunfo de la República #1820, Ciudad Juárez'
+    };
+    social = {
+      facebook: {
+        copy: '✨ Tu sonrisa es tu mejor carta de presentación. En Sonrisas & Salud Pro contamos con ortodoncia invisible y diseño de sonrisa con tecnología 3D.\n\n📅 Agenda tu valoración sin costo este mes y descubre lo fácil que es sonreír con seguridad.',
+        cta: 'Enviar Mensaje por WhatsApp'
+      },
+      instagram: {
+        copy: '¿Sabías que una sonrisa sana mejora tu confianza en más del 80% en reuniones sociales y de trabajo? 🌟\n\nNuestros especialistas están listos para darte la atención que mereces sin dolor.',
+        hashtags: '#SaludDental #SonrisasPerfectas #DentistaPro #OrtodonciaInvisible #CuidadoPersonal #Bienestar'
+      }
+    };
+    imagePrompt = 'Fotografía publicitaria limpia y luminosa en instalaciones odontológicas de alta tecnología, doctora profesional sonriendo con paciente satisfecho, estilo editorial 8k.';
   }
-  // 3. Dispositivos Conectados (IoT) y Sensores
+  // 3. IoT, Dispositivos Conectados, Industria y Sensores
   else if (
     lower.includes('iot') ||
     lower.includes('sensor') ||
     lower.includes('dispositivo') ||
     lower.includes('industrial') ||
-    lower.includes('automatizacion')
+    lower.includes('automatizacion') ||
+    lower.includes('bi') ||
+    lower.includes('datos')
   ) {
-    sector = 'Dispositivos Conectados (IoT)';
-    titlePrefix = 'Telemetría y Control Inteligente con Soluciones IoT';
-    webSummary = `Optimice la operación de su negocio mediante infraestructura de sensores conectados y análisis de datos en tiempo real. Reduzca paros no programados, controle variables críticas y anticipe contingencias operativas con nuestra plataforma de monitoreo 24/7.\n\nDiseñado para responder a las exigencias industriales y comerciales modernas con protocolos seguros y soporte de ingeniería especializada.`;
-    socialCopy = `🌐 Monitoree activos críticos en tiempo real desde cualquier dispositivo con sensores IoT de alta precisión.\n\n✅ Alertas automáticas instantáneas\n✅ Plataformas en la nube para PyMEs y plantas industriales\n\n📩 Solicite un piloto técnico: contacto@iottechnologies.mx\n\n#IoT #Industria40 #MonitoreoRemoto #IOTTechnologies`;
-    imagePrompt = `Fotografía publicitaria corporativa de tecnología industrial, sensores conectados emitiendo datos visuales en tonos azul brillante (#1d7eae) y fondo tecnológico (#231f20), realismo 8k.`;
-  }
-  // 4. General / Cualquier otra PyME
-  else {
-    sector = 'Soluciones en Innovación';
-    titlePrefix = `Soluciones en Innovación: ${cleanBrief.slice(0, 48)}`;
-    webSummary = `En IOT Technologies y MYOS Platform potenciamos el crecimiento de su empresa mediante estrategias digitales enfocadas en resultados comerciales tangibles.\n\nOptimice sus costos operativos y tome el control de cada proceso clave hoy mismo con plataformas diseñadas a la medida.`;
-    socialCopy = `🚀 ¡Impulsa el rendimiento de tu negocio con soluciones tecnológicas de vanguardia!\n\nEnfoque a la medida: "${cleanBrief}".\n\n📩 Agenda una sesión con nuestros consultores hoy mismo: contacto@iottechnologies.mx\n\n#IOTTechnologies #BusinessInnovation #TransformacionDigital`;
-    imagePrompt = `Composición publicitaria profesional moderna de alta conversión, colores corporativos azul #1d7eae y grafito #231f20, iluminación de estudio suave, 8k hiperrealista.`;
+    siteName = 'Pulse IoT Solutions';
+    industry = 'Internet de las Cosas (IoT) & Telemetría Industrial';
+    tagline = 'Monitoreo inteligente en tiempo real y automatización para la industria moderna.';
+    primaryColor = '#1d7eae';
+    secondaryColor = '#0032a0';
+    accentColor = '#98dae9';
+    hero = {
+      badge: '🌐 Redes de Sensores en Tiempo Real',
+      title: 'Optimice sus Operaciones Industriales con Telemetría IoT',
+      subtitle: 'Plataforma de alta confiabilidad diseñada para capturar variables críticas de sensores, predecir paros no programados y reducir costos operativos con soporte 24/7.',
+      primary_cta: 'Solicitar Demostración Técnica',
+      secondary_cta: 'Ver Arquitectura de Red',
+      trust_badges: ['Disponibilidad 99.9%', 'Protocolos Criptográficos', 'Ingeniería en Sitio']
+    };
+    services = [
+      { title: 'Monitoreo de Variables Críticas', description: 'Temperatura, vibración, presión y consumo eléctrico transmitidos por redes seguras.', icon: 'Cpu', badge: 'Tiempo Real' },
+      { title: 'Tableros de Business Intelligence', description: 'Consola web ejecutiva que convierte millones de lecturas en indicadores accionables.', icon: 'BarChart3', badge: 'Alta Dirección' },
+      { title: 'Alertas Tempranas y Automatización', description: 'Notificaciones automáticas a supervisores antes de que ocurra una falla crítica.', icon: 'Network', badge: 'Mantenimiento Predictivo' }
+    ];
+    about = {
+      title: 'Ingeniería Fronteriza Orientada a Cero Paros',
+      content: 'Diseñamos e implementamos infraestructura de hardware y software para maquiladoras y PyMEs industriales.\n\nNuestras soluciones resisten entornos severos y se conectan sin fricción con los sistemas ERP ya instalados en su planta.',
+      metrics: [
+        { label: 'Sensores en Producción', value: '+12,000' },
+        { label: 'Reducción de Paros', value: '34%' },
+        { label: 'Tiempo de Despliegue', value: '< 7 Días' }
+      ]
+    };
+    blogPosts = [
+      { title: 'Cómo la Telemetría IoT Salvó una Cadena de Frío Farmacéutica', excerpt: 'Caso de estudio sobre la implementación de sensores certificados en almacenes logísticos de la frontera.', read_time: '5 min', date: 'Esta semana' },
+      { title: 'Protocolos de Comunicación Seguros para Sensores en Fábricas Inteligentes', excerpt: 'Comparativa entre LoRaWAN, MQTT y redes celulares privadas para telemetría industrial.', read_time: '4 min', date: 'Hace unos días' }
+    ];
+    contact = {
+      title: 'Inicie un Piloto en su Planta',
+      subtitle: 'Nuestros ingenieros evalúan sus líneas de producción sin costo.',
+      phone: '+52 (656) 613-0000',
+      email: 'contacto@iottechnologies.mx',
+      address: 'Parque Industrial Juárez, Edificio Tecnológico 4'
+    };
+    social = {
+      facebook: {
+        copy: '🌐 Monitoree activos críticos en tiempo real desde cualquier dispositivo con sensores IoT de alta precisión de IOT Technologies.\n\n✅ Alertas automáticas instantáneas\n✅ Plataformas en la nube para PyMEs y plantas industriales\n\n📩 Solicite un piloto técnico hoy mismo.',
+        cta: 'Contactar a un Ingeniero'
+      },
+      instagram: {
+        copy: '¿Sabes cuánto cuesta una hora de paro imprevisto en tu línea de producción? 💡 La telemetría en tiempo real te permite actuar antes de que la maquinaria falle.',
+        hashtags: '#IoT #Industria40 #MonitoreoRemoto #IOTTechnologies #TransformacionDigital'
+      }
+    };
+    imagePrompt = 'Fotografía publicitaria corporativa de tecnología industrial, sensores conectados emitiendo datos visuales en tonos azul brillante (#1d7eae) y fondo tecnológico (#231f20), realismo 8k.';
   }
 
   const generatedId = Date.now() % 100000;
+  const titulo = `Sitio Web Corporativo: ${siteName}`;
+
+  const generatedWebsite = {
+    titulo,
+    site_name: siteName,
+    industry,
+    tagline,
+    brand_colors: {
+      primary: primaryColor,
+      secondary: secondaryColor,
+      accent: accentColor
+    },
+    hero,
+    services,
+    about,
+    blog_posts: blogPosts,
+    contact,
+    social_posts: social,
+    resumen_web: about.content,
+    copy_redes: social.instagram.copy,
+    prompt_imagen: imagePrompt,
+    drive_files: {
+      pages_file: `/Sitio_Web/Paginas/${siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_landing.json`,
+      blog_file: `/Sitio_Web/Blog/post_${blogPosts[0]?.title.slice(0, 15).replace(/\s+/g, '_').toLowerCase()}.md`,
+      social_file: `/Redes_Sociales/Para_Publicar/campaña_${siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}.json`
+    }
+  };
 
   return {
     id: generatedId,
     status: 'PENDING',
-    sector,
-    content: {
-      titulo: titlePrefix,
-      resumen_web: webSummary,
-      copy_redes: socialCopy,
-      prompt_imagen: imagePrompt
-    },
+    sector: industry,
+    content: generatedWebsite,
     record: {
       id: generatedId,
-      title: titlePrefix,
-      slug: `propuesta-${generatedId}`,
-      category: 'PÁGINA WEB / REDES',
+      title: titulo,
+      slug: `sitio-web-${generatedId}`,
+      category: 'SITIO WEB / REDES',
       status: 'PENDING',
       brief: cleanBrief,
-      body_text: webSummary,
+      body_text: about.content,
       created_at: new Date().toISOString(),
-      drive_file_id: `drive_draft_${generatedId}`,
-      content: {
-        titulo: titlePrefix,
-        resumen_web: webSummary,
-        copy_redes: socialCopy,
-        prompt_imagen: imagePrompt
-      }
+      drive_file_id: `drive_site_${generatedId}`,
+      content: generatedWebsite
     }
   };
 }
@@ -814,7 +1014,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* 4. Módulo del Cerebro Digital (Generación IA + Control Humano) */}
+          {/* 4. Módulo del Cerebro Digital (Generación de Sitios Web + Control Humano) */}
           <section id="cerebro-digital" className="py-20 px-6 max-w-5xl mx-auto">
             <div className="bg-gradient-to-b from-slate-900 to-[#231f20] rounded-3xl border border-[#1d7eae]/40 p-8 sm:p-10 shadow-2xl space-y-8">
               
@@ -822,13 +1022,13 @@ export default function App() {
                 <div>
                   <div className="inline-flex items-center gap-2 text-xs font-bold text-[#98dae9] uppercase tracking-wider mb-1">
                     <Sparkles className="w-4 h-4 text-[#1d7eae]" />
-                    Cerebro Digital con Gemini IA
+                    Cerebro Digital con IA (Ficha 2026-544-11 - Merkatics)
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
-                    Generador de Propuestas & Contenido
+                    Generador Autónomo de Sitios Web de Alta Conversión
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Genera landing pages, copies con hashtags y prompts de arte alineados a IOT Technologies.
+                  <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+                    Genera páginas web completas para PyMEs (Hero, Servicios, Blog, Contacto y Redes Sociales) a partir de Google Drive con aprobación humana no negociable.
                   </p>
                 </div>
                 <div className="text-right">
@@ -842,31 +1042,36 @@ export default function App() {
               {/* Formulario Prompt */}
               <div className="space-y-3">
                 <label className="block text-sm font-semibold text-slate-300">
-                  Instrucción / Brief para el Cerebro Digital:
+                  Instrucción / Brief del Negocio para Generar el Sitio Web:
                 </label>
                 <textarea
                   value={brief}
                   onChange={(e) => setBrief(e.target.value)}
-                  placeholder="Ejemplo: Diseña una propuesta para promocionar soluciones de software empresarial e Inteligencia de Negocios para PyMEs de manufactura y logística en Ciudad Juárez y El Paso..."
-                  className="w-full h-32 p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1d7eae] text-sm leading-relaxed"
+                  placeholder="Ejemplo: Crea un sitio web para una clínica dental de ortodoncia invisible y diseño de sonrisa con citas en línea en Ciudad Juárez..."
+                  className="w-full h-28 p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1d7eae] text-sm leading-relaxed"
                 />
 
-                {/* Sugerencias rápidas de brief */}
-                <div className="flex flex-wrap gap-2 pt-1 text-xs text-slate-400">
-                  <span className="font-semibold text-slate-500">Sugerencias rápidas:</span>
-                  {[
-                    'Monitoreo de sensores IoT en plantas industriales',
-                    'Kioskos de autoservicio y facturación electrónica',
-                    'Tableros de Business Intelligence para directores'
-                  ].map((sug, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setBrief(sug)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-800 hover:text-[#98dae9] transition border border-slate-700/60"
-                    >
-                      {sug}
-                    </button>
-                  ))}
+                {/* Sugerencias rápidas de industrias / PyMEs */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-xs font-semibold text-slate-400 block">Plantillas & Ejemplos Rápidos de PyMEs:</span>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {[
+                      { label: '☕ Cafetería Gourmet', brief: 'Cafetería de especialidad con granos de altura, barra de extracciones, repostería artesanal y espacio para co-working.' },
+                      { label: '🦷 Clínica Dental & Salud', brief: 'Clínica odontológica especializada en ortodoncia invisible, diseño de sonrisa digital y atención sin dolor.' },
+                      { label: '🌐 Sensores IoT & Telemetría', brief: 'Plataforma de telemetría y sensores IoT para monitoreo de temperatura y maquinaria industrial en tiempo real.' },
+                      { label: '🚀 Agencia de Growth Marketing', brief: 'Agencia de crecimiento digital y embudos de venta de alta conversión para PyMEs y marcas de comercio electrónico.' },
+                      { label: '⚖️ Despacho Jurídico', brief: 'Firma de abogados y consultores corporativos especializados en contratos, derecho laboral y protección patrimonial.' },
+                      { label: '🏋️ Gimnasio & Bienestar', brief: 'Centro de entrenamiento funcional, acondicionamiento físico personalizado y planes nutricionales.' }
+                    ].map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setBrief(item.brief)}
+                        className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 hover:text-white transition border border-slate-700/60 text-slate-300 flex items-center gap-1.5"
+                      >
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <button
@@ -875,7 +1080,7 @@ export default function App() {
                   className="w-full py-4 rounded-xl font-bold text-white bg-[#1d7eae] hover:bg-[#0032a0] disabled:bg-slate-800 disabled:text-slate-600 transition shadow-lg shadow-[#1d7eae]/25 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
-                  {loading ? '🧠 Cerebro Digital procesando con Gemini IA...' : 'Generar Propuesta de Contenido (Texto + Arte)'}
+                  {loading ? '🧠 Cerebro Digital generando sitio web con IA...' : 'Generar Sitio Web Completo de Alta Conversión (Páginas + Blog + Redes)'}
                 </button>
 
                 {errorMessage && (
@@ -886,91 +1091,16 @@ export default function App() {
                 )}
               </div>
 
-              {/* Tarjeta de Propuesta Generada (Estado PENDING) */}
+              {/* Renderizado del Sitio Web Generado con Vista Previa Interactiva */}
               {proposal && (
-                <div className="mt-8 p-6 sm:p-8 rounded-2xl bg-slate-950 border border-blue-500/40 space-y-6 shadow-2xl">
-                  
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-4">
-                    <div className="flex items-center gap-2.5">
-                      <span className={`text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-1.5 ${
-                        approvedSuccess 
-                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                          : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                      }`}>
-                        {approvedSuccess ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                        ESTADO: {approvedSuccess ? 'APPROVED (APROBADO)' : 'PENDING (PENDIENTE DE APROBACIÓN)'}
-                      </span>
-                      <span className="text-xs font-mono text-slate-500">ID: #{proposal.id}</span>
-                    </div>
-
-                    <span className="text-xs text-slate-400 font-mono">
-                      Carpeta Drive: /Redes_Sociales/{approvedSuccess ? 'Publicado' : 'Para_Publicar'}
-                    </span>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Título Corporativo Recomendado</h5>
-                        <p className="text-lg font-bold text-white mt-1 font-heading">{proposal.content.titulo}</p>
-                      </div>
-                      <div>
-                        <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Propuesta para Landing Page (Resumen Web)</h5>
-                        <p className="text-sm text-slate-300 mt-1 leading-relaxed bg-slate-900/80 p-4 rounded-xl border border-slate-800 whitespace-pre-line">
-                          {proposal.content.resumen_web}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Copy para Redes Sociales (Instagram / LinkedIn)</h5>
-                        <p className="text-sm text-slate-300 mt-1 leading-relaxed bg-slate-900/80 p-4 rounded-xl border border-slate-800 whitespace-pre-line font-mono text-xs max-h-48 overflow-y-auto">
-                          {proposal.content.copy_redes}
-                        </p>
-                      </div>
-                      <div>
-                        <h5 className="text-xs font-bold text-[#98dae9] uppercase tracking-wider">Arte Publicitario / Prompt de Imagen Recomendado</h5>
-                        <div className="p-3.5 rounded-xl bg-[#0032a0]/20 border border-[#1d7eae]/40 text-xs text-[#98dae9] font-mono mt-1">
-                          🎨 {proposal.content.prompt_imagen}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Botones de Control y Auditoría Humana */}
-                  {!approvedSuccess ? (
-                    <div className="space-y-3 pt-4 border-t border-slate-800">
-                      <div className="text-xs text-slate-400 flex items-center justify-between">
-                        <span>Aprobador que firmará: <strong className="text-white">{currentUser.displayName}</strong> ({currentUser.email})</span>
-                        <span className="text-emerald-400 font-semibold">Cumple regla de auditoría</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <button
-                          onClick={handleGenerate}
-                          disabled={loading}
-                          className="flex-1 py-3.5 rounded-xl font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
-                        >
-                          🔄 Volver a generar (Descartar)
-                        </button>
-                        <button
-                          onClick={() => handleApprove()}
-                          className="flex-1 py-3.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2"
-                        >
-                          <CheckCircle2 className="w-5 h-5" />
-                          Aprobar y Registrar Publicación
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-center font-semibold text-sm flex items-center justify-center gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                      <span>
-                        ✓ Contenido aprobado y sellado por {currentUser.displayName}. Publicación registrada en el CMS.
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <GeneratedWebsitePreview
+                  proposal={proposal}
+                  isApproved={approvedSuccess}
+                  onApprove={() => handleApprove()}
+                  onRegenerate={handleGenerate}
+                  currentUser={currentUser}
+                  loading={loading}
+                />
               )}
             </div>
           </section>
