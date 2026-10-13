@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Logo({ className = "h-9", light = true }) {
+export default function Logo({ className = "h-9", light = false }) {
   const coral = "#E95349";
   const textColor = light ? "#F1F1F1" : "#1E1E1E";
   const subtextColor = light ? "#E26A69" : "#757575";
