@@ -1255,7 +1255,7 @@ export default function App() {
 
   // APLICACIÓN PRINCIPAL: GENERADOR DE PÁGINAS WEB DESDE CERO CON IA
   return (
-    <div className="min-h-screen bg-[#F1F1F1] text-slate-100 font-sans selection:bg-[#E2554F] selection:text-[#1E1E1E]">
+    <div className="min-h-screen bg-[#F8F9FC] text-[#252B3A] font-sans selection:bg-[#E2554F] selection:text-[#1E1E1E]">
       
       {/* 1. Header & Navegación Institucional Oficial IOT TECHNOLOGIES */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] px-4 sm:px-8 py-3.5 shadow-lg">
@@ -1437,7 +1437,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => logoInputMainRef.current?.click()}
-                          className="px-3 py-1.5 rounded-lg bg-[#F1F1F1] hover:bg-slate-700 text-xs font-semibold text-slate-200 transition border border-[#E5E5E5]"
+                          className="px-3 py-1.5 rounded-lg bg-[#F1F1F1] hover:bg-slate-100 text-xs font-semibold text-[#252B3A] transition border border-[#E5E5E5]"
                         >
                           Cambiar imagen
                         </button>
@@ -1461,7 +1461,7 @@ export default function App() {
                         <Upload className="w-5 h-5 group-hover:scale-110 transition" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-slate-200 block">
+                        <span className="text-xs font-bold text-[#252B3A] block">
                           Haz clic aquí para subir la imagen de tu logotipo
                         </span>
                         <span className="text-[11px] text-[#757575] block mt-0.5">
@@ -1474,7 +1474,7 @@ export default function App() {
 
                 {/* 2. SECCIÓN: INSTRUCCIONES / PROMPT PARA LA IA */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-200 flex items-center justify-between">
+                  <label className="block text-sm font-bold text-[#252B3A] flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-[#D14842]" />
                       <span>Instrucciones para la Inteligencia Artificial (Prompt):</span>
@@ -1493,7 +1493,7 @@ export default function App() {
 - ¿Tienes preferencia de colores o estilo? (ej: colores rosa pastel, blanco minimalista, tonos oscuros elegantes, azul corporativo, etc.)
 - ¿Tienes teléfono, WhatsApp, promociones o servicio a domicilio?"
                     rows={5}
-                    className="w-full p-4 rounded-2xl bg-[#F1F1F1] border border-[#E5E5E5] text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E2554F] text-sm leading-relaxed"
+                    className="w-full p-4 rounded-2xl bg-[#F1F1F1] border border-[#E5E5E5] text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E2554F] text-sm leading-relaxed"
                   />
                   <span className="text-[11px] text-[#757575] block">
                     Tip: Puedes ser tan específico como quieras con los colores, secciones, ofertas o textos. La IA no copiará tu texto, sino que diseñará el sitio a tu gusto.
