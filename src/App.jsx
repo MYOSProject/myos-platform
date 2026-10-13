@@ -1259,10 +1259,10 @@ export default function App() {
 
   // APLICACIÓN PRINCIPAL: GENERADOR DE PÁGINAS WEB DESDE CERO CON IA
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-[#E95349] selection:text-white">
+    <div className="min-h-screen bg-[#F1F1F1] text-slate-100 font-sans selection:bg-[#E95349] selection:text-[#1E1E1E]">
       
       {/* 1. Header & Navegación Institucional Oficial IOT TECHNOLOGIES */}
-      <header className="sticky top-0 z-40 bg-[#1E1E1E]/95 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3.5 shadow-lg">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] px-4 sm:px-8 py-3.5 shadow-lg">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
           
           {/* Logo Corporativo Oficial */}
@@ -1273,17 +1273,17 @@ export default function App() {
           </div>
 
           {/* Navegación Oficial: Generador Web IA, Sitios Aprobados y Google Drive CMS */}
-          <nav className="hidden lg:flex items-center space-x-6 text-sm font-semibold text-slate-300">
+          <nav className="hidden lg:flex items-center space-x-6 text-sm font-semibold text-[#333333]">
             <button
               onClick={() => setActiveTab('plataforma')}
-              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'plataforma' ? 'text-[#E26A69] border-b-2 border-[#E95349]' : 'hover:text-white'}`}
+              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'plataforma' ? 'text-[#E26A69] border-b-2 border-[#E95349]' : 'hover:text-[#1E1E1E]'}`}
             >
               <Sparkles className="w-4 h-4 text-[#E95349]" />
               <span>Generador Web IA</span>
             </button>
             <button
               onClick={() => setActiveTab('aprobados')}
-              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'aprobados' ? 'text-emerald-400 border-b-2 border-emerald-500' : 'hover:text-white'}`}
+              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'aprobados' ? 'text-emerald-400 border-b-2 border-emerald-500' : 'hover:text-[#1E1E1E]'}`}
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>Sitios Aprobados</span>
@@ -1293,7 +1293,7 @@ export default function App() {
             </button>
             <button
               onClick={() => setActiveTab('drive')}
-              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'drive' ? 'text-[#E26A69] border-b-2 border-[#E95349]' : 'hover:text-white'}`}
+              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'drive' ? 'text-[#E26A69] border-b-2 border-[#E95349]' : 'hover:text-[#1E1E1E]'}`}
             >
               <FolderTree className="w-4 h-4 text-[#E95349]" />
               <span>Google Drive CMS</span>
@@ -1302,12 +1302,12 @@ export default function App() {
 
           {/* Área de Autenticación / Sesión de Usuario */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl shadow-inner">
-              <div className="w-7 h-7 rounded-lg bg-[#E95349] text-white flex items-center justify-center font-bold text-xs">
+            <div className="flex items-center gap-2.5 bg-white/90 border border-[#E5E5E5]/80 px-3 py-1.5 rounded-xl shadow-inner">
+              <div className="w-7 h-7 rounded-lg bg-[#E95349] text-[#1E1E1E] flex items-center justify-center font-bold text-xs">
                 {currentUser?.displayName ? currentUser.displayName[0].toUpperCase() : 'U'}
               </div>
               <div className="hidden sm:block text-left leading-tight">
-                <span className="text-xs font-bold text-white block truncate max-w-[130px]">
+                <span className="text-xs font-bold text-[#1E1E1E] block truncate max-w-[130px]">
                   {currentUser?.displayName || 'Usuario'}
                 </span>
                 <span className="text-[10px] text-emerald-400 font-semibold block flex items-center gap-1">
@@ -1318,7 +1318,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowAuthModal(true)}
-                  className="ml-1 px-2.5 py-1 text-xs font-bold text-[#E26A69] bg-[#E95349]/25 hover:bg-[#E95349] hover:text-white rounded-lg transition border border-[#E95349]/40 flex items-center gap-1"
+                  className="ml-1 px-2.5 py-1 text-xs font-bold text-[#E26A69] bg-[#E95349]/25 hover:bg-[#E95349] hover:text-[#1E1E1E] rounded-lg transition border border-[#E95349]/40 flex items-center gap-1"
                 >
                   <LogIn className="w-3 h-3" />
                   Iniciar Sesión
@@ -1327,7 +1327,7 @@ export default function App() {
                 <button
                   onClick={handleSignOut}
                   title="Cerrar Sesión"
-                  className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition"
+                  className="p-1.5 text-[#757575] hover:text-red-400 rounded-lg hover:bg-[#F1F1F1] transition"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -1338,24 +1338,24 @@ export default function App() {
       </header>
 
       {/* Barra de navegación para móviles */}
-      <div className="lg:hidden flex items-center justify-around px-4 py-2 bg-slate-900/80 border-b border-slate-800 text-xs font-semibold">
+      <div className="lg:hidden flex items-center justify-around px-4 py-2 bg-white/80 border-b border-[#E5E5E5] text-xs font-semibold">
         <button
           onClick={() => setActiveTab('plataforma')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'plataforma' ? 'bg-[#E95349] text-white' : 'text-slate-400'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'plataforma' ? 'bg-[#E95349] text-[#1E1E1E]' : 'text-[#757575]'}`}
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>Generador</span>
         </button>
         <button
           onClick={() => setActiveTab('aprobados')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'aprobados' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'aprobados' ? 'bg-emerald-600 text-[#1E1E1E]' : 'text-[#757575]'}`}
         >
           <CheckCircle2 className="w-3.5 h-3.5" />
           <span>Aprobados ({publishedContent.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('drive')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'drive' ? 'bg-[#E95349] text-white' : 'text-slate-400'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'drive' ? 'bg-[#E95349] text-[#1E1E1E]' : 'text-[#757575]'}`}
         >
           <FolderTree className="w-3.5 h-3.5" />
           <span>Drive</span>
@@ -1375,16 +1375,16 @@ export default function App() {
               <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#E95349]/10 blur-[100px] rounded-full pointer-events-none"></div>
 
               {/* Encabezado del Generador */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-6 relative z-10">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#E5E5E5] pb-6 relative z-10">
                 <div>
                   <div className="inline-flex items-center gap-2 text-xs font-bold text-[#E26A69] uppercase tracking-wider mb-1 px-3 py-1 rounded-full bg-[#E95349]/15 border border-[#E95349]/30">
                     <Sparkles className="w-4 h-4 text-[#E95349]" />
                     <span>Cerebro Digital con IA • Ficha 2026-544-11 (MYOS Platform)</span>
                   </div>
-                  <h1 className="text-3xl sm:text-4xl font-black text-white font-heading mt-2">
+                  <h1 className="text-3xl sm:text-4xl font-black text-[#1E1E1E] font-heading mt-2">
                     Generador de Páginas Web desde Cero con IA
                   </h1>
-                  <p className="text-sm text-slate-300 mt-1 max-w-2xl">
+                  <p className="text-sm text-[#333333] mt-1 max-w-2xl">
                     Describe tu idea o selecciona un giro comercial. La Inteligencia Artificial creará el sitio web completo con diseño en vivo, código HTML5 descargable, publicaciones para redes y sincronización en Google Drive CMS.
                   </p>
                 </div>
@@ -1393,7 +1393,7 @@ export default function App() {
                   <span className="px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold inline-block">
                     Aprobación Humana Obligatoria
                   </span>
-                  <span className="text-[10px] text-slate-400 mt-1 block">
+                  <span className="text-[10px] text-[#757575] mt-1 block">
                     Auditor: <strong className="text-slate-200">{currentUser?.displayName}</strong>
                   </span>
                 </div>
@@ -1403,13 +1403,13 @@ export default function App() {
               <div className="space-y-6 relative z-10">
                 
                 {/* 1. SECCIÓN: LOGOTIPO DE LA PÁGINA WEB (Subir Imagen) */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/95 border border-slate-800 space-y-3 shadow-lg">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 border-b border-slate-800/80 pb-2.5">
-                    <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/95 border border-[#E5E5E5] space-y-3 shadow-lg">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 border-b border-[#E5E5E5]/80 pb-2.5">
+                    <label className="text-xs font-bold text-[#1E1E1E] uppercase tracking-wider flex items-center gap-2">
                       <Upload className="w-4 h-4 text-[#E26A69]" />
                       <span>Logotipo de la Página Web (Sube tu Imagen)</span>
                     </label>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-[#757575]">
                       Opcional: Aparecerá en el encabezado, pie de página y carpeta de marca
                     </span>
                   </div>
@@ -1423,16 +1423,16 @@ export default function App() {
                   />
 
                   {customLogo ? (
-                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-emerald-500/40">
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#F1F1F1] border border-emerald-500/40">
                       <div className="flex items-center gap-3">
                         <img
                           src={customLogo}
                           alt="Logo cargado"
-                          className="w-14 h-14 object-contain rounded-lg bg-white/5 p-1 border border-slate-700 shadow-inner"
+                          className="w-14 h-14 object-contain rounded-lg bg-white/5 p-1 border border-[#E5E5E5] shadow-inner"
                         />
                         <div>
                           <span className="text-xs font-bold text-emerald-300 block">✓ Logotipo Oficial Cargado</span>
-                          <span className="text-[11px] text-slate-400 block">
+                          <span className="text-[11px] text-[#757575] block">
                             Tu logotipo se integrará de forma automática en el navbar y en todo el sitio web
                           </span>
                         </div>
@@ -1441,14 +1441,14 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => logoInputMainRef.current?.click()}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition border border-slate-700"
+                          className="px-3 py-1.5 rounded-lg bg-[#F1F1F1] hover:bg-slate-700 text-xs font-semibold text-slate-200 transition border border-[#E5E5E5]"
                         >
                           Cambiar imagen
                         </button>
                         <button
                           type="button"
                           onClick={handleLogoRemove}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/30 transition"
+                          className="p-1.5 rounded-lg text-[#757575] hover:text-red-400 hover:bg-red-950/30 transition"
                           title="Eliminar logotipo"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1459,7 +1459,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => logoInputMainRef.current?.click()}
-                      className="w-full p-5 rounded-xl border-2 border-dashed border-slate-800 hover:border-[#E95349] bg-slate-950/80 hover:bg-slate-900/60 transition flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
+                      className="w-full p-5 rounded-xl border-2 border-dashed border-[#E5E5E5] hover:border-[#E95349] bg-[#F1F1F1]/80 hover:bg-white/60 transition flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-xl bg-[#E95349]/10 group-hover:bg-[#E95349]/20 text-[#E26A69] flex items-center justify-center transition">
                         <Upload className="w-5 h-5 group-hover:scale-110 transition" />
@@ -1468,7 +1468,7 @@ export default function App() {
                         <span className="text-xs font-bold text-slate-200 block">
                           Haz clic aquí para subir la imagen de tu logotipo
                         </span>
-                        <span className="text-[11px] text-slate-400 block mt-0.5">
+                        <span className="text-[11px] text-[#757575] block mt-0.5">
                           Admite PNG, JPG, SVG o WebP (Recomendado fondo transparente)
                         </span>
                       </div>
@@ -1483,7 +1483,7 @@ export default function App() {
                       <Sparkles className="w-4 h-4 text-[#E26A69]" />
                       <span>Instrucciones para la Inteligencia Artificial (Prompt):</span>
                     </span>
-                    <span className="text-xs font-normal text-slate-400">
+                    <span className="text-xs font-normal text-[#757575]">
                       Tú pides las cosas y la IA las crea
                     </span>
                   </label>
@@ -1497,9 +1497,9 @@ export default function App() {
 - ¿Tienes preferencia de colores o estilo? (ej: colores rosa pastel, blanco minimalista, tonos oscuros elegantes, azul corporativo, etc.)
 - ¿Tienes teléfono, WhatsApp, promociones o servicio a domicilio?"
                     rows={5}
-                    className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E95349] text-sm leading-relaxed"
+                    className="w-full p-4 rounded-2xl bg-[#F1F1F1] border border-[#E5E5E5] text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E95349] text-sm leading-relaxed"
                   />
-                  <span className="text-[11px] text-slate-400 block">
+                  <span className="text-[11px] text-[#757575] block">
                     Tip: Puedes ser tan específico como quieras con los colores, secciones, ofertas o textos. La IA no copiará tu texto, sino que diseñará el sitio a tu gusto.
                   </span>
                 </div>
@@ -1508,7 +1508,7 @@ export default function App() {
                 <button
                   onClick={() => handleGenerate()}
                   disabled={loading || !brief.trim()}
-                  className="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-[#E95349] via-[#C6443F] to-[#E95349] hover:opacity-95 disabled:from-slate-800 disabled:to-slate-850 disabled:text-slate-600 transition shadow-xl shadow-[#E95349]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
+                  className="w-full py-4 rounded-2xl font-bold text-[#1E1E1E] bg-gradient-to-r from-[#E95349] via-[#C6443F] to-[#E95349] hover:opacity-95 disabled:from-slate-800 disabled:to-slate-850 disabled:text-slate-600 transition shadow-xl shadow-[#E95349]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
                 >
                   <Sparkles className="w-5 h-5" />
                   {loading ? '🧠 La Inteligencia Artificial está construyendo tu página web...' : '⚡ Construir Página Web con IA'}
@@ -1516,7 +1516,7 @@ export default function App() {
 
                 {/* Progreso en tiempo real mientras genera */}
                 {loading && (
-                  <div className="p-4 rounded-2xl bg-slate-950 border border-[#E95349]/40 space-y-3 animate-fadeIn">
+                  <div className="p-4 rounded-2xl bg-[#F1F1F1] border border-[#E95349]/40 space-y-3 animate-fadeIn">
                     <div className="flex justify-between items-center text-xs">
                       <span className="font-bold text-[#E26A69] flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#E95349] animate-ping"></span>
@@ -1526,9 +1526,9 @@ export default function App() {
                         {generationStep === 4 && 'Paso 4/5: Estructurando código HTML5 interactivo y responsive...'}
                         {generationStep >= 5 && 'Paso 5/5: Creando estructura en Google Drive CMS (/Sitio_Web/Paginas)...'}
                       </span>
-                      <span className="font-mono text-slate-400">{generationStep * 20}%</span>
+                      <span className="font-mono text-[#757575]">{generationStep * 20}%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-slate-900 overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-white overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-[#E95349] to-[#E26A69] transition-all duration-500 rounded-full"
                         style={{ width: `${Math.min(100, Math.max(15, generationStep * 20))}%` }}
@@ -1565,34 +1565,34 @@ export default function App() {
                   onUpdateSite={handleUpdateSite}
                 />
               ) : (
-                <div className="pt-4 border-t border-slate-800/80">
+                <div className="pt-4 border-t border-[#E5E5E5]/80">
                   <div className="grid md:grid-cols-3 gap-4">
-                    <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
+                    <div className="p-5 rounded-2xl bg-[#F1F1F1]/70 border border-[#E5E5E5] space-y-2">
                       <div className="w-9 h-9 rounded-xl bg-[#E95349]/20 text-[#E26A69] flex items-center justify-center font-bold text-sm">
                         1
                       </div>
-                      <h4 className="font-bold text-white text-sm">Describe tu Idea</h4>
-                      <p className="text-xs text-slate-400 leading-relaxed">
+                      <h4 className="font-bold text-[#1E1E1E] text-sm">Describe tu Idea</h4>
+                      <p className="text-xs text-[#757575] leading-relaxed">
                         Escribe el giro de tu negocio, productos clave o promociones. La IA genera textos y estructura a la medida.
                       </p>
                     </div>
 
-                    <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
+                    <div className="p-5 rounded-2xl bg-[#F1F1F1]/70 border border-[#E5E5E5] space-y-2">
                       <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-sm">
                         2
                       </div>
-                      <h4 className="font-bold text-white text-sm">Vista Previa & Código</h4>
-                      <p className="text-xs text-slate-400 leading-relaxed">
+                      <h4 className="font-bold text-[#1E1E1E] text-sm">Vista Previa & Código</h4>
+                      <p className="text-xs text-[#757575] leading-relaxed">
                         Interactúa con el sitio web generado en vivo en móvil, tablet o escritorio y descarga el archivo <code className="text-emerald-400">index.html</code> con 1 clic.
                       </p>
                     </div>
 
-                    <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
+                    <div className="p-5 rounded-2xl bg-[#F1F1F1]/70 border border-[#E5E5E5] space-y-2">
                       <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center font-bold text-sm">
                         3
                       </div>
-                      <h4 className="font-bold text-white text-sm">Google Drive & Auditoría</h4>
-                      <p className="text-xs text-slate-400 leading-relaxed">
+                      <h4 className="font-bold text-[#1E1E1E] text-sm">Google Drive & Auditoría</h4>
+                      <p className="text-xs text-[#757575] leading-relaxed">
                         Sincronización con carpetas de Drive y firma del evaluador humano para autorizar la publicación a Vercel.
                       </p>
                     </div>
@@ -1603,16 +1603,16 @@ export default function App() {
           </section>
 
           {/* 2. Sección Informativa Institucional (Catálogo Oficial IOT Technologies) */}
-          <section id="servicios" className="py-16 px-6 bg-slate-900/60 border-t border-slate-800/80">
+          <section id="servicios" className="py-16 px-6 bg-white/60 border-t border-[#E5E5E5]/80">
             <div className="max-w-6xl mx-auto space-y-10">
               <div className="text-center space-y-2">
                 <span className="text-xs font-bold uppercase tracking-widest text-[#E95349]">
                   Manual Corporativo Merkatics
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#1E1E1E] font-heading">
                   Capacidades Tecnológicas Certificadas
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
+                <p className="text-xs sm:text-sm text-[#757575] max-w-xl mx-auto">
                   Líneas de infraestructura, telemetría e innovación digital para PyMEs de la región fronteriza.
                 </p>
               </div>
@@ -1660,16 +1660,16 @@ export default function App() {
                   return (
                     <div
                       key={index}
-                      className="p-5 rounded-2xl bg-[#1E1E1E]/75 border border-slate-800 hover:border-[#E95349]/60 transition group space-y-2"
+                      className="p-5 rounded-2xl bg-white border border-[#E5E5E5] hover:border-[#E95349]/60 transition group space-y-2"
                     >
                       <div className="flex justify-between items-start">
                         <div className="w-9 h-9 rounded-xl bg-[#E95349]/15 text-[#E26A69] flex items-center justify-center font-bold">
                           <Icon className="w-4 h-4" />
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-slate-500">{srv.num}</span>
+                        <span className="text-[10px] font-mono font-bold text-[#757575]">{srv.num}</span>
                       </div>
-                      <h4 className="text-base font-bold text-white font-heading">{srv.title}</h4>
-                      <p className="text-xs text-slate-400 leading-relaxed">{srv.desc}</p>
+                      <h4 className="text-base font-bold text-[#1E1E1E] font-heading">{srv.title}</h4>
+                      <p className="text-xs text-[#757575] leading-relaxed">{srv.desc}</p>
                     </div>
                   );
                 })}
@@ -1694,37 +1694,37 @@ export default function App() {
       {/* PESTAÑA DE AUDITORÍA HUMANA & BANDEJA PENDIENTE (REGLA DE CARLOS) */}
       {activeTab === 'auditoria' && (
         <section className="py-12 px-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
-          <div className="bg-[#1E1E1E] border border-slate-800 rounded-3xl p-8 space-y-4 shadow-xl">
+          <div className="bg-white border border-[#E5E5E5] rounded-3xl p-8 space-y-4 shadow-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
               <ShieldCheck className="w-4 h-4" />
               Módulo de Cumplimiento de Seguridad — Proyecto 2026-544-11
             </div>
-            <h2 className="text-3xl font-extrabold text-white font-heading">
+            <h2 className="text-3xl font-extrabold text-[#1E1E1E] font-heading">
               Regla no negociable: Aprobación Humana antes de Publicar
             </h2>
-            <blockquote className="p-4 rounded-xl bg-slate-900/90 border-l-4 border-[#E95349] text-sm text-slate-300 italic leading-relaxed">
+            <blockquote className="p-4 rounded-xl bg-white/90 border-l-4 border-[#E95349] text-sm text-[#333333] italic leading-relaxed">
               "Todo el proyecto se construye alrededor de una restricción de seguridad explícita de Carlos: ningún contenido generado por la IA (sitio web, texto, imagen o publicación en redes) se publica de forma automática. Debe existir siempre un estado de 'pendiente de aprobación humana' antes de cualquier publicación real, y quien apruebe debe quedar registrado."
             </blockquote>
 
             <div className="grid sm:grid-cols-3 gap-4 pt-4 text-center">
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="p-4 rounded-xl bg-white border border-[#E5E5E5]">
                 <span className="text-2xl font-extrabold text-amber-400 block">{pendingContents.length}</span>
-                <span className="text-xs text-slate-400 uppercase font-semibold">Pendientes (PENDING)</span>
+                <span className="text-xs text-[#757575] uppercase font-semibold">Pendientes (PENDING)</span>
               </div>
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="p-4 rounded-xl bg-white border border-[#E5E5E5]">
                 <span className="text-2xl font-extrabold text-emerald-400 block">{publishedContent.length}</span>
-                <span className="text-xs text-slate-400 uppercase font-semibold">Aprobados (APPROVED)</span>
+                <span className="text-xs text-[#757575] uppercase font-semibold">Aprobados (APPROVED)</span>
               </div>
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="p-4 rounded-xl bg-white border border-[#E5E5E5]">
                 <span className="text-2xl font-extrabold text-[#E26A69] block">100%</span>
-                <span className="text-xs text-slate-400 uppercase font-semibold">Trazabilidad Humana</span>
+                <span className="text-xs text-[#757575] uppercase font-semibold">Trazabilidad Humana</span>
               </div>
             </div>
           </div>
 
           {/* Bandeja de Contenidos Pendientes de Aprobación */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2 font-heading">
+            <h3 className="text-xl font-bold text-[#1E1E1E] flex items-center gap-2 font-heading">
               <Clock className="w-5 h-5 text-amber-400" />
               Bandeja de Entrada: Propuestas Esperando Validación Humana ({pendingContents.length})
             </h3>
@@ -1732,24 +1732,24 @@ export default function App() {
             {pendingContents.length > 0 ? (
               <div className="space-y-4">
                 {pendingContents.map((item) => (
-                  <div key={item.id} className="p-6 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-4">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-3">
+                  <div key={item.id} className="p-6 rounded-2xl bg-white border border-amber-500/40 space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#E5E5E5] pb-3">
                       <div>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           ESTADO: PENDING
                         </span>
-                        <h4 className="text-lg font-bold text-white mt-1 font-heading">{item.title}</h4>
+                        <h4 className="text-lg font-bold text-[#1E1E1E] mt-1 font-heading">{item.title}</h4>
                       </div>
-                      <span className="text-xs font-mono text-slate-500">ID: #{item.id}</span>
+                      <span className="text-xs font-mono text-[#757575]">ID: #{item.id}</span>
                     </div>
 
-                    <p className="text-sm text-slate-300">{item.body_text}</p>
+                    <p className="text-sm text-[#333333]">{item.body_text}</p>
 
                     {item.content && (
-                      <div className="grid sm:grid-cols-2 gap-4 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <div className="grid sm:grid-cols-2 gap-4 text-xs bg-[#F1F1F1] p-4 rounded-xl border border-[#E5E5E5]">
                         <div>
-                          <strong className="text-slate-400 block mb-1">Copy para Redes:</strong>
-                          <p className="text-slate-300 font-mono line-clamp-3">{item.content.copy_redes}</p>
+                          <strong className="text-[#757575] block mb-1">Copy para Redes:</strong>
+                          <p className="text-[#333333] font-mono line-clamp-3">{item.content.copy_redes}</p>
                         </div>
                         <div>
                           <strong className="text-[#E26A69] block mb-1">Prompt de Arte:</strong>
@@ -1761,7 +1761,7 @@ export default function App() {
                     <div className="pt-2 flex justify-end gap-3">
                       <button
                         onClick={() => handleApprove(item.id, item.content)}
-                        className="px-5 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-2 shadow-md shadow-emerald-600/20"
+                        className="px-5 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-[#1E1E1E] transition flex items-center gap-2 shadow-md shadow-emerald-600/20"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                         Validar y Aprobar con mi Firma ({currentUser.displayName})
@@ -1771,7 +1771,7 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+              <div className="p-8 text-center text-[#757575] border border-dashed border-[#E5E5E5] rounded-2xl">
                 ✓ No hay elementos pendientes de aprobación en este momento.
               </div>
             )}
@@ -1785,7 +1785,7 @@ export default function App() {
           <div className="flex justify-between items-center">
             <button
               onClick={() => setActiveTab('plataforma')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 hover:text-white border border-slate-700 transition"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-[#F1F1F1] text-xs font-bold text-[#333333] hover:text-[#1E1E1E] border border-[#E5E5E5] transition"
             >
               ← Volver al Inicio & Cerebro Digital
             </button>
@@ -1800,16 +1800,16 @@ export default function App() {
       {/* PESTAÑA 4: MANUAL CORPORATIVO & NORMAS GRÁFICAS */}
       {activeTab === 'manual' && (
         <section className="py-12 px-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
-          <div className="bg-[#1E1E1E] border border-slate-800 rounded-3xl p-8 space-y-6 shadow-xl">
+          <div className="bg-white border border-[#E5E5E5] rounded-3xl p-8 space-y-6 shadow-xl">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-xs font-bold text-[#E95349] uppercase tracking-wider">
                   Guía Oficial de Identidad Visual
                 </span>
-                <h2 className="text-3xl font-extrabold text-white mt-1 font-heading">
+                <h2 className="text-3xl font-extrabold text-[#1E1E1E] mt-1 font-heading">
                   Manual Corporativo Merkatics
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-[#757575] mt-1">
                   Social eThinking S.A. de C.V. — Derechos Reservados
                 </p>
               </div>
@@ -1820,15 +1820,15 @@ export default function App() {
 
             {/* Simbología y Significado */}
             <div className="grid md:grid-cols-2 gap-6 pt-4">
-              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                <h4 className="text-base font-bold text-white font-heading">El Símbolo (Antena Emisora)</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
+              <div className="p-5 rounded-2xl bg-white border border-[#E5E5E5] space-y-2">
+                <h4 className="text-base font-bold text-[#1E1E1E] font-heading">El Símbolo (Antena Emisora)</h4>
+                <p className="text-xs text-[#333333] leading-relaxed">
                   Representa una antena emisora de una señal que se expande concéntricamente llevando un mensaje que llega a cumplir con el propósito para el cual fue enviado. Conexión, alcance y telemetría continua.
                 </p>
               </div>
-              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                <h4 className="text-base font-bold text-white font-heading">Tipografías Oficiales</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
+              <div className="p-5 rounded-2xl bg-white border border-[#E5E5E5] space-y-2">
+                <h4 className="text-base font-bold text-[#1E1E1E] font-heading">Tipografías Oficiales</h4>
+                <p className="text-xs text-[#333333] leading-relaxed">
                   <strong>OPEN SANS:</strong> Utilizada en el logo-símbolo y encabezados. Transmite firmeza, tecnología y neutralidad elegante.<br />
                   <strong>ROBOTO:</strong> Utilizada para niveles de lectura, datos y párrafos por su vanguardia y máxima legibilidad.
                 </p>
@@ -1837,7 +1837,7 @@ export default function App() {
 
             {/* Paleta de Colores Institucionales Oficial */}
             <div className="space-y-3">
-              <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+              <h4 className="text-sm font-bold uppercase tracking-wider text-[#757575]">
                 Colores Institucionales (Página 9 & 10 del Manual)
               </h4>
               <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -1849,25 +1849,25 @@ export default function App() {
                   { name: 'Coral medio', hex: '#D64D4D', rgb: '214, 77, 77', tag: 'Acento' },
                   { name: 'Gris neutro', hex: '#757575', rgb: '117, 117, 117', tag: 'Neutro' }
                 ].map((col, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-center">
+                  <div key={i} className="p-3 rounded-xl bg-[#F1F1F1] border border-[#E5E5E5] space-y-2 text-center">
                     <div className="w-full h-12 rounded-lg shadow-md" style={{ backgroundColor: col.hex }}></div>
-                    <span className="text-xs font-bold text-white block">{col.name}</span>
+                    <span className="text-xs font-bold text-[#1E1E1E] block">{col.name}</span>
                     <span className="text-[10px] font-mono text-[#E26A69] block">{col.hex}</span>
-                    <span className="text-[9px] text-slate-500 block">RGB: {col.rgb}</span>
+                    <span className="text-[9px] text-[#757575] block">RGB: {col.rgb}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Directorio de Oficinas Oficial */}
-            <div className="pt-4 border-t border-slate-800 grid md:grid-cols-2 gap-4 text-xs text-slate-300">
+            <div className="pt-4 border-t border-[#E5E5E5] grid md:grid-cols-2 gap-4 text-xs text-[#333333]">
               <div className="space-y-1">
-                <span className="font-bold text-white block">Sede México:</span>
+                <span className="font-bold text-[#1E1E1E] block">Sede México:</span>
                 <p>Benjamin Franklin 3220 5E, Ciudad Juárez, Chih.</p>
                 <p>Tel: (Mx) 656-626-9124</p>
               </div>
               <div className="space-y-1">
-                <span className="font-bold text-white block">Sede Estados Unidos:</span>
+                <span className="font-bold text-[#1E1E1E] block">Sede Estados Unidos:</span>
                 <p>James Watt Dr. 11395 Suite A-13, El Paso, TX</p>
                 <p>Tel: From USA: 915-726-1048</p>
               </div>
@@ -1877,11 +1877,11 @@ export default function App() {
       )}
 
       {/* 5. Footer Institucional Oficial */}
-      <footer className="bg-[#1E1E1E] border-t border-slate-800 py-12 px-6 text-slate-400 text-xs">
+      <footer className="bg-white border-t border-[#E5E5E5] py-12 px-6 text-[#757575] text-xs">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <Logo />
-            <div className="flex flex-wrap gap-6 text-slate-300">
+            <div className="flex flex-wrap gap-6 text-[#333333]">
               <span className="flex items-center gap-1.5">
                 <Phone className="w-4 h-4 text-[#E95349]" />
                 Mx: 656-626-9124 | USA: 915-726-1048
@@ -1893,7 +1893,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500 text-[11px]">
+          <div className="border-t border-[#E5E5E5]/80 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[#757575] text-[11px]">
             <p>
               © 2026 Merkatics — Growth Operating System Todos los derechos reservados.
             </p>
