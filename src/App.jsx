@@ -1365,7 +1365,7 @@ export default function App() {
         <>
           {/* 1. ESTUDIO CENTRAL: CEREBRO DIGITAL - GENERADOR DE SITIOS WEB CON IA */}
           <section id="cerebro-digital" className="relative pt-8 pb-16 px-4 sm:px-6 max-w-6xl mx-auto space-y-8">
-            <div className="bg-white rounded-3xl border border-[#DFE3EC] p-6 sm:p-10 shadow-xl space-y-8 relative overflow-hidden">
+            <div className="bg-white rounded-3xl border border-[#CBD2E0] p-6 sm:p-10 shadow-2xl ring-1 ring-slate-300 space-y-8 relative overflow-hidden">
               
               {/* Resplandor decorativo de fondo */}
               <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#FBEDEC] blur-[100px] rounded-full pointer-events-none"></div>
