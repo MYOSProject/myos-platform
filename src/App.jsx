@@ -57,7 +57,7 @@ function generateSmartProposal(brief, options = {}) {
     } else if (lower.includes('rojo') || lower.includes('vino')) {
       updated.brand_colors = { primary: '#dc2626', secondary: '#991b1b', accent: '#fca5a5' };
     } else if (lower.includes('azul')) {
-      updated.brand_colors = { primary: '#E95349', secondary: '#C6443F', accent: '#E26A69' };
+      updated.brand_colors = { primary: '#E2554F', secondary: '#D14842', accent: '#D14842' };
     }
 
     if (lower.includes('claro') || lower.includes('blanco') || lower.includes('minimal')) {
@@ -105,9 +105,9 @@ function generateSmartProposal(brief, options = {}) {
   let siteName = '';
   let industry = '';
   let tagline = '';
-  let primaryColor = '#E95349';
-  let secondaryColor = '#C6443F';
-  let accentColor = '#E26A69';
+  let primaryColor = '#E2554F';
+  let secondaryColor = '#D14842';
+  let accentColor = '#D14842';
   let hero = null;
   let services = [];
   let about = null;
@@ -525,9 +525,9 @@ function generateSmartProposal(brief, options = {}) {
     siteName = 'Pulse IoT Solutions';
     industry = 'Internet de las Cosas (IoT) & Telemetría Industrial';
     tagline = 'Monitoreo inteligente en tiempo real y automatización para la industria moderna.';
-    primaryColor = '#E95349';
-    secondaryColor = '#C6443F';
-    accentColor = '#E26A69';
+    primaryColor = '#E2554F';
+    secondaryColor = '#D14842';
+    accentColor = '#D14842';
     hero = {
       badge: '🌐 Redes de Sensores en Tiempo Real',
       title: 'Optimice sus Operaciones Industriales con Telemetría IoT',
@@ -571,7 +571,7 @@ function generateSmartProposal(brief, options = {}) {
         hashtags: '#IoT #Industria40 #MonitoreoRemoto #IOTTechnologies #TransformacionDigital'
       }
     };
-    imagePrompt = 'Fotografía publicitaria corporativa de tecnología industrial, sensores conectados emitiendo datos visuales en tonos azul brillante (#E95349) y fondo tecnológico (#1E1E1E), realismo 8k.';
+    imagePrompt = 'Fotografía publicitaria corporativa de tecnología industrial, sensores conectados emitiendo datos visuales en tonos azul brillante (#E2554F) y fondo tecnológico (#1E1E1E), realismo 8k.';
   }
   // 8. Florerías, Flores, Tulipanes y Rosas
   else if (lower.includes('flor') || lower.includes('tulipan') || lower.includes('rosa') || lower.includes('ramo') || lower.includes('arreglo floral')) {
@@ -690,9 +690,9 @@ function generateSmartProposal(brief, options = {}) {
     siteName = dynamicBrand;
     industry = 'Servicios Profesionales & Soluciones a Medida';
     tagline = `Calidad garantizada, atención personalizada y soluciones a tu medida en ${location}.`;
-    primaryColor = '#E95349';
-    secondaryColor = '#C6443F';
-    accentColor = '#E26A69';
+    primaryColor = '#E2554F';
+    secondaryColor = '#D14842';
+    accentColor = '#D14842';
 
     if (lower.includes('rosa') || lower.includes('pastel')) {
       primaryColor = '#db2777'; secondaryColor = '#9d174d'; accentColor = '#fbcfe8';
@@ -782,8 +782,8 @@ function generateSmartProposal(brief, options = {}) {
   // Aplicar colores personalizados o selección de paleta
   if (options.customColors?.primary) {
     primaryColor = options.customColors.primary;
-    secondaryColor = options.customColors.secondary || '#C6443F';
-    accentColor = options.customColors.accent || '#E26A69';
+    secondaryColor = options.customColors.secondary || '#D14842';
+    accentColor = options.customColors.accent || '#D14842';
   } else if (options.colorPalette) {
     const pal = options.colorPalette.toLowerCase();
     if (pal.includes('verde') || pal.includes('059669')) {
@@ -953,7 +953,7 @@ export default function App() {
   // Manejador para cambiar paleta o color primario/secundario en tiempo real
   const handleColorChange = (newPrimary, newSecondary = null) => {
     const primary = newPrimary;
-    const secondary = newSecondary || (newPrimary === '#E95349' ? '#C6443F' : '#0f172a');
+    const secondary = newSecondary || (newPrimary === '#E2554F' ? '#D14842' : '#0f172a');
     setCustomColors({ primary, secondary });
     setProposal((prev) => {
       if (!prev || !prev.content) return prev;
@@ -1259,7 +1259,7 @@ export default function App() {
 
   // APLICACIÓN PRINCIPAL: GENERADOR DE PÁGINAS WEB DESDE CERO CON IA
   return (
-    <div className="min-h-screen bg-[#F1F1F1] text-slate-100 font-sans selection:bg-[#E95349] selection:text-[#1E1E1E]">
+    <div className="min-h-screen bg-[#F1F1F1] text-slate-100 font-sans selection:bg-[#E2554F] selection:text-[#1E1E1E]">
       
       {/* 1. Header & Navegación Institucional Oficial IOT TECHNOLOGIES */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] px-4 sm:px-8 py-3.5 shadow-lg">
@@ -1276,9 +1276,9 @@ export default function App() {
           <nav className="hidden lg:flex items-center space-x-6 text-sm font-semibold text-[#333333]">
             <button
               onClick={() => setActiveTab('plataforma')}
-              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'plataforma' ? 'text-[#E26A69] border-b-2 border-[#E95349]' : 'hover:text-[#1E1E1E]'}`}
+              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'plataforma' ? 'text-[#D14842] border-b-2 border-[#E2554F]' : 'hover:text-[#1E1E1E]'}`}
             >
-              <Sparkles className="w-4 h-4 text-[#E95349]" />
+              <Sparkles className="w-4 h-4 text-[#E2554F]" />
               <span>Generador Web IA</span>
             </button>
             <button
@@ -1293,9 +1293,9 @@ export default function App() {
             </button>
             <button
               onClick={() => setActiveTab('drive')}
-              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'drive' ? 'text-[#E26A69] border-b-2 border-[#E95349]' : 'hover:text-[#1E1E1E]'}`}
+              className={`flex items-center gap-1.5 transition pb-1 cursor-pointer ${activeTab === 'drive' ? 'text-[#D14842] border-b-2 border-[#E2554F]' : 'hover:text-[#1E1E1E]'}`}
             >
-              <FolderTree className="w-4 h-4 text-[#E95349]" />
+              <FolderTree className="w-4 h-4 text-[#E2554F]" />
               <span>Google Drive CMS</span>
             </button>
           </nav>
@@ -1303,7 +1303,7 @@ export default function App() {
           {/* Área de Autenticación / Sesión de Usuario */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2.5 bg-white/90 border border-[#E5E5E5]/80 px-3 py-1.5 rounded-xl shadow-inner">
-              <div className="w-7 h-7 rounded-lg bg-[#E95349] text-[#1E1E1E] flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-lg bg-[#E2554F] text-[#1E1E1E] flex items-center justify-center font-bold text-xs">
                 {currentUser?.displayName ? currentUser.displayName[0].toUpperCase() : 'U'}
               </div>
               <div className="hidden sm:block text-left leading-tight">
@@ -1318,7 +1318,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowAuthModal(true)}
-                  className="ml-1 px-2.5 py-1 text-xs font-bold text-[#E26A69] bg-[#E95349]/25 hover:bg-[#E95349] hover:text-[#1E1E1E] rounded-lg transition border border-[#E95349]/40 flex items-center gap-1"
+                  className="ml-1 px-2.5 py-1 text-xs font-bold text-[#D14842] bg-[#E2554F]/25 hover:bg-[#E2554F] hover:text-[#1E1E1E] rounded-lg transition border border-[#E2554F]/40 flex items-center gap-1"
                 >
                   <LogIn className="w-3 h-3" />
                   Iniciar Sesión
@@ -1341,7 +1341,7 @@ export default function App() {
       <div className="lg:hidden flex items-center justify-around px-4 py-2 bg-white/80 border-b border-[#E5E5E5] text-xs font-semibold">
         <button
           onClick={() => setActiveTab('plataforma')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'plataforma' ? 'bg-[#E95349] text-[#1E1E1E]' : 'text-[#757575]'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'plataforma' ? 'bg-[#E2554F] text-[#1E1E1E]' : 'text-[#757575]'}`}
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>Generador</span>
@@ -1355,7 +1355,7 @@ export default function App() {
         </button>
         <button
           onClick={() => setActiveTab('drive')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'drive' ? 'bg-[#E95349] text-[#1E1E1E]' : 'text-[#757575]'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${activeTab === 'drive' ? 'bg-[#E2554F] text-[#1E1E1E]' : 'text-[#757575]'}`}
         >
           <FolderTree className="w-3.5 h-3.5" />
           <span>Drive</span>
@@ -1369,16 +1369,16 @@ export default function App() {
         <>
           {/* 1. ESTUDIO CENTRAL: CEREBRO DIGITAL - GENERADOR DE SITIOS WEB CON IA */}
           <section id="cerebro-digital" className="relative pt-8 pb-16 px-4 sm:px-6 max-w-6xl mx-auto space-y-8">
-            <div className="bg-gradient-to-b from-[#1E1E1E] via-slate-900 to-slate-950 rounded-3xl border border-[#E95349]/40 p-6 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden">
+            <div className="bg-gradient-to-b from-[#1E1E1E] via-slate-900 to-slate-950 rounded-3xl border border-[#E2554F]/40 p-6 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden">
               
               {/* Resplandor decorativo de fondo */}
-              <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#E95349]/10 blur-[100px] rounded-full pointer-events-none"></div>
+              <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#E2554F]/10 blur-[100px] rounded-full pointer-events-none"></div>
 
               {/* Encabezado del Generador */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#E5E5E5] pb-6 relative z-10">
                 <div>
-                  <div className="inline-flex items-center gap-2 text-xs font-bold text-[#E26A69] uppercase tracking-wider mb-1 px-3 py-1 rounded-full bg-[#E95349]/15 border border-[#E95349]/30">
-                    <Sparkles className="w-4 h-4 text-[#E95349]" />
+                  <div className="inline-flex items-center gap-2 text-xs font-bold text-[#D14842] uppercase tracking-wider mb-1 px-3 py-1 rounded-full bg-[#E2554F]/15 border border-[#E2554F]/30">
+                    <Sparkles className="w-4 h-4 text-[#E2554F]" />
                     <span>Cerebro Digital con IA • Ficha 2026-544-11 (MYOS Platform)</span>
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-black text-[#1E1E1E] font-heading mt-2">
@@ -1406,7 +1406,7 @@ export default function App() {
                 <div className="p-4 sm:p-5 rounded-2xl bg-white/95 border border-[#E5E5E5] space-y-3 shadow-lg">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 border-b border-[#E5E5E5]/80 pb-2.5">
                     <label className="text-xs font-bold text-[#1E1E1E] uppercase tracking-wider flex items-center gap-2">
-                      <Upload className="w-4 h-4 text-[#E26A69]" />
+                      <Upload className="w-4 h-4 text-[#D14842]" />
                       <span>Logotipo de la Página Web (Sube tu Imagen)</span>
                     </label>
                     <span className="text-[11px] text-[#757575]">
@@ -1459,9 +1459,9 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => logoInputMainRef.current?.click()}
-                      className="w-full p-5 rounded-xl border-2 border-dashed border-[#E5E5E5] hover:border-[#E95349] bg-[#F1F1F1]/80 hover:bg-white/60 transition flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
+                      className="w-full p-5 rounded-xl border-2 border-dashed border-[#E5E5E5] hover:border-[#E2554F] bg-[#F1F1F1]/80 hover:bg-white/60 transition flex flex-col items-center justify-center gap-2 text-center group cursor-pointer"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-[#E95349]/10 group-hover:bg-[#E95349]/20 text-[#E26A69] flex items-center justify-center transition">
+                      <div className="w-10 h-10 rounded-xl bg-[#E2554F]/10 group-hover:bg-[#E2554F]/20 text-[#D14842] flex items-center justify-center transition">
                         <Upload className="w-5 h-5 group-hover:scale-110 transition" />
                       </div>
                       <div>
@@ -1480,7 +1480,7 @@ export default function App() {
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-200 flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-[#E26A69]" />
+                      <Sparkles className="w-4 h-4 text-[#D14842]" />
                       <span>Instrucciones para la Inteligencia Artificial (Prompt):</span>
                     </span>
                     <span className="text-xs font-normal text-[#757575]">
@@ -1497,7 +1497,7 @@ export default function App() {
 - ¿Tienes preferencia de colores o estilo? (ej: colores rosa pastel, blanco minimalista, tonos oscuros elegantes, azul corporativo, etc.)
 - ¿Tienes teléfono, WhatsApp, promociones o servicio a domicilio?"
                     rows={5}
-                    className="w-full p-4 rounded-2xl bg-[#F1F1F1] border border-[#E5E5E5] text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E95349] text-sm leading-relaxed"
+                    className="w-full p-4 rounded-2xl bg-[#F1F1F1] border border-[#E5E5E5] text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E2554F] text-sm leading-relaxed"
                   />
                   <span className="text-[11px] text-[#757575] block">
                     Tip: Puedes ser tan específico como quieras con los colores, secciones, ofertas o textos. La IA no copiará tu texto, sino que diseñará el sitio a tu gusto.
@@ -1508,7 +1508,7 @@ export default function App() {
                 <button
                   onClick={() => handleGenerate()}
                   disabled={loading || !brief.trim()}
-                  className="w-full py-4 rounded-2xl font-bold text-[#1E1E1E] bg-gradient-to-r from-[#E95349] via-[#C6443F] to-[#E95349] hover:opacity-95 disabled:from-slate-800 disabled:to-slate-850 disabled:text-slate-600 transition shadow-xl shadow-[#E95349]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
+                  className="w-full py-4 rounded-2xl font-bold text-[#1E1E1E] bg-gradient-to-r from-[#E2554F] via-[#D14842] to-[#E2554F] hover:opacity-95 disabled:from-slate-800 disabled:to-slate-850 disabled:text-slate-600 transition shadow-xl shadow-[#E2554F]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
                 >
                   <Sparkles className="w-5 h-5" />
                   {loading ? '🧠 La Inteligencia Artificial está construyendo tu página web...' : '⚡ Construir Página Web con IA'}
@@ -1516,10 +1516,10 @@ export default function App() {
 
                 {/* Progreso en tiempo real mientras genera */}
                 {loading && (
-                  <div className="p-4 rounded-2xl bg-[#F1F1F1] border border-[#E95349]/40 space-y-3 animate-fadeIn">
+                  <div className="p-4 rounded-2xl bg-[#F1F1F1] border border-[#E2554F]/40 space-y-3 animate-fadeIn">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-[#E26A69] flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#E95349] animate-ping"></span>
+                      <span className="font-bold text-[#D14842] flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#E2554F] animate-ping"></span>
                         {generationStep === 1 && 'Paso 1/5: Interpretando modelo de negocio y audiencia objetivo...'}
                         {generationStep === 2 && 'Paso 2/5: Diseñando paleta visual, tipografía y arquitectura...'}
                         {generationStep === 3 && 'Paso 3/5: Redactando propuestas de valor y copywriting persuasivo...'}
@@ -1530,7 +1530,7 @@ export default function App() {
                     </div>
                     <div className="w-full h-2 rounded-full bg-white overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-[#E95349] to-[#E26A69] transition-all duration-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-[#E2554F] to-[#D14842] transition-all duration-500 rounded-full"
                         style={{ width: `${Math.min(100, Math.max(15, generationStep * 20))}%` }}
                       ></div>
                     </div>
@@ -1568,7 +1568,7 @@ export default function App() {
                 <div className="pt-4 border-t border-[#E5E5E5]/80">
                   <div className="grid md:grid-cols-3 gap-4">
                     <div className="p-5 rounded-2xl bg-[#F1F1F1]/70 border border-[#E5E5E5] space-y-2">
-                      <div className="w-9 h-9 rounded-xl bg-[#E95349]/20 text-[#E26A69] flex items-center justify-center font-bold text-sm">
+                      <div className="w-9 h-9 rounded-xl bg-[#E2554F]/20 text-[#D14842] flex items-center justify-center font-bold text-sm">
                         1
                       </div>
                       <h4 className="font-bold text-[#1E1E1E] text-sm">Describe tu Idea</h4>
@@ -1606,7 +1606,7 @@ export default function App() {
           <section id="servicios" className="py-16 px-6 bg-white/60 border-t border-[#E5E5E5]/80">
             <div className="max-w-6xl mx-auto space-y-10">
               <div className="text-center space-y-2">
-                <span className="text-xs font-bold uppercase tracking-widest text-[#E95349]">
+                <span className="text-xs font-bold uppercase tracking-widest text-[#E2554F]">
                   Manual Corporativo Merkatics
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-[#1E1E1E] font-heading">
@@ -1660,10 +1660,10 @@ export default function App() {
                   return (
                     <div
                       key={index}
-                      className="p-5 rounded-2xl bg-white border border-[#E5E5E5] hover:border-[#E95349]/60 transition group space-y-2"
+                      className="p-5 rounded-2xl bg-white border border-[#E5E5E5] hover:border-[#E2554F]/60 transition group space-y-2"
                     >
                       <div className="flex justify-between items-start">
-                        <div className="w-9 h-9 rounded-xl bg-[#E95349]/15 text-[#E26A69] flex items-center justify-center font-bold">
+                        <div className="w-9 h-9 rounded-xl bg-[#E2554F]/15 text-[#D14842] flex items-center justify-center font-bold">
                           <Icon className="w-4 h-4" />
                         </div>
                         <span className="text-[10px] font-mono font-bold text-[#757575]">{srv.num}</span>
@@ -1702,7 +1702,7 @@ export default function App() {
             <h2 className="text-3xl font-extrabold text-[#1E1E1E] font-heading">
               Regla no negociable: Aprobación Humana antes de Publicar
             </h2>
-            <blockquote className="p-4 rounded-xl bg-white/90 border-l-4 border-[#E95349] text-sm text-[#333333] italic leading-relaxed">
+            <blockquote className="p-4 rounded-xl bg-white/90 border-l-4 border-[#E2554F] text-sm text-[#333333] italic leading-relaxed">
               "Todo el proyecto se construye alrededor de una restricción de seguridad explícita de Carlos: ningún contenido generado por la IA (sitio web, texto, imagen o publicación en redes) se publica de forma automática. Debe existir siempre un estado de 'pendiente de aprobación humana' antes de cualquier publicación real, y quien apruebe debe quedar registrado."
             </blockquote>
 
@@ -1716,7 +1716,7 @@ export default function App() {
                 <span className="text-xs text-[#757575] uppercase font-semibold">Aprobados (APPROVED)</span>
               </div>
               <div className="p-4 rounded-xl bg-white border border-[#E5E5E5]">
-                <span className="text-2xl font-extrabold text-[#E26A69] block">100%</span>
+                <span className="text-2xl font-extrabold text-[#D14842] block">100%</span>
                 <span className="text-xs text-[#757575] uppercase font-semibold">Trazabilidad Humana</span>
               </div>
             </div>
@@ -1752,8 +1752,8 @@ export default function App() {
                           <p className="text-[#333333] font-mono line-clamp-3">{item.content.copy_redes}</p>
                         </div>
                         <div>
-                          <strong className="text-[#E26A69] block mb-1">Prompt de Arte:</strong>
-                          <p className="text-[#E26A69] font-mono line-clamp-3">{item.content.prompt_imagen}</p>
+                          <strong className="text-[#D14842] block mb-1">Prompt de Arte:</strong>
+                          <p className="text-[#D14842] font-mono line-clamp-3">{item.content.prompt_imagen}</p>
                         </div>
                       </div>
                     )}
@@ -1803,7 +1803,7 @@ export default function App() {
           <div className="bg-white border border-[#E5E5E5] rounded-3xl p-8 space-y-6 shadow-xl">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-xs font-bold text-[#E95349] uppercase tracking-wider">
+                <span className="text-xs font-bold text-[#E2554F] uppercase tracking-wider">
                   Guía Oficial de Identidad Visual
                 </span>
                 <h2 className="text-3xl font-extrabold text-[#1E1E1E] mt-1 font-heading">
@@ -1842,17 +1842,17 @@ export default function App() {
               </h4>
               <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {[
-                  { name: 'Coral principal', hex: '#E95349', rgb: '233, 83, 73', tag: 'Principal' },
-                  { name: 'Graphite', hex: '#1E1E1E', rgb: '30, 30, 30', tag: 'Corporativo' },
-                  { name: 'Coral profundo', hex: '#C6443F', rgb: '198, 68, 63', tag: 'Secundario' },
-                  { name: 'Coral suave', hex: '#E26A69', rgb: '226, 106, 105', tag: 'Auxiliar' },
-                  { name: 'Coral medio', hex: '#D64D4D', rgb: '214, 77, 77', tag: 'Acento' },
-                  { name: 'Gris neutro', hex: '#757575', rgb: '117, 117, 117', tag: 'Neutro' }
+                  { name: 'Coral principal', hex: '#E2554F', rgb: '226, 85, 79', tag: 'Principal' },
+                  { name: 'Graphite', hex: '#252B3A', rgb: '37, 43, 58', tag: 'Corporativo' },
+                  { name: 'Coral profundo', hex: '#D14842', rgb: '209, 72, 66', tag: 'Secundario' },
+                  { name: 'Coral suave', hex: '#FBEDEC', rgb: '251, 237, 236', tag: 'Auxiliar' },
+                  { name: 'Coral medio', hex: '#3B6FD9', rgb: '59, 111, 217', tag: 'Acento' },
+                  { name: 'Gris neutro', hex: '#5A6172', rgb: '90, 97, 114', tag: 'Neutro' }
                 ].map((col, i) => (
                   <div key={i} className="p-3 rounded-xl bg-[#F1F1F1] border border-[#E5E5E5] space-y-2 text-center">
                     <div className="w-full h-12 rounded-lg shadow-md" style={{ backgroundColor: col.hex }}></div>
                     <span className="text-xs font-bold text-[#1E1E1E] block">{col.name}</span>
-                    <span className="text-[10px] font-mono text-[#E26A69] block">{col.hex}</span>
+                    <span className="text-[10px] font-mono text-[#D14842] block">{col.hex}</span>
                     <span className="text-[9px] text-[#757575] block">RGB: {col.rgb}</span>
                   </div>
                 ))}
@@ -1883,11 +1883,11 @@ export default function App() {
             <Logo />
             <div className="flex flex-wrap gap-6 text-[#333333]">
               <span className="flex items-center gap-1.5">
-                <Phone className="w-4 h-4 text-[#E95349]" />
+                <Phone className="w-4 h-4 text-[#E2554F]" />
                 Mx: 656-626-9124 | USA: 915-726-1048
               </span>
               <span className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-[#E95349]" />
+                <MapPin className="w-4 h-4 text-[#E2554F]" />
                 Cd. Juárez, Chih. & El Paso, TX
               </span>
             </div>
