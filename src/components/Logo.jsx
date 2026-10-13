@@ -1,9 +1,9 @@
 import React from 'react';
 
 export default function Logo({ className = "h-9", light = false }) {
-  const coral = "#E95349";
+  const coral = "#E2554F";
   const textColor = light ? "#F1F1F1" : "#1E1E1E";
-  const subtextColor = light ? "#E26A69" : "#757575";
+  const subtextColor = light ? "#D14842" : "#757575";
 
   return (
     <div className={`flex items-center gap-2.5 ${className}`} aria-label="Merkatics Growth Operating System">
