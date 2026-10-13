@@ -1,24 +1,79 @@
 @import "tailwindcss";
 
+/*
+ * Merkatics Growth Operating System — design tokens
+ * Based on the supplied Merkatics Design System / Foundations and Responsive guides.
+ */
 :root {
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   color-scheme: light;
-  --merkatic-coral: #E95349;
-  --merkatic-coral-deep: #C6443F;
-  --merkatic-coral-mid: #D64D4D;
-  --merkatic-coral-soft: #E26A69;
-  --merkatic-graphite: #1E1E1E;
-  --merkatic-dark-gray: #333333;
-  --merkatic-gray: #757575;
-  --merkatic-light-gray: #F1F1F1;
-  --iot-primary: var(--merkatic-coral);
-  --iot-black: var(--merkatic-graphite);
-  --iot-deep: var(--merkatic-coral-deep);
-  --iot-cyan: var(--merkatic-coral-soft);
-  --iot-orange: var(--merkatic-coral-mid);
-  --iot-gray: var(--merkatic-gray);
-  background: #FFFFFF;
-  color: var(--merkatic-graphite);
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+
+  --mk-brand: #E2554F;
+  --mk-brand-hover: #D14842;
+  --mk-brand-soft: #FBEDEC;
+  --mk-brand-ink: #252B3A;
+
+  --mk-text: #252B3A;
+  --mk-text-secondary: #3A4256;
+  --mk-text-muted: #5A6172;
+  --mk-text-faint: #8A92A4;
+  --mk-border: #DFE3EC;
+  --mk-border-strong: #C8CEDB;
+  --mk-surface: #FFFFFF;
+  --mk-surface-muted: #F2F4FA;
+  --mk-surface-soft: #F8F9FC;
+  --mk-surface-tint: #EEF0F6;
+  --mk-danger: #C2413A;
+  --mk-success: #18794E;
+  --mk-warning: #9A6700;
+  --mk-info: #3B6FD9;
+
+  --mk-radius-sm: 8px;
+  --mk-radius-md: 12px;
+  --mk-radius-lg: 16px;
+  --mk-radius-xl: 20px;
+  --mk-radius-pill: 999px;
+
+  --mk-shadow-1: 0 1px 2px rgba(20, 24, 36, .05);
+  --mk-shadow-2: 0 4px 12px rgba(20, 24, 36, .07);
+  --mk-shadow-3: 0 12px 30px rgba(20, 24, 36, .10);
+
+  --merkatic-coral: var(--mk-brand);
+  --merkatic-coral-deep: var(--mk-brand-hover);
+  --merkatic-coral-mid: var(--mk-brand-hover);
+  --merkatic-coral-soft: var(--mk-brand-soft);
+  --merkatic-graphite: var(--mk-text);
+  --merkatic-dark-gray: var(--mk-text-secondary);
+  --merkatic-gray: var(--mk-text-muted);
+  --merkatic-light-gray: var(--mk-surface-muted);
+
+  --iot-primary: var(--mk-brand);
+  --iot-black: var(--mk-text);
+  --iot-deep: var(--mk-brand-hover);
+  --iot-cyan: var(--mk-brand-soft);
+  --iot-orange: var(--mk-brand-hover);
+  --iot-gray: var(--mk-text-muted);
+
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 17px;
+  --font-sans: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-h1: 700 36px/1.2 "Open Sans", Arial, sans-serif;
+  --font-h2: 700 30px/1.25 "Open Sans", Arial, sans-serif;
+  --font-h3: 700 24px/1.3 "Open Sans", Arial, sans-serif;
+  --font-h4: 700 16px/1.35 "Open Sans", Arial, sans-serif;
+  --font-body-lg: 400 17px/1.6 var(--font-sans);
+  --font-body: 400 14px/1.55 var(--font-sans);
+  --font-body-sm: 400 13px/1.5 var(--font-sans);
+  --font-label: 700 12px/1.2 var(--font-sans);
+  --font-code: 500 13px/1.35 var(--font-mono);
+
+  background: var(--mk-surface-soft);
+  color: var(--mk-text);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -26,20 +81,121 @@
 }
 
 * { box-sizing: border-box; }
-html, body, #root { min-width: 320px; min-height: 100%; background: #FFFFFF; }
-body { margin: 0; min-height: 100vh; font-family: inherit; color: var(--merkatic-graphite); }
+html, body, #root {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--mk-surface-soft);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--mk-text);
+  font-size: 14px;
+  line-height: 1.55;
+}
 button, input, textarea, select { font: inherit; }
-button { transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease; }
+button { transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-  outline: 2px solid var(--merkatic-coral);
+  outline: 2px solid var(--mk-brand);
   outline-offset: 3px;
 }
-::selection { background: rgba(233, 83, 73, .2); color: #1E1E1E; }
-h1, h2, h3, h4, .font-heading { font-family: 'Open Sans', 'Arial', sans-serif; }
+::selection { background: rgba(226, 85, 79, .18); color: var(--mk-text); }
+h1, h2, h3, h4, h5, h6, .font-heading { font-family: "Open Sans", Arial, sans-serif; color: var(--mk-text); }
+p { text-wrap: pretty; }
+a { color: var(--mk-brand-hover); }
 
-/* White-first Merkatics surfaces; coral is reserved for emphasis and actions. */
-.bg-slate-950, .bg-slate-900, .bg-slate-800 { background-color: #FFFFFF !important; }
-.text-white { color: #1E1E1E !important; }
-.text-slate-300 { color: #333333 !important; }
-.text-slate-400, .text-slate-500 { color: #757575 !important; }
-.border-slate-800, .border-slate-700 { border-color: #E5E5E5 !important; }
+/* Legacy utility classes are intentionally normalized so older screens adopt the
+   system without replacing their React state, handlers, or application workflows. */
+.bg-slate-950, .bg-slate-900, .bg-slate-800 { background-color: var(--mk-surface) !important; }
+.text-white { color: var(--mk-text) !important; }
+.text-slate-300 { color: var(--mk-text-secondary) !important; }
+.text-slate-400, .text-slate-500 { color: var(--mk-text-muted) !important; }
+.border-slate-800, .border-slate-700 { border-color: var(--mk-border) !important; }
+
+/* Surfaces / cards */
+[class*="rounded-3xl"], [class*="rounded-2xl"] {
+  box-shadow: var(--mk-shadow-1);
+}
+.bg-white {
+  background-color: var(--mk-surface) !important;
+}
+[class*="border-[#E5E5E5]"], [class*="border-[#DFE3EC]"] {
+  border-color: var(--mk-border) !important;
+}
+[class*="shadow-xl"] { box-shadow: var(--mk-shadow-2) !important; }
+[class*="shadow-2xl"] { box-shadow: var(--mk-shadow-3) !important; }
+
+/* Buttons: keep semantic status colors, standardize shape, weight and focus. */
+button, [role="button"] {
+  font-weight: 600;
+}
+button[class*="rounded-xl"], button[class*="rounded-2xl"],
+a[class*="rounded-xl"], a[class*="rounded-2xl"] {
+  border-radius: var(--mk-radius-md);
+}
+button[class*="bg-[#E2554F]"], a[class*="bg-[#E2554F]"],
+button[class*="bg-[#E95349]"], a[class*="bg-[#E95349]"] {
+  background-color: var(--mk-brand) !important;
+  color: #FFFFFF !important;
+}
+button[class*="bg-[#E2554F]"]:hover, a[class*="bg-[#E2554F]"]:hover,
+button[class*="bg-[#E95349]"]:hover, a[class*="bg-[#E95349]"]:hover {
+  background-color: var(--mk-brand-hover) !important;
+}
+
+/* Inputs / controls */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea, select {
+  color: var(--mk-text);
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea, select {
+  border-color: var(--mk-border-strong);
+  border-radius: var(--mk-radius-md);
+}
+input::placeholder, textarea::placeholder { color: var(--mk-text-faint); }
+input:focus, textarea:focus, select:focus {
+  border-color: var(--mk-brand) !important;
+  box-shadow: 0 0 0 3px rgba(226, 85, 79, .12);
+}
+
+/* Common app shell spacing and readable content widths */
+main { min-width: 0; }
+img, svg { max-width: 100%; }
+:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: .65; }
+
+/* Motion-safe transitions */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Merkatics responsive type and spacing ramp */
+@media (max-width: 1023px) {
+  .max-w-6xl { max-width: 100%; }
+}
+@media (max-width: 639px) {
+  :root {
+    --text-2xs: 11px;
+    --text-xs: 12px;
+    --text-sm: 13px;
+    --text-base: 15px;
+    --text-md: 16px;
+    --text-lg: 17px;
+    --font-body-lg: 400 var(--text-lg)/1.6 var(--font-sans);
+    --font-body: 400 var(--text-base)/1.55 var(--font-sans);
+    --font-body-sm: 400 var(--text-sm)/1.5 var(--font-sans);
+    --font-label: 700 var(--text-xs)/1.2 var(--font-sans);
+    --font-code: 500 var(--text-sm)/1.35 var(--font-mono);
+    --font-h4: 700 var(--text-md)/1.35 var(--font-sans);
+  }
+  body { font-size: 15px; }
+  h1 { font-size: 1.75rem; line-height: 1.2; }
+  h2 { font-size: 1.5rem; line-height: 1.25; }
+  h3 { font-size: 1.25rem; line-height: 1.3; }
+}
