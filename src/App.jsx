@@ -871,14 +871,8 @@ function generateSmartProposal(brief, options = {}) {
 }
 
 export default function App() {
-  // Estado de usuario y Auth (con sesión activa por defecto para permitir acceso inmediato al generador de páginas web con IA)
-  const [currentUser, setCurrentUser] = useState({
-    uid: 'evaluador-carlos',
-    email: 'carlos.torres@iottechnologies.mx',
-    displayName: 'Carlos Torres (Evaluador)',
-    role: 'Aprobador Humano & Creador',
-    isDefaultSession: true
-  });
+  // La aplicación inicia siempre sin sesión; Firebase solo activa un usuario si ya existe una autenticación válida.
+  const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Prompt inicial por defecto para demostración inmediata
@@ -1032,6 +1026,8 @@ export default function App() {
           role: 'Aprobador Humano (Audit Trail)',
           isDefaultSession: false
         });
+      } else {
+        setCurrentUser(null);
       }
     });
     return () => unsubscribe();
@@ -1310,26 +1306,26 @@ export default function App() {
                 <span className="text-xs font-bold text-[#1E1E1E] block truncate max-w-[130px]">
                   {currentUser?.displayName || 'Usuario'}
                 </span>
-                <span className="text-[10px] text-emerald-400 font-semibold block flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 inline" /> {currentUser?.isDefaultSession ? 'Sesión Activa' : 'Auditor Conectado'}
+                <span className="text-[10px] text-[#18794E] font-semibold block flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 inline" /> {currentUser ? 'Auditor Conectado' : 'Sin sesión iniciada'}
                 </span>
               </div>
-              {currentUser?.isDefaultSession ? (
-                <button
-                  type="button"
-                  onClick={() => setShowAuthModal(true)}
-                  className="ml-1 px-2.5 py-1 text-xs font-bold text-[#D14842] bg-[#E2554F]/25 hover:bg-[#E2554F] hover:text-[#1E1E1E] rounded-lg transition border border-[#E2554F]/40 flex items-center gap-1"
-                >
-                  <LogIn className="w-3 h-3" />
-                  Iniciar Sesión
-                </button>
-              ) : (
+              {currentUser ? (
                 <button
                   onClick={handleSignOut}
                   title="Cerrar Sesión"
-                  className="p-1.5 text-[#757575] hover:text-red-400 rounded-lg hover:bg-[#F1F1F1] transition"
+                  className="p-1.5 text-[#5A6172] hover:text-red-600 rounded-lg hover:bg-[#FBEDEC] transition"
                 >
                   <LogOut className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(true)}
+                  className="ml-1 px-2.5 py-1 text-xs font-bold text-white bg-[#E2554F] hover:bg-[#D14842] rounded-lg transition border border-[#E2554F] flex items-center gap-1"
+                >
+                  <LogIn className="w-3 h-3" />
+                  Iniciar Sesión
                 </button>
               )}
             </div>
@@ -1369,10 +1365,10 @@ export default function App() {
         <>
           {/* 1. ESTUDIO CENTRAL: CEREBRO DIGITAL - GENERADOR DE SITIOS WEB CON IA */}
           <section id="cerebro-digital" className="relative pt-8 pb-16 px-4 sm:px-6 max-w-6xl mx-auto space-y-8">
-            <div className="bg-gradient-to-b from-[#1E1E1E] via-slate-900 to-slate-950 rounded-3xl border border-[#E2554F]/40 p-6 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden">
+            <div className="bg-white rounded-3xl border border-[#DFE3EC] p-6 sm:p-10 shadow-xl space-y-8 relative overflow-hidden">
               
               {/* Resplandor decorativo de fondo */}
-              <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#E2554F]/10 blur-[100px] rounded-full pointer-events-none"></div>
+              <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#FBEDEC] blur-[100px] rounded-full pointer-events-none"></div>
 
               {/* Encabezado del Generador */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#E5E5E5] pb-6 relative z-10">
@@ -1390,11 +1386,11 @@ export default function App() {
                 </div>
 
                 <div className="text-right sm:self-start">
-                  <span className="px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold inline-block">
+                  <span className="px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold inline-block">
                     Aprobación Humana Obligatoria
                   </span>
                   <span className="text-[10px] text-[#757575] mt-1 block">
-                    Auditor: <strong className="text-slate-200">{currentUser?.displayName}</strong>
+                    Auditor: <strong className="text-[#252B3A]">{currentUser?.displayName || 'Sin sesión iniciada'}</strong>
                   </span>
                 </div>
               </div>
