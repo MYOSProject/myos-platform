@@ -8,21 +8,21 @@
   color-scheme: light;
   font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 
-  --mk-brand: #E2554F;
-  --mk-brand-hover: #D14842;
-  --mk-brand-soft: #FBEDEC;
-  --mk-brand-ink: #252B3A;
+  --mk-brand: #E95349;
+  --mk-brand-hover: #C6443F;
+  --mk-brand-soft: #FFF1F0;
+  --mk-brand-ink: #1E1E1E;
 
-  --mk-text: #252B3A;
-  --mk-text-secondary: #3A4256;
-  --mk-text-muted: #5A6172;
-  --mk-text-faint: #8A92A4;
-  --mk-border: #DFE3EC;
-  --mk-border-strong: #C8CEDB;
+  --mk-text: #1E1E1E;
+  --mk-text-secondary: #1E1E1E;
+  --mk-text-muted: #757575;
+  --mk-text-faint: #757575;
+  --mk-border: #F1F1F1;
+  --mk-border-strong: #E4E4E4;
   --mk-surface: #FFFFFF;
-  --mk-surface-muted: #F2F4FA;
-  --mk-surface-soft: #F8F9FC;
-  --mk-surface-tint: #EEF0F6;
+  --mk-surface-muted: #FFFFFF;
+  --mk-surface-soft: #FFFFFF;
+  --mk-surface-tint: #FFFFFF;
   --mk-danger: #C2413A;
   --mk-success: #18794E;
   --mk-warning: #9A6700;
@@ -242,4 +242,84 @@ textarea::placeholder, input::placeholder { color: #737B8C !important; opacity: 
 [class*="bg-black"], [class*="bg-slate-950"], [class*="bg-slate-900"],
 [class*="bg-gray-950"], [class*="bg-gray-900"], [class*="bg-zinc-950"], [class*="bg-zinc-900"] {
   background-color: #FFFFFF !important;
+}
+
+
+/* MYOS / Merkatics brand lock: white canvas everywhere, coral-red accents only.
+   Palette: #E95349, #C6443F, #D64D4D, #E26A69, #1E1E1E, #757575, #F1F1F1. */
+:root {
+  color-scheme: light !important;
+  --mk-brand: #E95349;
+  --mk-brand-hover: #C6443F;
+  --mk-brand-soft: #FFF1F0;
+  --mk-brand-ink: #1E1E1E;
+  --mk-text: #1E1E1E;
+  --mk-text-secondary: #1E1E1E;
+  --mk-text-muted: #757575;
+  --mk-text-faint: #757575;
+  --mk-border: #F1F1F1;
+  --mk-border-strong: #E4E4E4;
+  --mk-surface: #FFFFFF;
+  --mk-surface-muted: #FFFFFF;
+  --mk-surface-soft: #FFFFFF;
+  --mk-surface-tint: #FFFFFF;
+}
+html, body, #root, body > #root, main, header, nav, aside, section, article,
+footer, form, [role="main"] {
+  background-color: #FFFFFF;
+  color: #1E1E1E;
+}
+html, body, #root { background: #FFFFFF !important; color: #1E1E1E !important; }
+.bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-slate-700,
+.bg-gray-950, .bg-gray-900, .bg-gray-800, .bg-zinc-950, .bg-zinc-900,
+.bg-neutral-950, .bg-neutral-900, .bg-black,
+[class*="bg-[#F8F9FC]"], [class*="bg-[#F2F4FA]"], [class*="bg-[#EEF0F6]"],
+[class*="bg-slate-950/"], [class*="bg-slate-900/"], [class*="bg-slate-800/"],
+[class*="bg-black/"], [class*="bg-gray-900/"], [class*="bg-zinc-900/"] {
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+}
+[class*="bg-[#1d7eae]"], [class*="bg-[#0032a0]"],
+[class*="bg-blue-"], [class*="bg-sky-"], [class*="bg-cyan-"],
+[class*="from-blue-"], [class*="to-blue-"], [class*="via-blue-"],
+[class*="from-emerald-"], [class*="to-emerald-"], [class*="via-emerald-"],
+[class*="from-teal-"], [class*="to-teal-"], [class*="via-teal-"] {
+  background-color: #E95349 !important;
+  background-image: none !important;
+  border-color: #C6443F !important;
+}
+button[class*="bg-gradient-to-r"], a[class*="bg-gradient-to-r"],
+button[class*="from-"], a[class*="from-"] {
+  background-color: #E95349 !important;
+  background-image: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important;
+  color: #FFFFFF !important;
+}
+[class*="text-[#98dae9]"], [class*="text-[#1d7eae]"],
+[class*="text-blue-"], [class*="text-sky-"], [class*="text-cyan-"],
+[class*="text-teal-"] {
+  color: #C6443F !important;
+}
+[class*="border-[#1d7eae]"], [class*="border-[#0032a0]"],
+[class*="border-blue-"], [class*="border-sky-"], [class*="border-cyan-"] {
+  border-color: #F1F1F1 !important;
+}
+[class*="bg-emerald-"], [class*="bg-green-"] {
+  background-color: #FFF1F0 !important;
+}
+[class*="text-emerald-"], [class*="text-green-"] {
+  color: #C6443F !important;
+}
+[class*="border-emerald-"], [class*="border-green-"] {
+  border-color: #F1F1F1 !important;
+}
+[class*="text-white"], .text-white { color: #1E1E1E !important; }
+button[class*="bg-[#E95349]"], button[class*="bg-[#C6443F]"],
+button[class*="bg-gradient-to-r"], a[class*="bg-gradient-to-r"],
+button[class*="bg-[#1d7eae]"], a[class*="bg-[#1d7eae]"] {
+  color: #FFFFFF !important;
+}
+input, textarea, select, [role="textbox"] {
+  background-color: #FFFFFF !important;
+  color: #1E1E1E !important;
+  border-color: #F1F1F1 !important;
 }
