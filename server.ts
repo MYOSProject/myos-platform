@@ -222,8 +222,8 @@ const contents: ContentItem[] = [
 
 // Helper: Generador de página web completa autónoma en HTML5 + Tailwind CSS
 export function generateStandaloneHtml(site: GeneratedWebsite): string {
-  const primary = site.brand_colors?.primary || '#1d7eae';
-  const secondary = site.brand_colors?.secondary || '#0032a0';
+  const primary = site.brand_colors?.primary || '#E95349';
+  const secondary = site.brand_colors?.secondary || '#C6443F';
   const siteName = site.site_name || site.titulo || 'Mi Negocio';
   const tagline = site.tagline || 'Soluciones de Alta Conversión';
 
@@ -275,16 +275,36 @@ export function generateStandaloneHtml(site: GeneratedWebsite): string {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F8F9FC !important; color: #252B3A !important; }
+    :root { color-scheme: light; }
+    html, body { font-family: 'Plus Jakarta Sans', sans-serif !important; background: #FFFFFF !important; color: #1E1E1E !important; }
+    body, header, main, section, article, footer, nav, form,
     .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-slate-700,
-    [class*="bg-slate-900/"], [class*="bg-slate-950/"] { background-color: #FFFFFF !important; }
-    .text-white, .text-slate-100, .text-slate-200 { color: #252B3A !important; }
-    .text-slate-300 { color: #3A4256 !important; }
-    .text-slate-400, .text-slate-500 { color: #5A6172 !important; }
-    .border-slate-800, .border-slate-700 { border-color: #DFE3EC !important; }
-    input, textarea, select { background: #FFFFFF !important; color: #252B3A !important; border-color: #C8CEDB !important; }
-    input::placeholder, textarea::placeholder { color: #737B8C !important; opacity: 1; }
+    [class*="bg-slate-900/"], [class*="bg-slate-950/"], [class*="bg-black"],
+    [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"] {
+      background-color: #FFFFFF !important;
+      background-image: none !important;
+    }
+    .text-white, .text-slate-100, .text-slate-200, .text-slate-300,
+    .text-slate-400, .text-slate-500, h1, h2, h3, h4, p, span, label, li {
+      color: #1E1E1E !important;
+    }
+    .text-emerald-400, .text-emerald-500, .text-blue-400, .text-cyan-400 {
+      color: #C6443F !important;
+    }
+    .border-slate-800, .border-slate-700, [class*="border-slate-"] {
+      border-color: #F1F1F1 !important;
+    }
+    a[style*="linear-gradient"], button[style*="linear-gradient"],
+    [style*="background: linear-gradient"], [style*="background:linear-gradient"] {
+      background: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important;
+      color: #FFFFFF !important;
+      border-color: #C6443F !important;
+    }
+    a[style*="linear-gradient"] *, button[style*="linear-gradient"] * { color: #FFFFFF !important; }
     a, button { text-shadow: none !important; }
+    input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border: 1px solid #E4E4E4 !important; }
+    input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
+    .bg-emerald-500, .hover\\:bg-emerald-600:hover { background-color: #E95349 !important; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased selection:bg-[#1d7eae] selection:text-white">
