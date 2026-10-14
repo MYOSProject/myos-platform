@@ -226,3 +226,20 @@ button[class*="bg-[#E2554F]"], a[class*="bg-[#E2554F]"],
 button[class*="bg-[#D14842]"], a[class*="bg-[#D14842]"] { color: #FFFFFF !important; }
 input, textarea, select { background-color: #FFFFFF; color: #252B3A !important; }
 input::placeholder, textarea::placeholder { color: #737B8C !important; opacity: 1; }
+
+/* Merkatics final contrast fixes for the remaining generator and sign-in controls. */
+button.bg-gradient-to-r,
+button[class*="bg-gradient-to-r"] { color: #FFFFFF !important; }
+button.bg-gradient-to-r:disabled,
+button[class*="bg-gradient-to-r"]:disabled { color: #252B3A !important; }
+textarea, input, select,
+[role="textbox"] {
+  background: #FFFFFF !important;
+  color: #252B3A !important;
+  border-color: #DFE3EC !important;
+}
+textarea::placeholder, input::placeholder { color: #737B8C !important; opacity: 1 !important; }
+[class*="bg-black"], [class*="bg-slate-950"], [class*="bg-slate-900"],
+[class*="bg-gray-950"], [class*="bg-gray-900"], [class*="bg-zinc-950"], [class*="bg-zinc-900"] {
+  background-color: #FFFFFF !important;
+}
