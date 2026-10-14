@@ -1458,7 +1458,7 @@ app.post(['/api/site/render-html', '/api/site/render-html/'], (req, res) => {
 
 // PUT /api/content/:id para guardar modificaciones de textos o fotos
 app.put(['/api/content/:id', '/api/content/:id/'], (req, res) => {
-  const paramId = req.params.id;
+  const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(paramId, 10);
   let item = contents.find(c => c.id === id || String(c.id) === String(paramId));
   
