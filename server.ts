@@ -1380,49 +1380,46 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
   });
 });
 
-// POST /api/approve/:id or /api/approve/:id/
+// POST /api/approve/:id — requires explicit human identity and a pending record.
+// TODO(production): verify the Firebase ID token server-side before trusting identity fields.
 app.post(['/api/approve/:id', '/api/approve/:id/'], (req, res) => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
-  const approverEmail = req.body?.approverEmail || 'carlos.torres@iottechnologies.mx';
-  const approverName = req.body?.approverName || 'Aprobador Corporativo';
+  const approverEmail = typeof req.body?.approverEmail === 'string' ? req.body.approverEmail.trim() : '';
+  const approverName = typeof req.body?.approverName === 'string' ? req.body.approverName.trim() : '';
 
-  let item = contents.find(c => c.id === id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Identificador de contenido inválido.' });
+  }
+  if (!approverEmail || !approverName) {
+    return res.status(401).json({ error: 'Debes iniciar sesión para registrar una aprobación humana.' });
+  }
+
+  const item = contents.find(c => c.id === id);
   if (!item) {
-    // Si la propuesta fue creada en cliente, la persistimos directamente en el backend
-    const prop = req.body?.proposalData || {};
-    item = {
-      id,
-      title: prop.site_name || prop.titulo || `Sitio Web #${id}`,
-      slug: `sitio-${id}`,
-      category: 'PÁGINA WEB / REDES',
-      status: 'APPROVED',
-      body_text: prop.resumen_web || 'Sitio web aprobado',
-      created_at: new Date().toISOString(),
-      approved_at: new Date().toISOString(),
-      approved_by: approverName,
-      approved_by_email: approverEmail,
-      content: prop
-    };
-    contents.unshift(item);
-  } else {
-    // Regla no negociable: registrar explícitamente quién aprobó y en qué fecha
-    item.status = 'APPROVED';
-    item.approved_at = new Date().toISOString();
-    item.approved_by = approverName;
-    item.approved_by_email = approverEmail;
+    return res.status(404).json({ error: 'La propuesta no existe en el servidor. No se puede aprobar una propuesta no registrada.' });
+  }
+  if (item.status !== 'PENDING') {
+    return res.status(409).json({ error: 'Solo se puede aprobar contenido en estado PENDING.', status: item.status });
+  }
 
-    if (req.body?.proposalData) {
-      item.content = req.body.proposalData;
-      item.title = req.body.proposalData.site_name || req.body.proposalData.titulo || item.title;
-      item.body_text = req.body.proposalData.resumen_web || item.body_text;
-    } else if (item.content?.resumen_web) {
-      item.body_text = item.content.resumen_web;
-      item.title = item.content.titulo;
-    }
+  // Registrar quién aprobó y cuándo. La aprobación no publica por sí misma en redes sociales.
+  const approvedAt = new Date().toISOString();
+  item.status = 'APPROVED';
+  item.approved_at = approvedAt;
+  item.approved_by = approverName;
+  item.approved_by_email = approverEmail;
+
+  if (req.body?.proposalData) {
+    item.content = req.body.proposalData;
+    item.title = req.body.proposalData.site_name || req.body.proposalData.titulo || item.title;
+    item.body_text = req.body.proposalData.resumen_web || item.body_text;
+  } else if (item.content?.resumen_web) {
+    item.body_text = item.content.resumen_web;
+    item.title = item.content.titulo || item.title;
   }
 
   return res.json({
-    message: 'Contenido aprobado con éxito y registrado en auditoría.',
+    message: 'Aprobación humana registrada. La publicación sigue siendo una acción separada.',
     status: 'APPROVED',
     item
   });
