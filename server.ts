@@ -3,6 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { timingSafeEqual } from 'node:crypto';
 
 dotenv.config({ override: true });
 
@@ -1390,7 +1391,7 @@ app.get(['/api/drive/files', '/api/drive/files/'], async (req, res) => {
   const supplied = Buffer.from(suppliedToken);
   const tokenMatches = expected.length > 0 &&
     expected.length === supplied.length &&
-    require('node:crypto').timingSafeEqual(expected, supplied);
+    timingSafeEqual(expected, supplied);
 
   if (!tokenMatches) {
     return res.status(401).json({ error: 'No autorizado.' });
