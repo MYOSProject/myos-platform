@@ -1136,18 +1136,25 @@ export default function App() {
     setLoading(false);
   };
 
-  // 2. Aprobar Propuesta (Regla No Negociable de Carlos: PENDING -> APPROVED con registro humano)
+  // La aprobación requiere una sesión humana y confirmación del servidor.
   const handleApprove = async (proposalId = null, proposalData = null) => {
     const targetId = proposalId || proposal?.id;
     const targetContent = proposalData || proposal?.content;
-    if (!targetId) return;
 
-    const approverName = currentUser?.displayName || 'Carlos Torres (Sales Consultant)';
-    const approverEmail = currentUser?.email || 'Carlos.Torres@iottechnologies.mx';
-    const nowIso = new Date().toISOString();
+    if (!targetId) {
+      setErrorMessage('No se encontró la propuesta que quieres aprobar.');
+      return;
+    }
+    if (!currentUser?.email) {
+      setErrorMessage('Inicia sesión con una cuenta autorizada antes de aprobar contenido.');
+      return;
+    }
+
+    const approverName = currentUser.displayName?.trim() || currentUser.email;
+    const approverEmail = currentUser.email;
 
     try {
-      await fetch(`${BACKEND_URL}/approve/${targetId}/`, {
+      const response = await fetch(`${BACKEND_URL}/approve/${targetId}/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1156,33 +1163,36 @@ export default function App() {
           proposalData: targetContent
         })
       });
-    } catch (e) {
-      console.warn('Aprobación sincronizada localmente:', e);
-    }
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'El servidor no pudo registrar la aprobación.');
+      }
 
-    setApprovedSuccess(true);
-    const approvedItem = {
-      id: targetId,
-      title: targetContent?.site_name || targetContent?.titulo || 'Sitio Web Aprobado',
-      body_text: targetContent?.resumen_web || targetContent?.about?.content || 'Sitio web profesional aprobado',
-      category: 'PÁGINA WEB / REDES',
-      status: 'APPROVED',
-      approved_by: approverName,
-      approved_by_email: approverEmail,
-      approved_at: nowIso,
-      content: targetContent
-    };
+      const approvedItem = result.item || {
+        id: targetId,
+        title: targetContent?.site_name || targetContent?.titulo || 'Sitio Web Aprobado',
+        body_text: targetContent?.resumen_web || targetContent?.about?.content || 'Sitio web profesional aprobado',
+        category: 'PÁGINA WEB / REDES',
+        status: 'APPROVED',
+        approved_by: approverName,
+        approved_by_email: approverEmail,
+        approved_at: new Date().toISOString(),
+        content: targetContent
+      };
 
-    setLastApprovedInfo(approvedItem);
-    setShowCelebrationModal(true);
-
-    if (targetContent) {
+      setApprovedSuccess(true);
+      setErrorMessage('');
+      setLastApprovedInfo(approvedItem);
+      setShowCelebrationModal(true);
       setPublishedContent((prev) => [
         approvedItem,
         ...prev.filter(item => item.id !== targetId)
       ]);
+      await loadContents();
+    } catch (e) {
+      console.error('No se pudo registrar la aprobación:', e);
+      setErrorMessage(e.message || 'No se pudo registrar la aprobación. Inténtalo de nuevo.');
     }
-    loadContents();
   };
 
   // Abrir cualquier sitio web aprobado en una pestaña nueva del navegador
