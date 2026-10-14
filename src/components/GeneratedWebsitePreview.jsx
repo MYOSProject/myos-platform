@@ -44,8 +44,8 @@ import {
 import EditContentModal from './EditContentModal';
 
 function buildHtmlFallback(site) {
-  const primary = site?.brand_colors?.primary || '#1d7eae';
-  const secondary = site?.brand_colors?.secondary || '#0032a0';
+  const primary = site?.brand_colors?.primary || '#E95349';
+  const secondary = site?.brand_colors?.secondary || '#C6443F';
   const siteName = site?.site_name || site?.titulo || 'Mi Negocio';
   const tagline = site?.tagline || 'Solución de Alta Conversión';
   const customLogo = site?.custom_logo || null;
@@ -88,7 +88,21 @@ function buildHtmlFallback(site) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style> body { font-family: 'Plus Jakarta Sans', sans-serif; } </style>
+  <style>
+    :root { color-scheme: light; }
+    html, body { font-family: 'Plus Jakarta Sans', sans-serif !important; background: #FFFFFF !important; color: #1E1E1E !important; }
+    body, header, main, section, article, footer, nav, form,
+    [class*="bg-slate-"], [class*="bg-gray-900"], [class*="bg-black"],
+    [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"] {
+      background-color: #FFFFFF !important; background-image: none !important;
+    }
+    .text-white, [class*="text-slate-"], [class*="text-gray-"] { color: #1E1E1E !important; }
+    [style*="linear-gradient"] { background: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important; color: #FFFFFF !important; }
+    [style*="linear-gradient"] * { color: #FFFFFF !important; }
+    [class*="border-slate-"], [class*="border-gray-"] { border-color: #F1F1F1 !important; }
+    input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border-color: #E4E4E4 !important; }
+    input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
+  </style>
 </head>
 <body class="bg-white text-[#252B3A] antialiased selection:bg-[#E2554F] selection:text-[#252B3A]">
   <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#DFE3EC]/80">
