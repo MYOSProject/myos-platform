@@ -274,6 +274,37 @@ export function generateStandaloneHtml(site: GeneratedWebsite): string {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style id="myos-light-brand-theme">
+    :root { color-scheme: light; }
+    html, body { background: #FFFFFF !important; color: #1E1E1E !important; }
+    body, header, main, section, article, footer, nav, form, aside,
+    [class*="bg-slate-"], [class*="bg-gray-900"], [class*="bg-gray-800"],
+    [class*="bg-black"], [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"] {
+      background-color: #FFFFFF !important;
+      background-image: none !important;
+    }
+    .text-white, [class*="text-slate-"], [class*="text-gray-"] {
+      color: #1E1E1E !important;
+    }
+    h1, h2, h3, h4, p, span, label, li, strong { text-shadow: none !important; }
+    [class*="border-slate-"], [class*="border-gray-"] { border-color: #F1F1F1 !important; }
+    a[style*="linear-gradient"], button[style*="linear-gradient"],
+    [style*="background: linear-gradient"], [style*="background:linear-gradient"] {
+      background: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important;
+      color: #FFFFFF !important;
+      border-color: #C6443F !important;
+    }
+    a[style*="linear-gradient"] *, button[style*="linear-gradient"] * { color: #FFFFFF !important; }
+    [class*="bg-emerald-"], [class*="bg-red-"], [class*="bg-[#E95349]"], [class*="bg-[#C6443F]"] {
+      background-color: #E95349 !important;
+      background-image: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important;
+      color: #FFFFFF !important;
+    }
+    [class*="bg-emerald-"] *, [class*="bg-red-"] *, [class*="bg-[#E95349]"] *, [class*="bg-[#C6443F]"] * { color: #FFFFFF !important; }
+    input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border: 1px solid #E4E4E4 !important; }
+    input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
+  </style>
+
   <style>
     :root { color-scheme: light; }
     html, body { font-family: 'Plus Jakarta Sans', sans-serif !important; background: #FFFFFF !important; color: #1E1E1E !important; }
