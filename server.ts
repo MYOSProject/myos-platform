@@ -301,6 +301,10 @@ export function generateStandaloneHtml(site: GeneratedWebsite): string {
       border-color: #C6443F !important;
     }
     a[style*="linear-gradient"] *, button[style*="linear-gradient"] * { color: #FFFFFF !important; }
+    [class*="bg-[#E2554F]"], [class*="bg-[#E95349]"], [class*="bg-[#C6443F]"], [class*="bg-red-"] {
+      background-color: #E95349 !important; background-image: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important; color: #FFFFFF !important;
+    }
+    [class*="bg-[#E2554F]"] *, [class*="bg-[#E95349]"] *, [class*="bg-[#C6443F]"] *, [class*="bg-red-"] * { color: #FFFFFF !important; }
     a, button { text-shadow: none !important; }
     input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border: 1px solid #E4E4E4 !important; }
     input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
