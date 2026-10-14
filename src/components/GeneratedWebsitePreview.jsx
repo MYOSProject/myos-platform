@@ -99,6 +99,11 @@ function buildHtmlFallback(site) {
     .text-white, [class*="text-slate-"], [class*="text-gray-"] { color: #1E1E1E !important; }
     [style*="linear-gradient"] { background: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important; color: #FFFFFF !important; }
     [style*="linear-gradient"] * { color: #FFFFFF !important; }
+    [class*="bg-[#E2554F]"], [class*="bg-[#E95349]"], [class*="bg-[#C6443F]"], [class*="bg-red-"] {
+      background-color: #E95349 !important; background-image: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important; color: #FFFFFF !important;
+    }
+    [class*="bg-[#E2554F]"] *, [class*="bg-[#E95349]"] *, [class*="bg-[#C6443F]"] *, [class*="bg-red-"] * { color: #FFFFFF !important; }
+
     [class*="border-slate-"], [class*="border-gray-"] { border-color: #F1F1F1 !important; }
     input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border-color: #E4E4E4 !important; }
     input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
