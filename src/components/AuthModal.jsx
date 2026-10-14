@@ -111,13 +111,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md bg-[#231f20] border border-slate-700/80 rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#252B3A]/55 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-md bg-white border border-[#DFE3EC] rounded-2xl p-6 sm:p-8 shadow-2xl text-[#252B3A]">
         
         {/* Botón cerrar */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-slate-800"
+          className="absolute top-4 right-4 text-[#5A6172] hover:text-[#252B3A] transition p-1 rounded-lg hover:bg-[#F2F4FA]"
         >
           <X className="w-5 h-5" />
         </button>
@@ -127,7 +127,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           <div className="flex justify-center mb-1">
             <Logo />
           </div>
-          <h3 className="text-xl font-extrabold text-white">
+          <h3 className="text-xl font-extrabold text-[#252B3A]">
             {isRegister ? 'Registro de Usuario / Auditor' : 'Acceso a Plataforma MYOS'}
           </h3>
           <p className="text-xs text-slate-400">
@@ -136,12 +136,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         </div>
 
         {/* Pestañas Login / Registro */}
-        <div className="grid grid-cols-2 p-1 bg-slate-900 rounded-xl mb-5 text-sm font-semibold">
+        <div className="grid grid-cols-2 p-1 bg-[#F2F4FA] rounded-xl mb-5 text-sm font-semibold">
           <button
             type="button"
             onClick={() => { setIsRegister(false); setError(''); }}
             className={`py-2 rounded-lg transition flex items-center justify-center gap-2 ${
-              !isRegister ? 'bg-[#1d7eae] text-white shadow-md' : 'text-slate-400 hover:text-white'
+              !isRegister ? 'bg-[#E2554F] text-white shadow-md' : 'text-[#5A6172] hover:text-[#252B3A]'
             }`}
           >
             <LogIn className="w-4 h-4" />
@@ -151,7 +151,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             type="button"
             onClick={() => { setIsRegister(true); setError(''); }}
             className={`py-2 rounded-lg transition flex items-center justify-center gap-2 ${
-              isRegister ? 'bg-[#1d7eae] text-white shadow-md' : 'text-slate-400 hover:text-white'
+              isRegister ? 'bg-[#E2554F] text-white shadow-md' : 'text-[#5A6172] hover:text-[#252B3A]'
             }`}
           >
             <UserPlus className="w-4 h-4" />
@@ -161,7 +161,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         {/* Banner de error */}
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs text-center">
+          <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs text-center">
             {error}
           </div>
         )}
@@ -170,7 +170,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {isRegister && (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Nombre Completo</label>
+              <label className="block text-xs font-semibold text-[#3A4256] mb-1">Nombre Completo</label>
               <div className="relative">
                 <User className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
                 <input
@@ -178,14 +178,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Ej. Carlos Torres"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1d7eae]"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#DFE3EC] text-sm text-[#252B3A] placeholder-[#757575] focus:outline-none focus:ring-2 focus:ring-[#E2554F]"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Correo Electrónico</label>
+            <label className="block text-xs font-semibold text-[#3A4256] mb-1">Correo Electrónico</label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
               <input
@@ -194,13 +194,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ejemplo@iottechnologies.mx"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1d7eae]"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#DFE3EC] text-sm text-[#252B3A] placeholder-[#757575] focus:outline-none focus:ring-2 focus:ring-[#E2554F]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Contraseña</label>
+            <label className="block text-xs font-semibold text-[#3A4256] mb-1">Contraseña</label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
               <input
@@ -209,20 +209,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1d7eae]"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#DFE3EC] text-sm text-[#252B3A] placeholder-[#757575] focus:outline-none focus:ring-2 focus:ring-[#E2554F]"
               />
             </div>
           </div>
 
           {isRegister && (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Rol en el Flujo de Aprobación</label>
+              <label className="block text-xs font-semibold text-[#3A4256] mb-1">Rol en el Flujo de Aprobación</label>
               <div className="relative">
                 <ShieldCheck className="absolute left-3.5 top-3 w-4 h-4 text-[#98dae9]" />
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#1d7eae]"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#DFE3EC] text-sm text-[#252B3A] focus:outline-none focus:ring-2 focus:ring-[#E2554F]"
                 >
                   <option value="approver">Aprobador Humano (Audit Trail - Ficha Merkatics)</option>
                   <option value="admin">Administrador General</option>
@@ -235,7 +235,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-white bg-[#1d7eae] hover:bg-[#0032a0] disabled:bg-slate-800 transition shadow-lg shadow-[#1d7eae]/30 text-sm"
+            className="w-full py-3 rounded-xl font-bold text-[#252B3A] bg-[#E2554F] hover:bg-[#D14842] disabled:bg-[#DFE3EC] transition shadow-lg shadow-[#1d7eae]/30 text-sm"
           >
             {loading ? 'Procesando...' : isRegister ? 'Registrar Usuario' : 'Entrar a la Plataforma'}
           </button>
@@ -244,10 +244,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         {/* Separador */}
         <div className="relative my-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-700"></div>
+            <div className="w-full border-t border-[#DFE3EC]"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-3 bg-[#231f20] text-slate-400">O también</span>
+            <span className="px-3 bg-white text-[#5A6172]">O también</span>
           </div>
         </div>
 
@@ -256,7 +256,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm bg-slate-800 hover:bg-slate-700 border border-slate-600 transition flex items-center justify-center gap-3 text-slate-200"
+          className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm bg-[#F8F9FC] hover:bg-[#F2F4FA] border border-[#DFE3EC] transition flex items-center justify-center gap-3 text-[#252B3A]"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
