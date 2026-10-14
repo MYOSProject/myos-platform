@@ -1374,6 +1374,73 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
   });
 });
 
+
+// GET /api/drive/files — lectura de archivos directamente dentro de la carpeta compartida.
+// Solo metadatos: no descarga ni modifica archivos de Drive.
+app.get(['/api/drive/files', '/api/drive/files/'], async (req, res) => {
+  const configuredToken = process.env.MYOS_DRIVE_API_TOKEN;
+  const authHeader = req.header('authorization') || '';
+  const suppliedToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
+  if (!configuredToken) {
+    return res.status(503).json({ error: 'La integración de Google Drive no está configurada en el servidor.' });
+  }
+
+  const expected = Buffer.from(configuredToken);
+  const supplied = Buffer.from(suppliedToken);
+  const tokenMatches = expected.length > 0 &&
+    expected.length === supplied.length &&
+    require('node:crypto').timingSafeEqual(expected, supplied);
+
+  if (!tokenMatches) {
+    return res.status(401).json({ error: 'No autorizado.' });
+  }
+
+  const folderId = process.env.MYOS_DRIVE_FOLDER_ID;
+  const serviceAccountJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!folderId || !serviceAccountJson) {
+    return res.status(503).json({ error: 'Faltan variables de configuración de Google Drive.' });
+  }
+
+  try {
+    const credentials = JSON.parse(serviceAccountJson);
+    if (!credentials.client_email || !credentials.private_key) {
+      return res.status(503).json({ error: 'La credencial de Google Drive no tiene el formato esperado.' });
+    }
+
+    const { google } = await import('googleapis');
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/drive.readonly']
+    });
+    const drive = google.drive({ version: 'v3', auth });
+    const result = await drive.files.list({
+      q: `'${folderId.replace(/'/g, "\\'")}' in parents and trashed = false`,
+      pageSize: 100,
+      orderBy: 'name',
+      fields: 'nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink)',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true
+    });
+
+    return res.json({
+      folderId,
+      files: (result.data.files || []).map(file => ({
+        id: file.id,
+        name: file.name,
+        mimeType: file.mimeType,
+        modifiedTime: file.modifiedTime,
+        webViewLink: file.webViewLink
+      })),
+      nextPageToken: result.data.nextPageToken || null
+    });
+  } catch (error) {
+    // No registrar credenciales ni detalles internos de Google en la respuesta.
+    console.error('Google Drive metadata listing failed.');
+    return res.status(502).json({ error: 'No se pudieron consultar los archivos de Google Drive. Verifica que la cuenta de servicio tenga acceso a la carpeta.' });
+  }
+});
+
 // POST /api/approve/:id — requires explicit human identity and a pending record.
 // TODO(production): verify the Firebase ID token server-side before trusting identity fields.
 app.post(['/api/approve/:id', '/api/approve/:id/'], (req, res) => {
