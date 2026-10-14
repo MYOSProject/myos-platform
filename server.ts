@@ -20,6 +20,8 @@ export interface GeneratedWebsite {
   site_name: string;
   industry: string;
   tagline: string;
+  custom_logo?: string;
+  hero_image?: string;
   brand_colors: {
     primary: string;
     secondary: string;
@@ -42,6 +44,7 @@ export interface GeneratedWebsite {
   about: {
     title: string;
     content: string;
+    image?: string;
     metrics: Array<{
       label: string;
       value: string;
@@ -1370,7 +1373,7 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
 
 // POST /api/approve/:id or /api/approve/:id/
 app.post(['/api/approve/:id', '/api/approve/:id/'], (req, res) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const approverEmail = req.body?.approverEmail || 'carlos.torres@iottechnologies.mx';
   const approverName = req.body?.approverName || 'Aprobador Corporativo';
 
@@ -1418,7 +1421,7 @@ app.post(['/api/approve/:id', '/api/approve/:id/'], (req, res) => {
 
 // GET /preview/:id o /site/:id para abrir la página en otra pestaña como HTML autónomo
 app.get(['/preview/:id', '/site/:id', '/api/site/:id/preview'], (req, res) => {
-  const paramId = req.params.id;
+  const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const numId = parseInt(paramId, 10);
   const item = contents.find(c => c.id === numId || String(c.id) === String(paramId));
   if (!item || !item.content) {
