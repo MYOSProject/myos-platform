@@ -1493,7 +1493,7 @@ export default function App() {
 - ¿Tienes preferencia de colores o estilo? (ej: colores rosa pastel, blanco minimalista, tonos oscuros elegantes, azul corporativo, etc.)
 - ¿Tienes teléfono, WhatsApp, promociones o servicio a domicilio?"
                     rows={5}
-                    className="w-full p-4 rounded-2xl bg-[#F1F1F1] border border-[#E5E5E5] text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#E2554F] text-sm leading-relaxed"
+                    className="w-full p-4 rounded-2xl bg-white border border-[#DFE3EC] text-[#252B3A] placeholder-[#757575] focus:outline-none focus:ring-2 focus:ring-[#E2554F] text-sm leading-relaxed"
                   />
                   <span className="text-[11px] text-[#757575] block">
                     Tip: Puedes ser tan específico como quieras con los colores, secciones, ofertas o textos. La IA no copiará tu texto, sino que diseñará el sitio a tu gusto.
@@ -1504,7 +1504,7 @@ export default function App() {
                 <button
                   onClick={() => handleGenerate()}
                   disabled={loading || !brief.trim()}
-                  className="w-full py-4 rounded-2xl font-bold text-[#1E1E1E] bg-gradient-to-r from-[#E2554F] via-[#D14842] to-[#E2554F] hover:opacity-95 disabled:from-slate-800 disabled:to-slate-850 disabled:text-slate-600 transition shadow-xl shadow-[#E2554F]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
+                  className="w-full py-4 rounded-2xl font-bold text-[#1E1E1E] bg-gradient-to-r from-[#E2554F] via-[#D14842] to-[#E2554F] hover:opacity-95 disabled:from-[#E7A09D] disabled:to-[#E7A09D] disabled:text-[#252B3A]/70 disabled:cursor-not-allowed transition shadow-xl shadow-[#E2554F]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
                 >
                   <Sparkles className="w-5 h-5" />
                   {loading ? '🧠 La Inteligencia Artificial está construyendo tu página web...' : '⚡ Construir Página Web con IA'}
@@ -1534,7 +1534,7 @@ export default function App() {
                 )}
 
                 {errorMessage && (
-                  <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-300 text-sm flex items-center justify-center gap-2">
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-center justify-center gap-2">
                     <AlertCircle className="w-4 h-4" />
                     <span>{errorMessage}</span>
                   </div>
