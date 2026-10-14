@@ -280,7 +280,16 @@ export function generateStandaloneHtml(site: GeneratedWebsite): string {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F8F9FC !important; color: #252B3A !important; }
+    .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-slate-700,
+    [class*="bg-slate-900/"], [class*="bg-slate-950/"] { background-color: #FFFFFF !important; }
+    .text-white, .text-slate-100, .text-slate-200 { color: #252B3A !important; }
+    .text-slate-300 { color: #3A4256 !important; }
+    .text-slate-400, .text-slate-500 { color: #5A6172 !important; }
+    .border-slate-800, .border-slate-700 { border-color: #DFE3EC !important; }
+    input, textarea, select { background: #FFFFFF !important; color: #252B3A !important; border-color: #C8CEDB !important; }
+    input::placeholder, textarea::placeholder { color: #737B8C !important; opacity: 1; }
+    a, button { text-shadow: none !important; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased selection:bg-[#1d7eae] selection:text-white">
