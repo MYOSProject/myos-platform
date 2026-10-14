@@ -1504,7 +1504,7 @@ export default function App() {
                 <button
                   onClick={() => handleGenerate()}
                   disabled={loading || !brief.trim()}
-                  className="w-full py-4 rounded-2xl font-bold text-[#1E1E1E] bg-gradient-to-r from-[#E2554F] via-[#D14842] to-[#E2554F] hover:opacity-95 disabled:from-[#E7A09D] disabled:to-[#E7A09D] disabled:text-[#252B3A]/70 disabled:cursor-not-allowed transition shadow-xl shadow-[#E2554F]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
+                  className="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-[#E2554F] via-[#D14842] to-[#E2554F] hover:opacity-95 disabled:from-[#E7A09D] disabled:to-[#E7A09D] disabled:text-[#252B3A]/80 disabled:cursor-not-allowed transition shadow-xl shadow-[#E2554F]/25 flex items-center justify-center gap-3 text-base cursor-pointer"
                 >
                   <Sparkles className="w-5 h-5" />
                   {loading ? '🧠 La Inteligencia Artificial está construyendo tu página web...' : '⚡ Construir Página Web con IA'}
