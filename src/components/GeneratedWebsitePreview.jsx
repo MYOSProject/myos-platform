@@ -471,8 +471,8 @@ export default function GeneratedWebsitePreview({
       secondary: secondaryColor
     }
   };
-  // Preferir el HTML real generado por la IA. Usar la plantilla de respaldo solo para propuestas antiguas o incompletas.
-  const fullHtmlCode = typeof siteForExport.full_html === 'string' && siteForExport.full_html.trim().startsWith('<!DOCTYPE html')
+  // Priorizar el HTML completo generado por la IA; usar la plantilla solo para propuestas antiguas.
+  const fullHtmlCode = typeof siteForExport.full_html === 'string' && siteForExport.full_html.trim().toLowerCase().startsWith('<!doctype html')
     ? siteForExport.full_html
     : buildHtmlFallback(siteForExport);
 
@@ -920,7 +920,7 @@ export default function GeneratedWebsitePreview({
           )}
 
           {/* ASISTENTE RÁPIDO: PEDIR CAMBIO DE COLOR, DISEÑO O TEXTO A LA IA */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border border-[#DFE3EC] space-y-2.5">
+          <div className="p-3.5 rounded-2xl bg-white border border-[#DFE3EC] shadow-md space-y-2.5 text-[#252B3A]">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#252B3A] flex items-center gap-1.5">
                 <Wand2 className="w-3.5 h-3.5 text-[#D14842]" />
@@ -993,7 +993,7 @@ export default function GeneratedWebsitePreview({
                     setAttachedRefinePhoto(null);
                   }
                 }}
-                className="px-4 py-2 rounded-xl font-bold text-xs text-[#252B3A] bg-gradient-to-r from-[#1d7eae] to-[#0032a0] hover:opacity-95 disabled:opacity-50 transition shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
+                className="px-4 py-2 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-[#E95349] to-[#C6443F] hover:opacity-95 disabled:opacity-50 transition shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{loading ? 'Ajustando...' : 'Aplicar con IA'}</span>
@@ -1026,21 +1026,355 @@ export default function GeneratedWebsitePreview({
             </div>
           </div>
 
-          {/* Vista previa del HTML generado realmente por la IA */}
-          <div className={`mx-auto overflow-hidden transition-all duration-300 bg-white shadow-2xl ${
-            device === 'mobile' ? 'max-w-sm rounded-[32px] border-4 border-[#C8CEDB] p-1.5' :
-            device === 'tablet' ? 'max-w-2xl rounded-3xl border-4 border-[#C8CEDB] p-1.5' :
-            'w-full rounded-2xl border border-[#DFE3EC]'
+          {/* Marco del dispositivo renderizado */}
+          <div className={`mx-auto transition-all duration-300 ${
+            device === 'mobile' 
+              ? 'max-w-sm rounded-[40px] border-4 border-[#C8CEDB] bg-white shadow-2xl p-2' 
+              : device === 'tablet'
+              ? 'max-w-2xl rounded-3xl border-4 border-[#C8CEDB] bg-white shadow-2xl p-2'
+              : 'w-full rounded-2xl border border-[#DFE3EC]'
           }`}>
-            <iframe
-              key={`${proposal?.id || siteName}-${device}-${fullHtmlCode.length}`}
-              title={`Vista previa del sitio: ${siteName}`}
-              srcDoc={fullHtmlCode}
-              sandbox="allow-scripts allow-forms allow-popups"
-              loading="eager"
-              className="block w-full bg-white"
-              style={{ height: device === 'mobile' ? '760px' : device === 'tablet' ? '850px' : '900px', border: 0 }}
-            />
+            <div className={`rounded-xl overflow-hidden font-sans border transition-colors duration-300 ${
+              currentTheme === 'light-clean'
+                ? 'bg-slate-50 text-slate-900 border-slate-200'
+                : currentTheme === 'luxury-gold'
+                ? 'bg-black text-amber-50 border-amber-950/60'
+                : currentTheme === 'corporate-navy'
+                ? 'bg-[#0a1120] text-[#252B3A] border-blue-950'
+                : 'bg-white text-[#252B3A] border-[#DFE3EC]/80'
+            }`}>
+              
+              {/* Navbar del sitio web generado */}
+              <nav className={`px-5 py-3.5 border-b flex justify-between items-center sticky top-0 z-10 backdrop-blur-md transition-colors ${
+                currentTheme === 'light-clean'
+                  ? 'bg-white/95 border-slate-200 text-slate-900 shadow-sm'
+                  : currentTheme === 'luxury-gold'
+                  ? 'bg-black/95 border-amber-950/60 text-amber-100'
+                  : 'bg-white/95 border-[#DFE3EC] text-[#252B3A]'
+              }`}>
+                <div className="flex items-center gap-2.5">
+                  {effectiveLogo ? (
+                    <div className="flex items-center gap-2 group">
+                      <img 
+                        src={effectiveLogo} 
+                        alt={siteName} 
+                        className="h-8 max-h-8 max-w-[140px] object-contain rounded bg-white/5 p-1 border border-[#C8CEDB]/80 shadow-sm"
+                      />
+                      <button
+                        onClick={() => logoFileInputRef.current?.click()}
+                        title="Cambiar imagen de logo"
+                        className="text-[10px] text-[#5A6172] hover:text-[#252B3A] underline cursor-pointer"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-[#252B3A] shadow-sm"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {siteName.slice(0, 1)}
+                      </div>
+                      <button
+                        onClick={() => logoFileInputRef.current?.click()}
+                        className="text-[10px] text-[#D14842] hover:underline cursor-pointer border border-[#E2554F]/40 bg-[#E2554F]/10 px-1.5 py-0.5 rounded"
+                      >
+                        + Logo
+                      </button>
+                    </div>
+                  )}
+                  <div>
+                    <h4 className={`font-extrabold text-sm tracking-tight leading-tight ${
+                      currentTheme === 'light-clean' ? 'text-slate-950' : 'text-[#252B3A]'
+                    }`}>
+                      {siteName}
+                    </h4>
+                    <span className="text-[10px] text-[#5A6172] block leading-none">{tagline || site.industry || 'PyME'}</span>
+                  </div>
+                </div>
+
+                <div className="hidden md:flex items-center gap-5 text-xs font-semibold text-[#3A4256]">
+                  <a href="#hero" className="hover:text-[#252B3A] transition">Inicio</a>
+                  <a href="#servicios" className="hover:text-[#252B3A] transition">Servicios</a>
+                  <a href="#nosotros" className="hover:text-[#252B3A] transition">Nosotros</a>
+                  <a href="#blog" className="hover:text-[#252B3A] transition">Blog</a>
+                  <a href="#contacto" className="hover:text-[#252B3A] transition">Contacto</a>
+                </div>
+
+                <a 
+                  href="#contacto"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#252B3A] transition shadow-sm hover:opacity-90"
+                  style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
+                >
+                  {hero.primary_cta || 'Contacto'}
+                </a>
+              </nav>
+
+              {/* SECCIÓN 1: HERO */}
+              <section id="hero" className="px-6 py-12 md:py-16 text-center space-y-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 border-b border-[#DFE3EC]">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F4FA] text-[#252B3A] border border-[#C8CEDB]">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D14842]" />
+                  <span>{hero.badge}</span>
+                </div>
+
+                <h1 className="text-2xl sm:text-4xl font-black text-[#252B3A] max-w-3xl mx-auto leading-tight">
+                  {hero.title}
+                </h1>
+
+                <p className="text-xs sm:text-sm text-[#3A4256] max-w-2xl mx-auto leading-relaxed">
+                  {hero.subtitle}
+                </p>
+
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
+                  <a
+                    href="#contacto"
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-[#252B3A] shadow-lg transition hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <span>{hero.primary_cta}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="#servicios"
+                    className="w-full sm:w-auto px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm bg-[#F2F4FA] hover:bg-slate-750 text-[#252B3A] border border-[#C8CEDB] transition"
+                  >
+                    {hero.secondary_cta}
+                  </a>
+                </div>
+
+                {/* Sellos de Confianza */}
+                <div className="flex flex-wrap justify-center items-center gap-4 pt-4 text-xs text-[#5A6172]">
+                  {hero.trust_badges?.map((badge, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>{badge}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Imagen Destacada de Portada / Hero */}
+                {site.hero_image && (
+                  <div className="pt-2 max-w-2xl mx-auto rounded-2xl overflow-hidden border border-[#C8CEDB] shadow-2xl relative group">
+                    <img src={site.hero_image} alt={siteName} className="w-full max-h-72 object-cover group-hover:scale-102 transition duration-500" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowEditModal(true)}
+                        className="px-3.5 py-2 rounded-xl bg-white/90 text-[#252B3A] font-bold text-xs border border-[#C8CEDB] hover:border-[#E2554F] flex items-center gap-1.5 cursor-pointer shadow-lg"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-[#D14842]" />
+                        <span>Cambiar Foto de Portada</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              {/* SECCIÓN 2: SERVICIOS / PRODUCTOS */}
+              <section id="servicios" className="px-6 py-12 space-y-8 bg-white/60 border-b border-[#DFE3EC]">
+                <div className="text-center space-y-2 max-w-xl mx-auto">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Soluciones Especializadas</span>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#252B3A]">Nuestros Servicios Principales</h2>
+                  <p className="text-xs text-[#5A6172]">Diseñados para brindar alta conversión y valor comercial inmediato a cada cliente.</p>
+                </div>
+
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {services.map((srv, idx) => {
+                    const IconComp = getServiceIcon(srv.icon);
+                    return (
+                      <div 
+                        key={idx}
+                        className="p-5 rounded-2xl bg-white border border-[#DFE3EC] hover:border-[#C8CEDB] transition group space-y-3"
+                      >
+                        {srv.image && (
+                          <div className="rounded-xl overflow-hidden h-32 border border-[#DFE3EC] -mt-1 mb-2">
+                            <img src={srv.image} alt={srv.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                          </div>
+                        )}
+                        <div className="flex justify-between items-start">
+                          <div 
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-[#252B3A]"
+                            style={{ backgroundColor: `${primaryColor}25`, color: primaryColor }}
+                          >
+                            <IconComp className="w-5 h-5" />
+                          </div>
+                          {srv.badge && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F2F4FA] text-[#3A4256] border border-[#C8CEDB]">
+                              {srv.badge}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-[#252B3A] text-sm">{srv.title}</h3>
+                        <p className="text-xs text-[#5A6172] leading-relaxed">{srv.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* SECCIÓN 3: PROPUESTA DE VALOR / NOSOTROS */}
+              <section id="nosotros" className="px-6 py-12 space-y-8 bg-white border-b border-[#DFE3EC]">
+                <div className="max-w-3xl mx-auto space-y-6 text-center">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Compromiso & Experiencia</span>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#252B3A]">{about.title}</h2>
+                  {about.image && (
+                    <div className="rounded-2xl overflow-hidden max-w-md mx-auto border border-[#C8CEDB] shadow-xl">
+                      <img src={about.image} alt="Nosotros" className="w-full max-h-56 object-cover" />
+                    </div>
+                  )}
+                  <p className="text-xs sm:text-sm text-[#3A4256] leading-relaxed whitespace-pre-line text-left bg-white/60 p-5 rounded-2xl border border-[#DFE3EC]">
+                    {about.content}
+                  </p>
+
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    {about.metrics?.map((m, idx) => (
+                      <div key={idx} className="p-3.5 rounded-xl bg-white border border-[#DFE3EC]">
+                        <span className="text-lg sm:text-xl font-black text-[#252B3A] block" style={{ color: primaryColor }}>
+                          {m.value}
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-[#5A6172] font-medium">{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* SECCIÓN 4: ARTÍCULOS DE BLOG (/Sitio_Web/Blog) */}
+              <section id="blog" className="px-6 py-12 space-y-6 bg-white/40 border-b border-[#DFE3EC]">
+                <div className="flex justify-between items-end max-w-4xl mx-auto">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Contenidos & Recursos</span>
+                    <h2 className="text-xl font-black text-[#252B3A]">Últimas Publicaciones del Blog</h2>
+                  </div>
+                  <span className="text-xs font-mono text-[#5A6172]">📁 /Sitio_Web/Blog</span>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                  {blogPosts.map((post, idx) => (
+                    <article key={idx} className="p-5 rounded-2xl bg-white border border-[#DFE3EC] space-y-2 hover:border-[#C8CEDB] transition">
+                      <div className="flex items-center gap-2 text-[10px] text-[#5A6172]">
+                        <Calendar className="w-3 h-3 text-[#1d7eae]" />
+                        <span>{post.date}</span>
+                        <span>•</span>
+                        <span>{post.read_time} de lectura</span>
+                      </div>
+                      <h3 className="font-bold text-[#252B3A] text-sm hover:text-[#D14842] transition cursor-pointer">{post.title}</h3>
+                      <p className="text-xs text-[#5A6172] leading-relaxed">{post.excerpt}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              {/* SECCIÓN 5: FORMULARIO DE CONTACTO / LEAD CAPTURE */}
+              <section id="contacto" className="px-6 py-12 bg-white space-y-6">
+                <div className="max-w-xl mx-auto text-center space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Conversemos</span>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#252B3A]">{contact.title}</h2>
+                  <p className="text-xs text-[#5A6172]">{contact.subtitle}</p>
+                </div>
+
+                <div className="max-w-lg mx-auto bg-white/90 border border-[#DFE3EC] p-6 rounded-2xl space-y-4 shadow-xl">
+                  {contactSubmitted ? (
+                    <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-800 text-center text-xs space-y-1">
+                      <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-700" />
+                      <p className="font-bold">¡Solicitud recibida con éxito!</p>
+                      <p className="text-[#5A6172]">El equipo se pondrá en contacto a la brevedad.</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleLeadSubmit} className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">Nombre Completo</label>
+                        <input
+                          type="text"
+                          required
+                          value={leadForm.name}
+                          onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                          placeholder="Tu nombre"
+                          className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">Correo Electrónico</label>
+                          <input
+                            type="email"
+                            required
+                            value={leadForm.email}
+                            onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                            placeholder="correo@ejemplo.com"
+                            className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">Teléfono</label>
+                          <input
+                            type="tel"
+                            value={leadForm.phone}
+                            onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
+                            placeholder="(656) 000-0000"
+                            className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">¿Cómo podemos ayudarte?</label>
+                        <textarea
+                          rows={2}
+                          value={leadForm.message}
+                          onChange={(e) => setLeadForm({ ...leadForm, message: e.target.value })}
+                          placeholder="Escribe tu mensaje o solicitud..."
+                          className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 rounded-xl font-bold text-xs text-[#252B3A] transition shadow-md flex items-center justify-center gap-1.5"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Enviar Mensaje de Contacto</span>
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="pt-3 border-t border-[#DFE3EC] space-y-1.5 text-[11px] text-[#5A6172]">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Phone className="w-3 h-3 text-[#1d7eae]" />
+                        <span>{contact.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Mail className="w-3 h-3 text-[#1d7eae]" />
+                        <span>{contact.email}</span>
+                      </div>
+                    </div>
+                    {contact.address && (
+                      <div className="flex items-center gap-1.5 truncate text-[10px] text-[#5A6172] pt-0.5">
+                        <MapPin className="w-3 h-3 text-[#1d7eae] shrink-0" />
+                        <span className="truncate">{contact.address}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* FOOTER DEL SITIO GENERADO */}
+              <footer className="bg-white px-6 py-6 border-t border-[#DFE3EC] text-center text-[11px] text-[#5A6172] space-y-2">
+                {effectiveLogo && (
+                  <div className="flex justify-center mb-1">
+                    <img
+                      src={effectiveLogo}
+                      alt={siteName}
+                      className="h-7 max-w-[130px] object-contain opacity-85 hover:opacity-100 transition"
+                    />
+                  </div>
+                )}
+                <p>© {new Date().getFullYear()} {siteName}. Todos los derechos reservados.</p>
+                <p className="mt-0.5 text-[10px] text-slate-600">Generado autónomamente por MYOS Platform (GrowthLab Merkatics)</p>
+              </footer>
+
+            </div>
           </div>
         </div>
       )}
@@ -1059,7 +1393,7 @@ export default function GeneratedWebsitePreview({
           <div className="grid md:grid-cols-2 gap-6">
             
             {/* Mockup Facebook */}
-            <div className="bg-[#18191a] border border-[#DFE3EC] rounded-2xl p-4 space-y-3 text-[#252B3A] shadow-xl">
+            <div className="bg-white border border-[#DFE3EC] rounded-2xl p-4 space-y-3 text-[#252B3A] shadow-md">
               <div className="flex items-center gap-2.5 pb-2 border-b border-[#DFE3EC]/80">
                 <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm text-[#252B3A]">
                   f
