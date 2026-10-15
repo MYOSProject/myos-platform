@@ -1328,9 +1328,9 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
     "title": "Nuestra Historia / Propuesta de Valor",
     "content": "Historia y misión del negocio",
     "metrics": [
-      { "label": "Métrica 1", "value": "+1,500" },
-      { "label": "Métrica 2", "value": "99.8%" },
-      { "label": "Métrica 3", "value": "8+ Años" }
+      { "label": "Beneficio", "value": "Calidad" },
+      { "label": "Atención", "value": "Cercana" },
+      { "label": "Enfoque", "value": "Personalizado" }
     ]
   }
 - "blog_posts": [
@@ -1339,11 +1339,15 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
   ]
 - "contact": {
     "title": "Contacto y Pedidos",
-    "subtitle": "Atención rápida por WhatsApp",
-    "phone": "+52 (656) 123-4567",
-    "email": "contacto@negocio.com",
-    "address": "Ciudad y cobertura del servicio"
+    "subtitle": "Texto breve para invitar al contacto",
+    "phone": "",
+    "whatsapp": "",
+    "email": "",
+    "address": "",
+    "hours": "",
+    "location_url": ""
   }
+- DATOS PERSONALES Y DEL NEGOCIO: si el usuario proporciona teléfono, WhatsApp, correo, dirección, ubicación, horarios o redes sociales, conserva esos valores exactamente y colócalos en los campos correspondientes. Nunca inventes datos de contacto. Si el usuario solicita esos datos pero no los proporciona, deja el campo vacío y señala fuera del contenido generado que necesita completarlo; si el usuario pide expresamente marcadores editables, usa textos como [Agregar teléfono] claramente identificados como pendientes.
 - "social_posts": {
     "facebook": { "copy": "Copy publicitario para Facebook", "cta": "Ver Más" },
     "instagram": { "copy": "Copy visual para Instagram", "hashtags": "#Negocio #Calidad" }
