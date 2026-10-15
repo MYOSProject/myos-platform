@@ -471,7 +471,10 @@ export default function GeneratedWebsitePreview({
       secondary: secondaryColor
     }
   };
-  const fullHtmlCode = buildHtmlFallback(siteForExport);
+  // Preferir el HTML real generado por la IA. Usar la plantilla de respaldo solo para propuestas antiguas o incompletas.
+  const fullHtmlCode = typeof siteForExport.full_html === 'string' && siteForExport.full_html.trim().startsWith('<!DOCTYPE html')
+    ? siteForExport.full_html
+    : buildHtmlFallback(siteForExport);
 
   const handleDownloadHtml = () => {
     const blob = new Blob([fullHtmlCode], { type: 'text/html;charset=utf-8' });
