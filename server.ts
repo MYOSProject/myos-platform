@@ -1247,8 +1247,22 @@ app.post(['/api/generate', '/api/generate/'], async (req, res) => {
     });
 
     let systemPrompt = '';
+    const generationRules = `
+REGLAS DE INTERPRETACIÓN OBLIGATORIAS:
+- Trata la petición del usuario como requisitos del proyecto, no como texto para copiar literalmente en la web.
+- Antes de redactar, identifica mentalmente: objetivo del sitio, tipo de negocio/proyecto, audiencia, acción principal, estilo visual, colores explícitos, páginas/secciones solicitadas, funcionalidades y contenido que el usuario aportó.
+- Respeta primero las instrucciones explícitas del usuario. No reemplaces colores, tono, estructura, idioma, funcionalidades ni contenido solicitados por preferencias predeterminadas.
+- Si el usuario pide una tienda, catálogo, portafolio, restaurante, reservas, evento, landing page, sitio informativo u otro tipo concreto, adapta el contenido y la jerarquía a ese objetivo; no asumas que todos son sitios corporativos.
+- Si el usuario especifica secciones, conserva esas secciones y su prioridad. Si no especifica estructura, elige una estructura apropiada para el objetivo y no agregues secciones irrelevantes.
+- Para cambios sobre un sitio existente, modifica solo lo solicitado y conserva todos los demás datos y decisiones existentes. No reconstruyas la identidad ni elimines secciones salvo que el usuario lo pida o sea indispensable.
+- No inventes testimonios, certificaciones, clientes, métricas, premios, direcciones, teléfonos, correos ni garantías como si fueran reales. Si falta información real, usa texto neutral o deja un valor vacío/claramente editable.
+- Usa español salvo que el usuario solicite otro idioma.
+- Escribe textos específicos del negocio y evita frases genéricas repetidas.
+- Devuelve JSON válido, sin Markdown, comentarios ni texto fuera del objeto.
+`;
     if (isRefinement && previousSite) {
-      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial del Growth Operating System.
+      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial de MYOS.
+${generationRules}
 El cliente ya tiene este sitio web generado:
 ${JSON.stringify({
   site_name: previousSite.site_name,
@@ -1276,8 +1290,9 @@ Aplica lo que el usuario pide estrictamente:
 Responde ÚNICAMENTE un JSON válido con estas llaves:
 "titulo", "site_name", "industry", "tagline", "brand_colors" ({"primary", "secondary", "accent"}), "hero" ({"badge", "title", "subtitle", "primary_cta", "secondary_cta", "trust_badges"}), "services" ([{"title", "description", "icon", "badge"}]), "about" ({"title", "content", "metrics"}), "blog_posts", "contact" ({"title", "subtitle", "phone", "email", "address"}), "social_posts", "resumen_web", "copy_redes", "prompt_imagen".`;
     } else {
-      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial del Growth Operating System.
-El usuario quiere que le construyas una página web comercial completa y de alta conversión a partir de esta instrucción en lenguaje natural:
+      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial de MYOS.
+${generationRules}
+El usuario quiere que le construyas una página web adaptada a sus necesidades a partir de esta instrucción en lenguaje natural:
 "${brief.trim()}"
 
 REGLAS CRÍTICAS DE DISEÑO:
@@ -1285,9 +1300,10 @@ REGLAS CRÍTICAS DE DISEÑO:
 2. Interpreta lo que el cliente quiere como un profesional:
    - Si dio un nombre de negocio, úsalo; si no, inventa un nombre comercial atractivo y memorable acorde al giro.
    - Si pidió colores o estilo específicos en su instrucción, aplícalos en "brand_colors" y en el tono.
-   - Crea un catálogo de 3 a 4 servicios o productos detallados y reales con descripciones llamativas y beneficios concretos.
-   - Escribe un titular de hero de alta conversión, un eslogan ganador y una propuesta única de valor.
-   - Redacta una historia de "Nosotros" humana y creíble, métricas de confianza, artículos de blog útiles y datos de contacto reales.
+   - Incluye servicios o productos solo cuando encajen con el tipo de sitio solicitado; si se pidió una tienda, prioriza productos, categorías, precios editables y acciones de compra.
+   - Escribe un titular principal y una propuesta de valor adecuados al objetivo de conversión del sitio.
+   - No fuerces una sección "Nosotros", blog ni métricas si no tienen sentido para la petición. Cuando el esquema exija esos campos, rellénalos de forma breve, neutral y sin inventar hechos.
+   - No inventes datos de contacto: si no se proporcionaron, usa campos vacíos o marcadores claramente editables.
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
 - "titulo": Título comercial atractivo
