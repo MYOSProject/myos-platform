@@ -1363,6 +1363,36 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
     parsedContent.design_theme = req.body.designTheme;
   }
 
+  // Si el usuario especifica colores en su instrucción, estos prevalecen sobre los colores genéricos que pueda proponer el modelo.
+  // Los colores de la interfaz MYOS no deben imponerse al sitio que se está creando.
+  const requestedBrief = String(req.body?.brief || '');
+  const explicitCustomColors = req.body?.customColors?.primary;
+  if (!explicitCustomColors) {
+    const asksGreen = /\\b(verde|green|esmeralda|menta)\\b/i.test(requestedBrief);
+    const asksBlack = /\\b(negro|negra|black|oscuro|oscura)\\b/i.test(requestedBrief);
+    const asksBlue = /\\b(azul|blue|marino)\\b/i.test(requestedBrief);
+    const asksPurple = /\\b(morado|morado|violeta|purple|lila)\\b/i.test(requestedBrief);
+    const asksOrange = /\\b(naranja|orange|coral)\\b/i.test(requestedBrief);
+    const asksRed = /\\b(rojo|roja|red|borgoña)\\b/i.test(requestedBrief);
+    if (asksGreen) {
+      parsedContent.brand_colors = {
+        primary: '#059669',
+        secondary: asksBlack ? '#111827' : '#047857',
+        accent: '#34D399'
+      };
+    } else if (asksBlue) {
+      parsedContent.brand_colors = { primary: '#2563EB', secondary: '#1E3A8A', accent: '#60A5FA' };
+    } else if (asksPurple) {
+      parsedContent.brand_colors = { primary: '#7C3AED', secondary: '#4C1D95', accent: '#C4B5FD' };
+    } else if (asksOrange) {
+      parsedContent.brand_colors = { primary: '#EA580C', secondary: '#9A3412', accent: '#FDBA74' };
+    } else if (asksRed) {
+      parsedContent.brand_colors = { primary: '#DC2626', secondary: '#7F1D1D', accent: '#FCA5A5' };
+    }
+  }
+
+  // Garantizar contraste legible en botones principales del HTML generado.
+  // La identidad de MYOS solo afecta al editor, nunca al sitio independiente.
   // Generar código HTML5 completo y asignarle archivos para Google Drive CMS
   parsedContent.full_html = generateStandaloneHtml(parsedContent);
   const safeSlug = (parsedContent.site_name || 'sitio').toLowerCase().replace(/[^a-z0-9]/g, '_');
