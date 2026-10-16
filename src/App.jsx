@@ -1069,71 +1069,87 @@ export default function App() {
     }
   };
 
-  // 1. Solicitud al Cerebro Digital (IA) con soporte para adjuntar fotos
+  // 1. Solicitud al Cerebro Digital (IA) con soporte para adjuntar fotos.
+  // Garantiza que el botón siempre termine su estado de carga y muestre errores reales.
   const handleGenerate = async (promptOverride = null, isRefinement = false, previousSiteData = null, attachedPhoto = null) => {
     const targetBrief = (typeof promptOverride === 'string' ? promptOverride : brief).trim();
-    if (!targetBrief && !attachedPhoto) return;
+    if (!targetBrief && !attachedPhoto) {
+      setErrorMessage('Escribe qué página quieres crear o adjunta una foto.');
+      return;
+    }
+
     setLoading(true);
     setApprovedSuccess(false);
     setErrorMessage('');
     setGenerationStep(1);
-
     const stepTimer = setInterval(() => {
       setGenerationStep((prev) => (prev < 4 ? prev + 1 : prev));
     }, 1200);
 
-    let generatedData = null;
-
-    // Intentar primero con el backend (conecta a Gemini AI)
     try {
-      const res = await fetch(`${BACKEND_URL}/generate/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brief: targetBrief || 'Genera una propuesta visual completa',
-          isRefinement,
-          previousSite: previousSiteData || (isRefinement ? proposal?.content : null),
-          refineInstruction: isRefinement ? targetBrief : null,
+      let generatedData = null;
+      try {
+        const res = await fetch(`${BACKEND_URL}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brief: targetBrief || 'Genera una propuesta visual completa',
+            isRefinement,
+            previousSite: previousSiteData || (isRefinement ? proposal?.content : null),
+            refineInstruction: isRefinement ? targetBrief : null,
+            customLogo,
+            heroImage: attachedPhoto || (isRefinement ? proposal?.content?.hero_image : null),
+            customColors,
+            designTheme,
+            userEmail: currentUser?.email || 'evaluador@iottechnologies.mx'
+          })
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const json = await res.json();
+          if (json?.content && (json.content.titulo || json.content.site_name)) {
+            generatedData = json;
+            if (customLogo) generatedData.content.custom_logo = customLogo;
+            if (attachedPhoto) generatedData.content.hero_image = attachedPhoto;
+            if (customColors) generatedData.content.brand_colors = customColors;
+            if (designTheme) generatedData.content.design_theme = designTheme;
+          } else {
+            console.warn('El endpoint de generación respondió sin contenido de sitio válido.');
+          }
+        } else {
+          console.warn(`El endpoint de generación respondió con HTTP ${res.status} (${contentType}).`);
+        }
+      } catch (networkErr) {
+        console.warn('No se pudo conectar con el backend de IA; se intentará el generador local.', networkErr);
+      }
+
+      if (!generatedData) {
+        generatedData = generateSmartProposal(targetBrief || 'Sitio web profesional', {
           customLogo,
-          heroImage: attachedPhoto || (isRefinement ? proposal?.content?.hero_image : null),
           customColors,
           designTheme,
-          userEmail: currentUser?.email || 'evaluador@iottechnologies.mx'
-        })
-      });
-      const contentType = res.headers.get('content-type') || '';
-      if (res.ok && contentType.includes('application/json')) {
-        const json = await res.json();
-        if (json?.content?.titulo) {
-          generatedData = json;
-          if (customLogo) generatedData.content.custom_logo = customLogo;
-          if (attachedPhoto) generatedData.content.hero_image = attachedPhoto;
-          if (customColors) generatedData.content.brand_colors = customColors;
-          if (designTheme) generatedData.content.design_theme = designTheme;
-        }
+          attachedPhoto: attachedPhoto || (isRefinement ? proposal?.content?.hero_image : null),
+          previousSite: previousSiteData || (isRefinement ? proposal?.content : null),
+          isRefinement
+        });
       }
-    } catch (networkErr) {
-      console.warn('API backend no disponible en este host, activando motor autónomo de IA:', networkErr);
-    }
 
-    // Si el backend no está disponible en Vercel estático o hubo problema de red, usar motor inteligente
-    if (!generatedData) {
-      generatedData = generateSmartProposal(targetBrief || 'Sitio web profesional', {
-        customLogo,
-        customColors,
-        designTheme,
-        attachedPhoto: attachedPhoto || (isRefinement ? proposal?.content?.hero_image : null),
-        previousSite: previousSiteData || (isRefinement ? proposal?.content : null),
-        isRefinement
-      });
+      if (!generatedData?.content) {
+        throw new Error('La IA no devolvió una página válida. Inténtalo de nuevo.');
+      }
+      setGenerationStep(5);
+      setProposal(generatedData);
+      setErrorMessage('');
+      try { await loadContents(); } catch (loadError) {
+        console.warn('La página se generó, pero no se pudo actualizar la lista de contenidos.', loadError);
+      }
+    } catch (generationError) {
+      console.error('Error al generar el sitio:', generationError);
+      setErrorMessage(generationError?.message || 'No se pudo generar la página. Revisa la conexión e inténtalo de nuevo.');
+    } finally {
+      clearInterval(stepTimer);
+      setLoading(false);
     }
-
-    clearInterval(stepTimer);
-    setGenerationStep(5);
-    setProposal(generatedData);
-    setErrorMessage('');
-    loadContents();
-    setLoading(false);
   };
 
   // La aprobación requiere una sesión humana y confirmación del servidor.
