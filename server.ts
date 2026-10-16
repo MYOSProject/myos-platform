@@ -1368,12 +1368,12 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
   const requestedBrief = String(req.body?.brief || '');
   const explicitCustomColors = req.body?.customColors?.primary;
   if (!explicitCustomColors) {
-    const asksGreen = /\\b(verde|green|esmeralda|menta)\\b/i.test(requestedBrief);
-    const asksBlack = /\\b(negro|negra|black|oscuro|oscura)\\b/i.test(requestedBrief);
-    const asksBlue = /\\b(azul|blue|marino)\\b/i.test(requestedBrief);
-    const asksPurple = /\\b(morado|morado|violeta|purple|lila)\\b/i.test(requestedBrief);
-    const asksOrange = /\\b(naranja|orange|coral)\\b/i.test(requestedBrief);
-    const asksRed = /\\b(rojo|roja|red|borgoña)\\b/i.test(requestedBrief);
+    const asksGreen = /\b(verde|green|esmeralda|menta)\b/i.test(requestedBrief);
+    const asksBlack = /\b(negro|negra|black|oscuro|oscura)\b/i.test(requestedBrief);
+    const asksBlue = /\b(azul|blue|marino)\b/i.test(requestedBrief);
+    const asksPurple = /\b(morado|morado|violeta|purple|lila)\b/i.test(requestedBrief);
+    const asksOrange = /\b(naranja|orange|coral)\b/i.test(requestedBrief);
+    const asksRed = /\b(rojo|roja|red|borgoña)\b/i.test(requestedBrief);
     if (asksGreen) {
       parsedContent.brand_colors = {
         primary: '#059669',
