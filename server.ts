@@ -274,72 +274,20 @@ export function generateStandaloneHtml(site: GeneratedWebsite): string {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style id="myos-light-brand-theme">
-    :root { color-scheme: light; }
-    html, body { background: #FFFFFF !important; color: #1E1E1E !important; }
-    body, header, main, section, article, footer, nav, form, aside,
-    [class*="bg-slate-"], [class*="bg-gray-900"], [class*="bg-gray-800"],
-    [class*="bg-black"], [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"] {
-      background-color: #FFFFFF !important;
-      background-image: none !important;
-    }
-    .text-white, [class*="text-slate-"], [class*="text-gray-"] {
-      color: #1E1E1E !important;
-    }
-    h1, h2, h3, h4, p, span, label, li, strong { text-shadow: none !important; }
-    [class*="border-slate-"], [class*="border-gray-"] { border-color: #F1F1F1 !important; }
-    a[style*="linear-gradient"], button[style*="linear-gradient"],
-    [style*="background: linear-gradient"], [style*="background:linear-gradient"] {
-      background: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important;
-      color: #FFFFFF !important;
-      border-color: #C6443F !important;
-    }
-    a[style*="linear-gradient"] *, button[style*="linear-gradient"] * { color: #FFFFFF !important; }
-    [class*="bg-emerald-"], [class*="bg-red-"], [class*="bg-[#E95349]"], [class*="bg-[#C6443F]"] {
-      background-color: #E95349 !important;
-      background-image: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important;
-      color: #FFFFFF !important;
-    }
-    [class*="bg-emerald-"] *, [class*="bg-red-"] *, [class*="bg-[#E95349]"] *, [class*="bg-[#C6443F]"] * { color: #FFFFFF !important; }
-    input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border: 1px solid #E4E4E4 !important; }
-    input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
-  </style>
-
   <style>
-    :root { color-scheme: light; }
-    html, body { font-family: 'Plus Jakarta Sans', sans-serif !important; background: #FFFFFF !important; color: #1E1E1E !important; }
-    body, header, main, section, article, footer, nav, form,
-    .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-slate-700,
-    [class*="bg-slate-900/"], [class*="bg-slate-950/"], [class*="bg-black"],
-    [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"] {
-      background-color: #FFFFFF !important;
-      background-image: none !important;
+    :root {
+      color-scheme: light;
+      --myos-primary: ${primary};
+      --myos-secondary: ${secondary};
+      --myos-accent: ${site.brand_colors?.accent || primary};
     }
-    .text-white, .text-slate-100, .text-slate-200, .text-slate-300,
-    .text-slate-400, .text-slate-500, h1, h2, h3, h4, p, span, label, li {
-      color: #1E1E1E !important;
-    }
-    .text-emerald-400, .text-emerald-500, .text-blue-400, .text-cyan-400 {
-      color: #C6443F !important;
-    }
-    .border-slate-800, .border-slate-700, [class*="border-slate-"] {
-      border-color: #F1F1F1 !important;
-    }
-    a[style*="linear-gradient"], button[style*="linear-gradient"],
-    [style*="background: linear-gradient"], [style*="background:linear-gradient"] {
-      background: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important;
-      color: #FFFFFF !important;
-      border-color: #C6443F !important;
-    }
-    a[style*="linear-gradient"] *, button[style*="linear-gradient"] * { color: #FFFFFF !important; }
-    [class*="bg-[#E2554F]"], [class*="bg-[#E95349]"], [class*="bg-[#C6443F]"], [class*="bg-red-"] {
-      background-color: #E95349 !important; background-image: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important; color: #FFFFFF !important;
-    }
-    [class*="bg-[#E2554F]"] *, [class*="bg-[#E95349]"] *, [class*="bg-[#C6443F]"] *, [class*="bg-red-"] * { color: #FFFFFF !important; }
-    a, button { text-shadow: none !important; }
-    input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border: 1px solid #E4E4E4 !important; }
-    input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
-    .bg-emerald-500, .hover\\:bg-emerald-600:hover { background-color: #E95349 !important; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    input, textarea, select { max-width: 100%; }
+    img { max-width: 100%; }
+    a, button { transition: opacity .2s ease, transform .2s ease; }
+    a:hover, button:hover { opacity: .94; }
+    :focus-visible { outline: 3px solid var(--myos-accent); outline-offset: 3px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased selection:bg-[#1d7eae] selection:text-white">
