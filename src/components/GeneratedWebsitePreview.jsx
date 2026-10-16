@@ -44,36 +44,36 @@ import {
 import EditContentModal from './EditContentModal';
 
 function buildHtmlFallback(site) {
-  const primary = site?.brand_colors?.primary || '#1d7eae';
-  const secondary = site?.brand_colors?.secondary || '#0032a0';
+  const primary = site?.brand_colors?.primary || '#E95349';
+  const secondary = site?.brand_colors?.secondary || '#C6443F';
   const siteName = site?.site_name || site?.titulo || 'Mi Negocio';
   const tagline = site?.tagline || 'Solución de Alta Conversión';
   const customLogo = site?.custom_logo || null;
 
   const servicesHtml = (site?.services || []).map((s, idx) => `
-    <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition shadow-lg">
-      ${s.image ? `<div class="mb-3 rounded-xl overflow-hidden h-36 border border-slate-800"><img src="${s.image}" alt="${s.title}" class="w-full h-full object-cover" /></div>` : ''}
+    <div class="p-6 rounded-2xl bg-white border border-[#DFE3EC] hover:border-[#C8CEDB] transition shadow-lg">
+      ${s.image ? `<div class="mb-3 rounded-xl overflow-hidden h-36 border border-[#DFE3EC]"><img src="${s.image}" alt="${s.title}" class="w-full h-full object-cover" /></div>` : ''}
       <div class="flex justify-between items-start mb-4">
         <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg" style="background-color: ${primary}20; color: ${primary};">
           ${idx + 1}
         </div>
-        ${s.badge ? `<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700">${s.badge}</span>` : ''}
+        ${s.badge ? `<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-[#F2F4FA] text-[#3A4256] border border-[#C8CEDB]">${s.badge}</span>` : ''}
       </div>
-      <h3 class="text-lg font-bold text-white mb-2">${s.title}</h3>
-      <p class="text-sm text-slate-400 leading-relaxed">${s.description}</p>
+      <h3 class="text-lg font-bold text-[#252B3A] mb-2">${s.title}</h3>
+      <p class="text-sm text-[#5A6172] leading-relaxed">${s.description}</p>
     </div>
   `).join('');
 
   const metricsHtml = (site?.about?.metrics || []).map(m => `
-    <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center">
+    <div class="p-4 rounded-xl bg-white border border-[#DFE3EC] text-center">
       <div class="text-2xl font-black mb-1" style="color: ${primary};">${m.value}</div>
-      <div class="text-xs text-slate-400 font-medium">${m.label}</div>
+      <div class="text-xs text-[#5A6172] font-medium">${m.label}</div>
     </div>
   `).join('');
 
   const logoHtml = customLogo
-    ? `<img src="${customLogo}" alt="${siteName}" class="h-9 max-w-[150px] object-contain rounded bg-white/5 p-1 border border-slate-800" />`
-    : `<div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-base shadow-md" style="background: linear-gradient(135deg, ${primary}, ${secondary});">
+    ? `<img src="${customLogo}" alt="${siteName}" class="h-9 max-w-[150px] object-contain rounded bg-white/5 p-1 border border-[#DFE3EC]" />`
+    : `<div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-[#252B3A] text-base shadow-md" style="background: linear-gradient(135deg, ${primary}, ${secondary});">
         ${siteName.charAt(0)}
       </div>`;
 
@@ -88,70 +88,89 @@ function buildHtmlFallback(site) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style> body { font-family: 'Plus Jakarta Sans', sans-serif; } </style>
+  <style>
+    :root { color-scheme: light; }
+    html, body { font-family: 'Plus Jakarta Sans', sans-serif !important; background: #FFFFFF !important; color: #1E1E1E !important; }
+    body, header, main, section, article, footer, nav, form,
+    [class*="bg-slate-"], [class*="bg-gray-900"], [class*="bg-black"],
+    [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"] {
+      background-color: #FFFFFF !important; background-image: none !important;
+    }
+    .text-white, [class*="text-slate-"], [class*="text-gray-"] { color: #1E1E1E !important; }
+    [style*="linear-gradient"] { background: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important; color: #FFFFFF !important; }
+    [style*="linear-gradient"] * { color: #FFFFFF !important; }
+    [class*="bg-[#E2554F]"], [class*="bg-[#E95349]"], [class*="bg-[#C6443F]"], [class*="bg-red-"] {
+      background-color: #E95349 !important; background-image: linear-gradient(135deg, #E95349 0%, #C6443F 100%) !important; color: #FFFFFF !important;
+    }
+    [class*="bg-[#E2554F]"] *, [class*="bg-[#E95349]"] *, [class*="bg-[#C6443F]"] *, [class*="bg-red-"] * { color: #FFFFFF !important; }
+
+    [class*="border-slate-"], [class*="border-gray-"] { border-color: #F1F1F1 !important; }
+    input, textarea, select { background: #FFFFFF !important; color: #1E1E1E !important; border-color: #E4E4E4 !important; }
+    input::placeholder, textarea::placeholder { color: #757575 !important; opacity: 1; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased selection:bg-[#1d7eae] selection:text-white">
-  <header class="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
+<body class="bg-white text-[#252B3A] antialiased selection:bg-[#E2554F] selection:text-[#252B3A]">
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#DFE3EC]/80">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
       <a href="#inicio" class="flex items-center gap-2.5">
         ${logoHtml}
         <div>
-          <span class="font-extrabold text-base tracking-tight text-white block leading-tight">${siteName}</span>
-          <span class="text-[10px] text-slate-400 block leading-none">${site?.industry || 'PyME'}</span>
+          <span class="font-extrabold text-base tracking-tight text-[#252B3A] block leading-tight">${siteName}</span>
+          <span class="text-[10px] text-[#5A6172] block leading-none">${site?.industry || 'PyME'}</span>
         </div>
       </a>
-      <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-300">
-        <a href="#inicio" class="hover:text-white transition">Inicio</a>
-        <a href="#servicios" class="hover:text-white transition">Servicios</a>
-        <a href="#nosotros" class="hover:text-white transition">Nosotros</a>
-        <a href="#contacto" class="hover:text-white transition">Contacto</a>
+      <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-[#3A4256]">
+        <a href="#inicio" class="hover:text-[#252B3A] transition">Inicio</a>
+        <a href="#servicios" class="hover:text-[#252B3A] transition">Servicios</a>
+        <a href="#nosotros" class="hover:text-[#252B3A] transition">Nosotros</a>
+        <a href="#contacto" class="hover:text-[#252B3A] transition">Contacto</a>
       </nav>
-      <a href="#contacto" class="px-5 py-2.5 rounded-xl font-bold text-xs text-white shadow-lg transition hover:opacity-95" style="background: linear-gradient(135deg, ${primary}, ${secondary});">
+      <a href="#contacto" class="px-5 py-2.5 rounded-xl font-bold text-xs text-[#252B3A] shadow-lg transition hover:opacity-95" style="background: linear-gradient(135deg, ${primary}, ${secondary});">
         ${site?.hero?.primary_cta || 'Contactar'}
       </a>
     </div>
   </header>
   <section id="inicio" class="relative pt-20 pb-24 px-6 overflow-hidden text-center max-w-4xl mx-auto space-y-6">
-    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-900 border border-slate-800 text-slate-200">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white border border-[#DFE3EC] text-[#252B3A]">
       <span>✨</span> <span>${site?.hero?.badge || 'Solución Profesional'}</span>
     </div>
-    <h1 class="text-4xl sm:text-6xl font-black text-white leading-tight tracking-tight">${site?.hero?.title || site?.titulo}</h1>
-    <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">${site?.hero?.subtitle || site?.resumen_web}</p>
+    <h1 class="text-4xl sm:text-6xl font-black text-[#252B3A] leading-tight tracking-tight">${site?.hero?.title || site?.titulo}</h1>
+    <p class="text-base sm:text-lg text-[#3A4256] max-w-2xl mx-auto leading-relaxed">${site?.hero?.subtitle || site?.resumen_web}</p>
     <div class="flex justify-center gap-4 pt-4">
-      <a href="#contacto" class="px-8 py-4 rounded-xl font-bold text-white shadow-xl transition" style="background: linear-gradient(135deg, ${primary}, ${secondary});">
+      <a href="#contacto" class="px-8 py-4 rounded-xl font-bold text-[#252B3A] shadow-xl transition" style="background: linear-gradient(135deg, ${primary}, ${secondary});">
         ${site?.hero?.primary_cta || 'Comenzar Ahora'}
       </a>
     </div>
     ${site?.hero_image ? `
-    <div class="mt-8 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl max-w-3xl mx-auto">
+    <div class="mt-8 rounded-2xl overflow-hidden border border-[#DFE3EC] shadow-2xl max-w-3xl mx-auto">
       <img src="${site.hero_image}" alt="${siteName}" class="w-full max-h-[420px] object-cover" />
     </div>` : ''}
   </section>
-  <section id="servicios" class="py-20 px-6 bg-slate-900/50 border-y border-slate-800 max-w-6xl mx-auto space-y-12">
+  <section id="servicios" class="py-20 px-6 bg-[#F2F4FA] border-y border-[#DFE3EC] max-w-6xl mx-auto space-y-12">
     <div class="text-center space-y-2 max-w-xl mx-auto">
-      <h2 class="text-3xl font-extrabold text-white">Nuestros Servicios</h2>
+      <h2 class="text-3xl font-extrabold text-[#252B3A]">Nuestros Servicios</h2>
     </div>
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">${servicesHtml}</div>
   </section>
   <section id="nosotros" class="py-20 px-6 max-w-4xl mx-auto space-y-10">
-    <h2 class="text-3xl font-extrabold text-white text-center">${site?.about?.title || 'Nosotros'}</h2>
+    <h2 class="text-3xl font-extrabold text-[#252B3A] text-center">${site?.about?.title || 'Nosotros'}</h2>
     ${site?.about?.image ? `
-    <div class="rounded-xl overflow-hidden border border-slate-800 mb-4 max-w-md mx-auto">
+    <div class="rounded-xl overflow-hidden border border-[#DFE3EC] mb-4 max-w-md mx-auto">
       <img src="${site.about.image}" alt="Nosotros" class="w-full max-h-56 object-cover" />
     </div>` : ''}
-    <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 leading-relaxed text-left whitespace-pre-line">${site?.about?.content || site?.resumen_web}</div>
+    <div class="p-6 rounded-2xl bg-white border border-[#DFE3EC] text-[#3A4256] leading-relaxed text-left whitespace-pre-line">${site?.about?.content || site?.resumen_web}</div>
     <div class="grid grid-cols-3 gap-4">${metricsHtml}</div>
   </section>
-  <section id="contacto" class="py-20 px-6 max-w-3xl mx-auto rounded-3xl bg-slate-900 border border-slate-800 p-8 space-y-6">
-    <h2 class="text-3xl font-extrabold text-white text-center">${site?.contact?.title || 'Contacto'}</h2>
-    <p class="text-sm text-slate-400 text-center">${site?.contact?.subtitle || 'Estamos a tu servicio'}</p>
-    <div class="pt-4 border-t border-slate-800 grid sm:grid-cols-3 gap-4 text-xs text-slate-400 text-center">
+  <section id="contacto" class="py-20 px-6 max-w-3xl mx-auto rounded-3xl bg-white border border-[#DFE3EC] p-8 space-y-6">
+    <h2 class="text-3xl font-extrabold text-[#252B3A] text-center">${site?.contact?.title || 'Contacto'}</h2>
+    <p class="text-sm text-[#5A6172] text-center">${site?.contact?.subtitle || 'Estamos a tu servicio'}</p>
+    <div class="pt-4 border-t border-[#DFE3EC] grid sm:grid-cols-3 gap-4 text-xs text-[#5A6172] text-center">
       <div>📍 ${site?.contact?.address || 'Ciudad Juárez'}</div>
       <div>📞 ${site?.contact?.phone || '+52 (656) 000-0000'}</div>
       <div>✉️ ${site?.contact?.email || 'contacto@empresa.com'}</div>
     </div>
   </section>
-  <footer class="py-8 text-center text-xs text-slate-500 border-t border-slate-900">
+  <footer class="py-8 text-center text-xs text-[#5A6172] border-t border-[#DFE3EC]">
     © 2026 ${siteName}. Todos los derechos reservados.
   </footer>
 </body>
@@ -197,24 +216,24 @@ export default function ${compName}Page() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-[${primary}] selection:text-white">
+      <div className="min-h-screen bg-white text-[#252B3A] font-sans selection:bg-[${primary}] selection:text-[#252B3A]">
         
         {/* Header con Navegación Dinámica */}
-        <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
+        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#DFE3EC]">
           <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white bg-[${primary}]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-[#252B3A] bg-[${primary}]">
                 ${siteName.charAt(0)}
               </div>
-              <span className="font-extrabold text-lg text-white">${site.site_name}</span>
+              <span className="font-extrabold text-lg text-[#252B3A]">${site.site_name}</span>
             </div>
-            <nav className="hidden md:flex items-center gap-6 text-sm text-slate-300">
-              <a href="#inicio" className="hover:text-white transition">Inicio</a>
-              <a href="#servicios" className="hover:text-white transition">Servicios</a>
-              <a href="#nosotros" className="hover:text-white transition">Nosotros</a>
-              <a href="#contacto" className="hover:text-white transition">Contacto</a>
+            <nav className="hidden md:flex items-center gap-6 text-sm text-[#3A4256]">
+              <a href="#inicio" className="hover:text-[#252B3A] transition">Inicio</a>
+              <a href="#servicios" className="hover:text-[#252B3A] transition">Servicios</a>
+              <a href="#nosotros" className="hover:text-[#252B3A] transition">Nosotros</a>
+              <a href="#contacto" className="hover:text-[#252B3A] transition">Contacto</a>
             </nav>
-            <a href="#contacto" className="px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-[${primary}] hover:opacity-90 transition">
+            <a href="#contacto" className="px-5 py-2.5 rounded-xl font-bold text-xs text-[#252B3A] bg-[${primary}] hover:opacity-90 transition">
               ${site.hero?.primary_cta || 'Contactar'}
             </a>
           </div>
@@ -222,31 +241,31 @@ export default function ${compName}Page() {
 
         {/* Hero Section */}
         <section id="inicio" className="relative pt-20 pb-24 px-6 text-center max-w-4xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-900 border border-slate-800 text-[#98dae9]">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white border border-[#DFE3EC] text-[#D14842]">
             <span>✨</span> <span>${site.hero?.badge || 'Solución Profesional'}</span>
           </div>
-          <h1 className="text-4xl sm:text-6xl font-black text-white leading-tight">
+          <h1 className="text-4xl sm:text-6xl font-black text-[#252B3A] leading-tight">
             ${site.hero?.title || site.titulo}
           </h1>
-          <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-[#3A4256] max-w-2xl mx-auto leading-relaxed">
             ${site.hero?.subtitle || site.resumen_web}
           </p>
           <div className="flex justify-center gap-4 pt-4">
-            <a href="#contacto" className="px-8 py-3.5 rounded-xl font-bold text-white bg-[${primary}] shadow-xl transition">
+            <a href="#contacto" className="px-8 py-3.5 rounded-xl font-bold text-[#252B3A] bg-[${primary}] shadow-xl transition">
               ${site.hero?.primary_cta || 'Comenzar Ahora'}
             </a>
           </div>
         </section>
 
         {/* Servicios Sincronizados desde Google Drive */}
-        <section id="servicios" className="py-20 px-6 bg-slate-900/50 border-y border-slate-800 max-w-6xl mx-auto space-y-12">
-          <h2 className="text-3xl font-extrabold text-white text-center">Nuestros Servicios</h2>
+        <section id="servicios" className="py-20 px-6 bg-[#F2F4FA] border-y border-[#DFE3EC] max-w-6xl mx-auto space-y-12">
+          <h2 className="text-3xl font-extrabold text-[#252B3A] text-center">Nuestros Servicios</h2>
           <div className="grid sm:grid-cols-3 gap-6">
             {${JSON.stringify(site.services || [], null, 2)}.map((s, idx) => (
-              <div key={idx} className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                <span className="text-xs font-bold px-2 py-1 rounded bg-slate-800 text-[#98dae9]">{s.badge}</span>
-                <h3 className="text-lg font-bold text-white">{s.title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{s.description}</p>
+              <div key={idx} className="p-6 rounded-2xl bg-white border border-[#DFE3EC] space-y-3">
+                <span className="text-xs font-bold px-2 py-1 rounded bg-[#F2F4FA] text-[#D14842]">{s.badge}</span>
+                <h3 className="text-lg font-bold text-[#252B3A]">{s.title}</h3>
+                <p className="text-sm text-[#5A6172] leading-relaxed">{s.description}</p>
               </div>
             ))}
           </div>
@@ -254,9 +273,9 @@ export default function ${compName}Page() {
 
         {/* Formulario de Captura de Clientes */}
         <section id="contacto" className="py-20 px-6 max-w-xl mx-auto space-y-6">
-          <h2 className="text-3xl font-extrabold text-white text-center">${site.contact?.title || 'Contáctanos'}</h2>
+          <h2 className="text-3xl font-extrabold text-[#252B3A] text-center">${site.contact?.title || 'Contáctanos'}</h2>
           {submitted ? (
-            <div className="p-4 rounded-xl bg-emerald-500/20 text-emerald-300 text-center text-sm font-bold">
+            <div className="p-4 rounded-xl bg-emerald-100 text-emerald-800 text-center text-sm font-bold">
               ✓ ¡Mensaje recibido! Nos comunicaremos en breve.
             </div>
           ) : (
@@ -267,7 +286,7 @@ export default function ${compName}Page() {
                 placeholder="Tu Nombre Completo"
                 value={leadForm.name}
                 onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
-                className="w-full p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm"
+                className="w-full p-3.5 rounded-xl bg-white border border-[#DFE3EC] text-[#252B3A] text-sm"
               />
               <input
                 type="email"
@@ -275,9 +294,9 @@ export default function ${compName}Page() {
                 placeholder="tu@correo.com"
                 value={leadForm.email}
                 onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
-                className="w-full p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm"
+                className="w-full p-3.5 rounded-xl bg-white border border-[#DFE3EC] text-[#252B3A] text-sm"
               />
-              <button type="submit" className="w-full py-3.5 rounded-xl font-bold text-white bg-[${primary}]">
+              <button type="submit" className="w-full py-3.5 rounded-xl font-bold text-[#252B3A] bg-[${primary}]">
                 Enviar Solicitud
               </button>
             </form>
@@ -452,7 +471,10 @@ export default function GeneratedWebsitePreview({
       secondary: secondaryColor
     }
   };
-  const fullHtmlCode = buildHtmlFallback(siteForExport);
+  // Priorizar el HTML completo generado por la IA; usar la plantilla solo para propuestas antiguas.
+  const fullHtmlCode = typeof siteForExport.full_html === 'string' && siteForExport.full_html.trim().toLowerCase().startsWith('<!doctype html')
+    ? siteForExport.full_html
+    : buildHtmlFallback(siteForExport);
 
   const handleDownloadHtml = () => {
     const blob = new Blob([fullHtmlCode], { type: 'text/html;charset=utf-8' });
@@ -582,17 +604,17 @@ export default function GeneratedWebsitePreview({
   };
 
   return (
-    <div className="mt-8 rounded-3xl bg-slate-950 border border-slate-700/80 shadow-2xl overflow-hidden transition-all duration-300">
+    <div className="mt-8 rounded-3xl bg-white border border-[#C8CEDB]/80 shadow-2xl overflow-hidden transition-all duration-300">
       
       {/* 1. BARRA SUPERIOR DE SEGURIDAD & ESTADO DE APROBACIÓN HUMANA (Regla de Carlos) */}
       <div className={`px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b ${
         isApproved 
-          ? 'bg-emerald-950/40 border-emerald-500/40' 
-          : 'bg-amber-950/40 border-amber-500/40'
+          ? 'bg-emerald-50 border-emerald-200' 
+          : 'bg-amber-50 border-amber-200'
       }`}>
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-xl flex items-center justify-center ${
-            isApproved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+            isApproved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
           }`}>
             {isApproved ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5 animate-pulse" />}
           </div>
@@ -600,14 +622,14 @@ export default function GeneratedWebsitePreview({
             <div className="flex items-center gap-2">
               <span className={`text-xs font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
                 isApproved 
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
-                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                  : 'bg-amber-100 text-amber-800 border-amber-200'
               }`}>
                 {isApproved ? 'Aprobado (APPROVED) — Listo para Vercel' : 'Borrador IA (PENDING) — Aprobación Obligatoria'}
               </span>
-              <span className="text-[11px] font-mono text-slate-400">ID: #{proposal.id}</span>
+              <span className="text-[11px] font-mono text-[#5A6172]">ID: #{proposal.id}</span>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
+            <p className="text-xs text-[#3A4256] mt-0.5">
               {isApproved 
                 ? `Certificado y firmado para despliegue por ${currentUser?.displayName || 'Auditor Autorizado'}.`
                 : 'Restricción de Carlos: Ningún sitio o post se publica sin la firma y registro de un evaluador humano.'}
@@ -616,11 +638,11 @@ export default function GeneratedWebsitePreview({
         </div>
 
         {/* Pestañas de vista del Generador */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-stretch md:self-auto justify-center">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white border border-[#DFE3EC] self-stretch md:self-auto justify-center">
           <button
             onClick={() => setSubTab('preview')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-              subTab === 'preview' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              subTab === 'preview' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
@@ -629,7 +651,7 @@ export default function GeneratedWebsitePreview({
           <button
             onClick={() => setSubTab('social')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-              subTab === 'social' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              subTab === 'social' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
             }`}
           >
             <Share2 className="w-3.5 h-3.5" />
@@ -638,7 +660,7 @@ export default function GeneratedWebsitePreview({
           <button
             onClick={() => setSubTab('drive')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-              subTab === 'drive' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              subTab === 'drive' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
             }`}
           >
             <FolderTree className="w-3.5 h-3.5" />
@@ -647,7 +669,7 @@ export default function GeneratedWebsitePreview({
           <button
             onClick={() => setSubTab('code')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-              subTab === 'code' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              subTab === 'code' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
             }`}
           >
             <Code2 className="w-3.5 h-3.5" />
@@ -670,12 +692,12 @@ export default function GeneratedWebsitePreview({
           />
 
           {/* Barra de control del simulador de dispositivo y acciones rápidas */}
-          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 bg-slate-900/95 p-3 rounded-2xl border border-slate-800 shadow-lg">
+          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 bg-[#F8F9FC] p-3 rounded-2xl border border-[#DFE3EC] shadow-lg">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
               <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
               <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
-              <span className="text-xs font-mono text-slate-400 ml-1 truncate">
+              <span className="text-xs font-mono text-[#5A6172] ml-1 truncate">
                 https://{siteName.toLowerCase().replace(/[^a-z0-9]/g, '')}.myos-platform.vercel.app
               </span>
             </div>
@@ -684,7 +706,7 @@ export default function GeneratedWebsitePreview({
             <div className="flex flex-wrap items-center gap-2 justify-end">
               
               {/* Botón de Subir / Cambiar Logo */}
-              <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-[#DFE3EC]">
                 {effectiveLogo ? (
                   <>
                     <img
@@ -692,11 +714,11 @@ export default function GeneratedWebsitePreview({
                       alt="Logo activo"
                       className="w-5 h-5 object-contain rounded bg-white/5"
                     />
-                    <span className="text-[11px] font-semibold text-emerald-300">Logo Activo</span>
+                    <span className="text-[11px] font-semibold text-emerald-800">Logo Activo</span>
                     <button
                       onClick={() => logoFileInputRef.current?.click()}
                       title="Cambiar imagen de logo"
-                      className="text-[10px] text-slate-400 hover:text-white underline ml-1"
+                      className="text-[10px] text-[#5A6172] hover:text-[#252B3A] underline ml-1"
                     >
                       Cambiar
                     </button>
@@ -704,7 +726,7 @@ export default function GeneratedWebsitePreview({
                       <button
                         onClick={onLogoRemove}
                         title="Eliminar logo personalizado"
-                        className="p-1 text-slate-500 hover:text-red-400 transition"
+                        className="p-1 text-[#5A6172] hover:text-red-400 transition"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -713,7 +735,7 @@ export default function GeneratedWebsitePreview({
                 ) : (
                   <button
                     onClick={() => logoFileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-[#98dae9] hover:text-white transition"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#D14842] hover:text-[#252B3A] transition"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Subir Logo</span>
@@ -725,9 +747,9 @@ export default function GeneratedWebsitePreview({
               <button
                 onClick={() => setShowEditModal(true)}
                 title="Editar cualquier texto o subir fotos personalizadas para este sitio"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 hover:border-[#1d7eae] transition cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#F2F4FA] hover:bg-slate-750 text-[#252B3A] border border-[#C8CEDB] hover:border-[#E2554F] transition cursor-pointer"
               >
-                <Edit3 className="w-3.5 h-3.5 text-[#98dae9]" />
+                <Edit3 className="w-3.5 h-3.5 text-[#D14842]" />
                 <span>Editar Textos & Fotos</span>
               </button>
 
@@ -736,8 +758,8 @@ export default function GeneratedWebsitePreview({
                 onClick={() => setShowColorPicker(!showColorPicker)}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition border ${
                   showColorPicker
-                    ? 'bg-[#1d7eae] text-white border-[#1d7eae] shadow-sm'
-                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+                    ? 'bg-[#E2554F] text-[#252B3A] border-[#E2554F] shadow-sm'
+                    : 'bg-[#F2F4FA] text-[#3A4256] border-[#C8CEDB] hover:text-[#252B3A]'
                 }`}
               >
                 <Palette className="w-3.5 h-3.5" />
@@ -745,12 +767,12 @@ export default function GeneratedWebsitePreview({
               </button>
 
               {/* Selector de Dispositivos */}
-              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#DFE3EC]">
                 <button
                   onClick={() => setDevice('desktop')}
                   title="Vista Escritorio"
                   className={`p-1.5 rounded-lg text-xs font-semibold transition ${
-                    device === 'desktop' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    device === 'desktop' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   <Laptop className="w-3.5 h-3.5" />
@@ -759,7 +781,7 @@ export default function GeneratedWebsitePreview({
                   onClick={() => setDevice('tablet')}
                   title="Vista Tablet"
                   className={`p-1.5 rounded-lg text-xs font-semibold transition ${
-                    device === 'tablet' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    device === 'tablet' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   <Tablet className="w-3.5 h-3.5" />
@@ -768,7 +790,7 @@ export default function GeneratedWebsitePreview({
                   onClick={() => setDevice('mobile')}
                   title="Vista Móvil"
                   className={`p-1.5 rounded-lg text-xs font-semibold transition ${
-                    device === 'mobile' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    device === 'mobile' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   <Smartphone className="w-3.5 h-3.5" />
@@ -776,7 +798,7 @@ export default function GeneratedWebsitePreview({
                 <button
                   onClick={() => setIsFullScreen(!isFullScreen)}
                   title={isFullScreen ? 'Salir de Pantalla Completa' : 'Pantalla Completa'}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white transition"
+                  className="p-1.5 rounded-lg text-[#5A6172] hover:text-[#252B3A] transition"
                 >
                   {isFullScreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                 </button>
@@ -786,7 +808,7 @@ export default function GeneratedWebsitePreview({
               <button
                 onClick={handleDownloadHtml}
                 title="Descargar index.html completo"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 font-semibold text-xs transition"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-850 hover:bg-[#F2F4FA] text-[#3A4256] hover:text-[#252B3A] border border-[#C8CEDB] font-semibold text-xs transition"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">HTML</span>
@@ -796,7 +818,7 @@ export default function GeneratedWebsitePreview({
               <button
                 onClick={handleOpenInNewTab}
                 title="Abrir la página web completa en una nueva pestaña del navegador"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-bold text-xs shadow-md transition cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-[#252B3A] font-bold text-xs shadow-md transition cursor-pointer"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Abrir en otra pestaña</span>
@@ -806,22 +828,22 @@ export default function GeneratedWebsitePreview({
 
           {/* PANEL DESPLEGABLE: ESTUDIO DE COLOR Y DISEÑO EN TIEMPO REAL */}
           {showColorPicker && (
-            <div className="p-4 rounded-2xl bg-slate-900 border border-[#1d7eae]/40 space-y-3.5 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-2.5">
+            <div className="p-4 rounded-2xl bg-white border border-[#E2554F]/40 space-y-3.5 animate-fadeIn">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#DFE3EC] pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-[#98dae9]" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  <Palette className="w-4 h-4 text-[#D14842]" />
+                  <span className="text-xs font-bold text-[#252B3A] uppercase tracking-wider">
                     Personalizador de Color & Estilo en Vivo
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-[#5A6172]">
                   Cambia los colores al instante o usa el selector hexadecimal.
                 </span>
               </div>
 
               {/* 1. Muestras de colores predefinidas */}
               <div className="space-y-1.5">
-                <span className="text-[11px] font-semibold text-slate-400 block">
+                <span className="text-[11px] font-semibold text-[#5A6172] block">
                   Paletas Profesionales de Alta Conversión:
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
@@ -841,8 +863,8 @@ export default function GeneratedWebsitePreview({
                       onClick={() => onColorChange?.(p.primary, p.secondary)}
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold transition border ${
                         primaryColor === p.primary
-                          ? 'bg-slate-800 text-white border-white/60 ring-2 ring-[#1d7eae]'
-                          : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                          ? 'bg-[#F2F4FA] text-[#252B3A] border-white/60 ring-2 ring-[#1d7eae]'
+                          : 'bg-white text-[#3A4256] border-[#DFE3EC] hover:border-[#C8CEDB]'
                       }`}
                     >
                       <span
@@ -854,7 +876,7 @@ export default function GeneratedWebsitePreview({
                   ))}
 
                   {/* Selector de color HEX nativo */}
-                  <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer">
+                  <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-white border border-[#DFE3EC] hover:border-[#C8CEDB] text-[#3A4256] cursor-pointer">
                     <input
                       type="color"
                       value={primaryColor}
@@ -862,14 +884,14 @@ export default function GeneratedWebsitePreview({
                       className="w-4 h-4 p-0 border-0 bg-transparent rounded cursor-pointer"
                     />
                     <span className="font-mono text-[11px]">{primaryColor}</span>
-                    <span className="text-[10px] text-slate-500">(Personalizado)</span>
+                    <span className="text-[10px] text-[#5A6172]">(Personalizado)</span>
                   </label>
                 </div>
               </div>
 
               {/* 2. Selector de Estilo Visual / Tema */}
-              <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
-                <span className="text-[11px] font-semibold text-slate-400 block">
+              <div className="space-y-1.5 pt-1 border-t border-[#DFE3EC]/80">
+                <span className="text-[11px] font-semibold text-[#5A6172] block">
                   Estilo Visual de la Página:
                 </span>
                 <div className="flex flex-wrap gap-2 text-xs">
@@ -885,8 +907,8 @@ export default function GeneratedWebsitePreview({
                       onClick={() => onThemeChange?.(thm.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
                         currentTheme === thm.id
-                          ? 'bg-[#1d7eae] text-white border-[#1d7eae] shadow-sm'
-                          : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                          ? 'bg-[#E2554F] text-[#252B3A] border-[#E2554F] shadow-sm'
+                          : 'bg-white text-[#3A4256] border-[#DFE3EC] hover:border-[#C8CEDB]'
                       }`}
                     >
                       {thm.label}
@@ -898,29 +920,29 @@ export default function GeneratedWebsitePreview({
           )}
 
           {/* ASISTENTE RÁPIDO: PEDIR CAMBIO DE COLOR, DISEÑO O TEXTO A LA IA */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border border-slate-800 space-y-2.5">
+          <div className="p-3.5 rounded-2xl bg-white border border-[#DFE3EC] shadow-md space-y-2.5 text-[#252B3A]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Wand2 className="w-3.5 h-3.5 text-[#98dae9]" />
+              <span className="text-xs font-bold text-[#252B3A] flex items-center gap-1.5">
+                <Wand2 className="w-3.5 h-3.5 text-[#D14842]" />
                 <span>¿Quieres pedirle otro color, diseño, texto o agregar fotos con la IA?</span>
               </span>
-              <span className="text-[10px] text-slate-400">Instrucción en lenguaje natural</span>
+              <span className="text-[10px] text-[#5A6172]">Instrucción en lenguaje natural</span>
             </div>
 
             {/* Vista previa de foto adjunta para la IA */}
             {attachedRefinePhoto && (
-              <div className="flex items-center justify-between p-2 rounded-xl bg-slate-950 border border-emerald-500/40">
+              <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-emerald-200">
                 <div className="flex items-center gap-2.5">
-                  <img src={attachedRefinePhoto} alt="Foto adjunta" className="w-10 h-10 object-cover rounded-lg border border-slate-700" />
+                  <img src={attachedRefinePhoto} alt="Foto adjunta" className="w-10 h-10 object-cover rounded-lg border border-[#C8CEDB]" />
                   <div className="text-[11px]">
-                    <span className="font-bold text-emerald-300 block">✓ Foto adjunta para incorporar al diseño</span>
-                    <span className="text-slate-400 block text-[10px]">La IA colocará esta imagen en la sección que le indiques en el prompt</span>
+                    <span className="font-bold text-emerald-800 block">✓ Foto adjunta para incorporar al diseño</span>
+                    <span className="text-[#5A6172] block text-[10px]">La IA colocará esta imagen en la sección que le indiques en el prompt</span>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setAttachedRefinePhoto(null)}
-                  className="p-1.5 text-slate-400 hover:text-red-400 transition"
+                  className="p-1.5 text-[#5A6172] hover:text-red-400 transition"
                   title="Eliminar foto adjunta"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -941,9 +963,9 @@ export default function GeneratedWebsitePreview({
                 type="button"
                 onClick={() => refinePhotoInputRef.current?.click()}
                 title="Subir foto desde tu dispositivo para que la IA la agregue a la página"
-                className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-white hover:bg-slate-850 text-[#3A4256] hover:text-[#252B3A] border border-[#DFE3EC] text-xs font-semibold flex items-center gap-1.5 shrink-0 transition cursor-pointer"
               >
-                <Camera className="w-3.5 h-3.5 text-[#98dae9]" />
+                <Camera className="w-3.5 h-3.5 text-[#D14842]" />
                 <span className="hidden sm:inline">Adjuntar Foto</span>
               </button>
 
@@ -959,7 +981,7 @@ export default function GeneratedWebsitePreview({
                   }
                 }}
                 placeholder="Ej: Agrega esta foto a la portada y cambia los textos para decir que atendemos urgencias..."
-                className="flex-1 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
               />
               <button
                 type="button"
@@ -971,7 +993,7 @@ export default function GeneratedWebsitePreview({
                     setAttachedRefinePhoto(null);
                   }
                 }}
-                className="px-4 py-2 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-[#1d7eae] to-[#0032a0] hover:opacity-95 disabled:opacity-50 transition shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
+                className="px-4 py-2 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-[#E95349] to-[#C6443F] hover:opacity-95 disabled:opacity-50 transition shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{loading ? 'Ajustando...' : 'Aplicar con IA'}</span>
@@ -979,8 +1001,8 @@ export default function GeneratedWebsitePreview({
             </div>
 
             {/* Sugerencias Rápidas con 1 Clic */}
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
-              <span className="font-semibold text-slate-500 mr-1">Sugerencias:</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[#5A6172]">
+              <span className="font-semibold text-[#5A6172] mr-1">Sugerencias:</span>
               {[
                 { label: '🌟 Tonos Dorados & Lujo', prompt: 'Cambia los colores a dorado y ámbar con estilo lujoso de alta gama.' },
                 { label: '🌿 Verde Esmeralda & Salud', prompt: 'Usa una paleta verde esmeralda y naturaleza con estilo fresco y confiable.' },
@@ -996,7 +1018,7 @@ export default function GeneratedWebsitePreview({
                       onAiRefine(sug.prompt);
                     }
                   }}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white transition border border-slate-800 text-[10px]"
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-[#F2F4FA] text-[#3A4256] hover:text-[#252B3A] transition border border-[#DFE3EC] text-[10px]"
                 >
                   {sug.label}
                 </button>
@@ -1007,10 +1029,10 @@ export default function GeneratedWebsitePreview({
           {/* Marco del dispositivo renderizado */}
           <div className={`mx-auto transition-all duration-300 ${
             device === 'mobile' 
-              ? 'max-w-sm rounded-[40px] border-4 border-slate-700 bg-slate-900 shadow-2xl p-2' 
+              ? 'max-w-sm rounded-[40px] border-4 border-[#C8CEDB] bg-white shadow-2xl p-2' 
               : device === 'tablet'
-              ? 'max-w-2xl rounded-3xl border-4 border-slate-700 bg-slate-900 shadow-2xl p-2'
-              : 'w-full rounded-2xl border border-slate-800'
+              ? 'max-w-2xl rounded-3xl border-4 border-[#C8CEDB] bg-white shadow-2xl p-2'
+              : 'w-full rounded-2xl border border-[#DFE3EC]'
           }`}>
             <div className={`rounded-xl overflow-hidden font-sans border transition-colors duration-300 ${
               currentTheme === 'light-clean'
@@ -1018,8 +1040,8 @@ export default function GeneratedWebsitePreview({
                 : currentTheme === 'luxury-gold'
                 ? 'bg-black text-amber-50 border-amber-950/60'
                 : currentTheme === 'corporate-navy'
-                ? 'bg-[#0a1120] text-slate-100 border-blue-950'
-                : 'bg-slate-900 text-slate-100 border-slate-800/80'
+                ? 'bg-[#0a1120] text-[#252B3A] border-blue-950'
+                : 'bg-white text-[#252B3A] border-[#DFE3EC]/80'
             }`}>
               
               {/* Navbar del sitio web generado */}
@@ -1028,7 +1050,7 @@ export default function GeneratedWebsitePreview({
                   ? 'bg-white/95 border-slate-200 text-slate-900 shadow-sm'
                   : currentTheme === 'luxury-gold'
                   ? 'bg-black/95 border-amber-950/60 text-amber-100'
-                  : 'bg-slate-950/90 border-slate-800 text-slate-100'
+                  : 'bg-white/95 border-[#DFE3EC] text-[#252B3A]'
               }`}>
                 <div className="flex items-center gap-2.5">
                   {effectiveLogo ? (
@@ -1036,12 +1058,12 @@ export default function GeneratedWebsitePreview({
                       <img 
                         src={effectiveLogo} 
                         alt={siteName} 
-                        className="h-8 max-h-8 max-w-[140px] object-contain rounded bg-white/5 p-1 border border-slate-700/80 shadow-sm"
+                        className="h-8 max-h-8 max-w-[140px] object-contain rounded bg-white/5 p-1 border border-[#C8CEDB]/80 shadow-sm"
                       />
                       <button
                         onClick={() => logoFileInputRef.current?.click()}
                         title="Cambiar imagen de logo"
-                        className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer"
+                        className="text-[10px] text-[#5A6172] hover:text-[#252B3A] underline cursor-pointer"
                       >
                         Cambiar
                       </button>
@@ -1049,14 +1071,14 @@ export default function GeneratedWebsitePreview({
                   ) : (
                     <div className="flex items-center gap-2">
                       <div 
-                        className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-white shadow-sm"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-[#252B3A] shadow-sm"
                         style={{ backgroundColor: primaryColor }}
                       >
                         {siteName.slice(0, 1)}
                       </div>
                       <button
                         onClick={() => logoFileInputRef.current?.click()}
-                        className="text-[10px] text-[#98dae9] hover:underline cursor-pointer border border-[#1d7eae]/40 bg-[#1d7eae]/10 px-1.5 py-0.5 rounded"
+                        className="text-[10px] text-[#D14842] hover:underline cursor-pointer border border-[#E2554F]/40 bg-[#E2554F]/10 px-1.5 py-0.5 rounded"
                       >
                         + Logo
                       </button>
@@ -1064,25 +1086,25 @@ export default function GeneratedWebsitePreview({
                   )}
                   <div>
                     <h4 className={`font-extrabold text-sm tracking-tight leading-tight ${
-                      currentTheme === 'light-clean' ? 'text-slate-950' : 'text-white'
+                      currentTheme === 'light-clean' ? 'text-slate-950' : 'text-[#252B3A]'
                     }`}>
                       {siteName}
                     </h4>
-                    <span className="text-[10px] text-slate-400 block leading-none">{tagline || site.industry || 'PyME'}</span>
+                    <span className="text-[10px] text-[#5A6172] block leading-none">{tagline || site.industry || 'PyME'}</span>
                   </div>
                 </div>
 
-                <div className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-300">
-                  <a href="#hero" className="hover:text-white transition">Inicio</a>
-                  <a href="#servicios" className="hover:text-white transition">Servicios</a>
-                  <a href="#nosotros" className="hover:text-white transition">Nosotros</a>
-                  <a href="#blog" className="hover:text-white transition">Blog</a>
-                  <a href="#contacto" className="hover:text-white transition">Contacto</a>
+                <div className="hidden md:flex items-center gap-5 text-xs font-semibold text-[#3A4256]">
+                  <a href="#hero" className="hover:text-[#252B3A] transition">Inicio</a>
+                  <a href="#servicios" className="hover:text-[#252B3A] transition">Servicios</a>
+                  <a href="#nosotros" className="hover:text-[#252B3A] transition">Nosotros</a>
+                  <a href="#blog" className="hover:text-[#252B3A] transition">Blog</a>
+                  <a href="#contacto" className="hover:text-[#252B3A] transition">Contacto</a>
                 </div>
 
                 <a 
                   href="#contacto"
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition shadow-sm hover:opacity-90"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#252B3A] transition shadow-sm hover:opacity-90"
                   style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
                 >
                   {hero.primary_cta || 'Contacto'}
@@ -1090,24 +1112,24 @@ export default function GeneratedWebsitePreview({
               </nav>
 
               {/* SECCIÓN 1: HERO */}
-              <section id="hero" className="px-6 py-12 md:py-16 text-center space-y-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 border-b border-slate-800">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700">
-                  <Sparkles className="w-3.5 h-3.5 text-[#98dae9]" />
+              <section id="hero" className="px-6 py-12 md:py-16 text-center space-y-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 border-b border-[#DFE3EC]">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F4FA] text-[#252B3A] border border-[#C8CEDB]">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D14842]" />
                   <span>{hero.badge}</span>
                 </div>
 
-                <h1 className="text-2xl sm:text-4xl font-black text-white max-w-3xl mx-auto leading-tight">
+                <h1 className="text-2xl sm:text-4xl font-black text-[#252B3A] max-w-3xl mx-auto leading-tight">
                   {hero.title}
                 </h1>
 
-                <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#3A4256] max-w-2xl mx-auto leading-relaxed">
                   {hero.subtitle}
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
                   <a
                     href="#contacto"
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-white shadow-lg transition hover:opacity-90 flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-[#252B3A] shadow-lg transition hover:opacity-90 flex items-center justify-center gap-2"
                     style={{ backgroundColor: primaryColor }}
                   >
                     <span>{hero.primary_cta}</span>
@@ -1115,17 +1137,17 @@ export default function GeneratedWebsitePreview({
                   </a>
                   <a
                     href="#servicios"
-                    className="w-full sm:w-auto px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 transition"
+                    className="w-full sm:w-auto px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm bg-[#F2F4FA] hover:bg-slate-750 text-[#252B3A] border border-[#C8CEDB] transition"
                   >
                     {hero.secondary_cta}
                   </a>
                 </div>
 
                 {/* Sellos de Confianza */}
-                <div className="flex flex-wrap justify-center items-center gap-4 pt-4 text-xs text-slate-400">
+                <div className="flex flex-wrap justify-center items-center gap-4 pt-4 text-xs text-[#5A6172]">
                   {hero.trust_badges?.map((badge, idx) => (
                     <div key={idx} className="flex items-center gap-1.5 font-medium">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
                       <span>{badge}</span>
                     </div>
                   ))}
@@ -1133,15 +1155,15 @@ export default function GeneratedWebsitePreview({
 
                 {/* Imagen Destacada de Portada / Hero */}
                 {site.hero_image && (
-                  <div className="pt-2 max-w-2xl mx-auto rounded-2xl overflow-hidden border border-slate-700 shadow-2xl relative group">
+                  <div className="pt-2 max-w-2xl mx-auto rounded-2xl overflow-hidden border border-[#C8CEDB] shadow-2xl relative group">
                     <img src={site.hero_image} alt={siteName} className="w-full max-h-72 object-cover group-hover:scale-102 transition duration-500" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                       <button
                         type="button"
                         onClick={() => setShowEditModal(true)}
-                        className="px-3.5 py-2 rounded-xl bg-slate-900/90 text-white font-bold text-xs border border-slate-700 hover:border-[#1d7eae] flex items-center gap-1.5 cursor-pointer shadow-lg"
+                        className="px-3.5 py-2 rounded-xl bg-white/90 text-[#252B3A] font-bold text-xs border border-[#C8CEDB] hover:border-[#E2554F] flex items-center gap-1.5 cursor-pointer shadow-lg"
                       >
-                        <Camera className="w-3.5 h-3.5 text-[#98dae9]" />
+                        <Camera className="w-3.5 h-3.5 text-[#D14842]" />
                         <span>Cambiar Foto de Portada</span>
                       </button>
                     </div>
@@ -1150,11 +1172,11 @@ export default function GeneratedWebsitePreview({
               </section>
 
               {/* SECCIÓN 2: SERVICIOS / PRODUCTOS */}
-              <section id="servicios" className="px-6 py-12 space-y-8 bg-slate-900/60 border-b border-slate-800">
+              <section id="servicios" className="px-6 py-12 space-y-8 bg-white/60 border-b border-[#DFE3EC]">
                 <div className="text-center space-y-2 max-w-xl mx-auto">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#98dae9]">Soluciones Especializadas</span>
-                  <h2 className="text-xl sm:text-2xl font-black text-white">Nuestros Servicios Principales</h2>
-                  <p className="text-xs text-slate-400">Diseñados para brindar alta conversión y valor comercial inmediato a cada cliente.</p>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Soluciones Especializadas</span>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#252B3A]">Nuestros Servicios Principales</h2>
+                  <p className="text-xs text-[#5A6172]">Diseñados para brindar alta conversión y valor comercial inmediato a cada cliente.</p>
                 </div>
 
                 <div className="grid sm:grid-cols-3 gap-4">
@@ -1163,28 +1185,28 @@ export default function GeneratedWebsitePreview({
                     return (
                       <div 
                         key={idx}
-                        className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition group space-y-3"
+                        className="p-5 rounded-2xl bg-white border border-[#DFE3EC] hover:border-[#C8CEDB] transition group space-y-3"
                       >
                         {srv.image && (
-                          <div className="rounded-xl overflow-hidden h-32 border border-slate-800 -mt-1 mb-2">
+                          <div className="rounded-xl overflow-hidden h-32 border border-[#DFE3EC] -mt-1 mb-2">
                             <img src={srv.image} alt={srv.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
                           </div>
                         )}
                         <div className="flex justify-between items-start">
                           <div 
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-[#252B3A]"
                             style={{ backgroundColor: `${primaryColor}25`, color: primaryColor }}
                           >
                             <IconComp className="w-5 h-5" />
                           </div>
                           {srv.badge && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F2F4FA] text-[#3A4256] border border-[#C8CEDB]">
                               {srv.badge}
                             </span>
                           )}
                         </div>
-                        <h3 className="font-bold text-white text-sm">{srv.title}</h3>
-                        <p className="text-xs text-slate-400 leading-relaxed">{srv.description}</p>
+                        <h3 className="font-bold text-[#252B3A] text-sm">{srv.title}</h3>
+                        <p className="text-xs text-[#5A6172] leading-relaxed">{srv.description}</p>
                       </div>
                     );
                   })}
@@ -1192,26 +1214,26 @@ export default function GeneratedWebsitePreview({
               </section>
 
               {/* SECCIÓN 3: PROPUESTA DE VALOR / NOSOTROS */}
-              <section id="nosotros" className="px-6 py-12 space-y-8 bg-slate-950 border-b border-slate-800">
+              <section id="nosotros" className="px-6 py-12 space-y-8 bg-white border-b border-[#DFE3EC]">
                 <div className="max-w-3xl mx-auto space-y-6 text-center">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#98dae9]">Compromiso & Experiencia</span>
-                  <h2 className="text-xl sm:text-2xl font-black text-white">{about.title}</h2>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Compromiso & Experiencia</span>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#252B3A]">{about.title}</h2>
                   {about.image && (
-                    <div className="rounded-2xl overflow-hidden max-w-md mx-auto border border-slate-700 shadow-xl">
+                    <div className="rounded-2xl overflow-hidden max-w-md mx-auto border border-[#C8CEDB] shadow-xl">
                       <img src={about.image} alt="Nosotros" className="w-full max-h-56 object-cover" />
                     </div>
                   )}
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line text-left bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                  <p className="text-xs sm:text-sm text-[#3A4256] leading-relaxed whitespace-pre-line text-left bg-white/60 p-5 rounded-2xl border border-[#DFE3EC]">
                     {about.content}
                   </p>
 
                   <div className="grid grid-cols-3 gap-3 pt-2">
                     {about.metrics?.map((m, idx) => (
-                      <div key={idx} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                        <span className="text-lg sm:text-xl font-black text-white block" style={{ color: primaryColor }}>
+                      <div key={idx} className="p-3.5 rounded-xl bg-white border border-[#DFE3EC]">
+                        <span className="text-lg sm:text-xl font-black text-[#252B3A] block" style={{ color: primaryColor }}>
                           {m.value}
                         </span>
-                        <span className="text-[10px] sm:text-xs text-slate-400 font-medium">{m.label}</span>
+                        <span className="text-[10px] sm:text-xs text-[#5A6172] font-medium">{m.label}</span>
                       </div>
                     ))}
                   </div>
@@ -1219,95 +1241,95 @@ export default function GeneratedWebsitePreview({
               </section>
 
               {/* SECCIÓN 4: ARTÍCULOS DE BLOG (/Sitio_Web/Blog) */}
-              <section id="blog" className="px-6 py-12 space-y-6 bg-slate-900/40 border-b border-slate-800">
+              <section id="blog" className="px-6 py-12 space-y-6 bg-white/40 border-b border-[#DFE3EC]">
                 <div className="flex justify-between items-end max-w-4xl mx-auto">
                   <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#98dae9]">Contenidos & Recursos</span>
-                    <h2 className="text-xl font-black text-white">Últimas Publicaciones del Blog</h2>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Contenidos & Recursos</span>
+                    <h2 className="text-xl font-black text-[#252B3A]">Últimas Publicaciones del Blog</h2>
                   </div>
-                  <span className="text-xs font-mono text-slate-400">📁 /Sitio_Web/Blog</span>
+                  <span className="text-xs font-mono text-[#5A6172]">📁 /Sitio_Web/Blog</span>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
                   {blogPosts.map((post, idx) => (
-                    <article key={idx} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 hover:border-slate-700 transition">
-                      <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                    <article key={idx} className="p-5 rounded-2xl bg-white border border-[#DFE3EC] space-y-2 hover:border-[#C8CEDB] transition">
+                      <div className="flex items-center gap-2 text-[10px] text-[#5A6172]">
                         <Calendar className="w-3 h-3 text-[#1d7eae]" />
                         <span>{post.date}</span>
                         <span>•</span>
                         <span>{post.read_time} de lectura</span>
                       </div>
-                      <h3 className="font-bold text-white text-sm hover:text-[#98dae9] transition cursor-pointer">{post.title}</h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">{post.excerpt}</p>
+                      <h3 className="font-bold text-[#252B3A] text-sm hover:text-[#D14842] transition cursor-pointer">{post.title}</h3>
+                      <p className="text-xs text-[#5A6172] leading-relaxed">{post.excerpt}</p>
                     </article>
                   ))}
                 </div>
               </section>
 
               {/* SECCIÓN 5: FORMULARIO DE CONTACTO / LEAD CAPTURE */}
-              <section id="contacto" className="px-6 py-12 bg-slate-950 space-y-6">
+              <section id="contacto" className="px-6 py-12 bg-white space-y-6">
                 <div className="max-w-xl mx-auto text-center space-y-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#98dae9]">Conversemos</span>
-                  <h2 className="text-xl sm:text-2xl font-black text-white">{contact.title}</h2>
-                  <p className="text-xs text-slate-400">{contact.subtitle}</p>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#D14842]">Conversemos</span>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#252B3A]">{contact.title}</h2>
+                  <p className="text-xs text-[#5A6172]">{contact.subtitle}</p>
                 </div>
 
-                <div className="max-w-lg mx-auto bg-slate-900/90 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-xl">
+                <div className="max-w-lg mx-auto bg-white/90 border border-[#DFE3EC] p-6 rounded-2xl space-y-4 shadow-xl">
                   {contactSubmitted ? (
-                    <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 text-center text-xs space-y-1">
-                      <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-400" />
+                    <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-800 text-center text-xs space-y-1">
+                      <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-700" />
                       <p className="font-bold">¡Solicitud recibida con éxito!</p>
-                      <p className="text-slate-400">El equipo se pondrá en contacto a la brevedad.</p>
+                      <p className="text-[#5A6172]">El equipo se pondrá en contacto a la brevedad.</p>
                     </div>
                   ) : (
                     <form onSubmit={handleLeadSubmit} className="space-y-3">
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">Nombre Completo</label>
+                        <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">Nombre Completo</label>
                         <input
                           type="text"
                           required
                           value={leadForm.name}
                           onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
                           placeholder="Tu nombre"
-                          className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                          className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">Correo Electrónico</label>
+                          <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">Correo Electrónico</label>
                           <input
                             type="email"
                             required
                             value={leadForm.email}
                             onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
                             placeholder="correo@ejemplo.com"
-                            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                            className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">Teléfono</label>
+                          <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">Teléfono</label>
                           <input
                             type="tel"
                             value={leadForm.phone}
                             onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
                             placeholder="(656) 000-0000"
-                            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                            className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">¿Cómo podemos ayudarte?</label>
+                        <label className="block text-[11px] font-semibold text-[#3A4256] mb-1">¿Cómo podemos ayudarte?</label>
                         <textarea
                           rows={2}
                           value={leadForm.message}
                           onChange={(e) => setLeadForm({ ...leadForm, message: e.target.value })}
                           placeholder="Escribe tu mensaje o solicitud..."
-                          className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
+                          className="w-full px-3 py-2 rounded-lg bg-white border border-[#DFE3EC] text-xs text-[#252B3A] placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#1d7eae]"
                         />
                       </div>
                       <button
                         type="submit"
-                        className="w-full py-2.5 rounded-xl font-bold text-xs text-white transition shadow-md flex items-center justify-center gap-1.5"
+                        className="w-full py-2.5 rounded-xl font-bold text-xs text-[#252B3A] transition shadow-md flex items-center justify-center gap-1.5"
                         style={{ backgroundColor: primaryColor }}
                       >
                         <Send className="w-3.5 h-3.5" />
@@ -1316,7 +1338,7 @@ export default function GeneratedWebsitePreview({
                     </form>
                   )}
 
-                  <div className="pt-3 border-t border-slate-800 space-y-1.5 text-[11px] text-slate-400">
+                  <div className="pt-3 border-t border-[#DFE3EC] space-y-1.5 text-[11px] text-[#5A6172]">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-1.5 truncate">
                         <Phone className="w-3 h-3 text-[#1d7eae]" />
@@ -1328,7 +1350,7 @@ export default function GeneratedWebsitePreview({
                       </div>
                     </div>
                     {contact.address && (
-                      <div className="flex items-center gap-1.5 truncate text-[10px] text-slate-500 pt-0.5">
+                      <div className="flex items-center gap-1.5 truncate text-[10px] text-[#5A6172] pt-0.5">
                         <MapPin className="w-3 h-3 text-[#1d7eae] shrink-0" />
                         <span className="truncate">{contact.address}</span>
                       </div>
@@ -1338,7 +1360,7 @@ export default function GeneratedWebsitePreview({
               </section>
 
               {/* FOOTER DEL SITIO GENERADO */}
-              <footer className="bg-slate-950 px-6 py-6 border-t border-slate-800 text-center text-[11px] text-slate-500 space-y-2">
+              <footer className="bg-white px-6 py-6 border-t border-[#DFE3EC] text-center text-[11px] text-[#5A6172] space-y-2">
                 {effectiveLogo && (
                   <div className="flex justify-center mb-1">
                     <img
@@ -1360,52 +1382,52 @@ export default function GeneratedWebsitePreview({
       {/* 3. SUBTAB 2: PUBLICACIONES PARA REDES SOCIALES (FACEBOOK & INSTAGRAM) */}
       {subTab === 'social' && (
         <div className="p-6 space-y-6">
-          <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
+          <div className="border-b border-[#DFE3EC] pb-3 flex justify-between items-center">
             <div>
-              <h4 className="text-base font-bold text-white">Estrategia en Redes Sociales (Facebook e Instagram)</h4>
-              <p className="text-xs text-slate-400">Cumplimiento del MVP: Publicaciones generadas con gancho, CTA y hashtags antes de enviar a Meta Graph API.</p>
+              <h4 className="text-base font-bold text-[#252B3A]">Estrategia en Redes Sociales (Facebook e Instagram)</h4>
+              <p className="text-xs text-[#5A6172]">Cumplimiento del MVP: Publicaciones generadas con gancho, CTA y hashtags antes de enviar a Meta Graph API.</p>
             </div>
-            <span className="text-xs font-mono text-slate-400">📁 /Redes_Sociales/{isApproved ? 'Publicado' : 'Para_Publicar'}</span>
+            <span className="text-xs font-mono text-[#5A6172]">📁 /Redes_Sociales/{isApproved ? 'Publicado' : 'Para_Publicar'}</span>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             
             {/* Mockup Facebook */}
-            <div className="bg-[#18191a] border border-slate-800 rounded-2xl p-4 space-y-3 text-slate-100 shadow-xl">
-              <div className="flex items-center gap-2.5 pb-2 border-b border-slate-800/80">
-                <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm text-white">
+            <div className="bg-white border border-[#DFE3EC] rounded-2xl p-4 space-y-3 text-[#252B3A] shadow-md">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-[#DFE3EC]/80">
+                <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm text-[#252B3A]">
                   f
                 </div>
                 <div>
-                  <h5 className="font-bold text-xs text-white">{siteName}</h5>
-                  <span className="text-[10px] text-slate-400">Publicación patrocinada • Hace 2 min</span>
+                  <h5 className="font-bold text-xs text-[#252B3A]">{siteName}</h5>
+                  <span className="text-[10px] text-[#5A6172]">Publicación patrocinada • Hace 2 min</span>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-line">
+              <p className="text-xs text-[#252B3A] leading-relaxed whitespace-pre-line">
                 {social.facebook?.copy}
               </p>
 
               {/* Tarjeta de Enlace en Facebook */}
-              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
+              <div className="rounded-xl overflow-hidden border border-[#DFE3EC] bg-white">
                 <div className="h-32 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center justify-center p-4 text-center">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-[#98dae9]">{site.industry}</span>
-                    <h6 className="font-bold text-white text-xs">{hero.title}</h6>
+                    <span className="text-[10px] uppercase font-bold text-[#D14842]">{site.industry}</span>
+                    <h6 className="font-bold text-[#252B3A] text-xs">{hero.title}</h6>
                   </div>
                 </div>
-                <div className="p-3 bg-slate-950 flex justify-between items-center">
+                <div className="p-3 bg-white flex justify-between items-center">
                   <div>
-                    <span className="text-[10px] text-slate-400 uppercase">myos-platform.vercel.app</span>
-                    <p className="font-bold text-xs text-white">{siteName}</p>
+                    <span className="text-[10px] text-[#5A6172] uppercase">myos-platform.vercel.app</span>
+                    <p className="font-bold text-xs text-[#252B3A]">{siteName}</p>
                   </div>
-                  <button className="px-3 py-1 rounded-md text-[11px] font-bold bg-slate-800 text-white border border-slate-700">
+                  <button className="px-3 py-1 rounded-md text-[11px] font-bold bg-[#F2F4FA] text-[#252B3A] border border-[#C8CEDB]">
                     {social.facebook?.cta || 'Más información'}
                   </button>
                 </div>
               </div>
 
-              <div className="flex justify-around pt-2 border-t border-slate-800 text-xs text-slate-400">
+              <div className="flex justify-around pt-2 border-t border-[#DFE3EC] text-xs text-[#5A6172]">
                 <span className="flex items-center gap-1.5"><ThumbsUp className="w-3.5 h-3.5 text-blue-400" /> Me gusta</span>
                 <span className="flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" /> Comentar</span>
                 <span className="flex items-center gap-1.5"><Share2 className="w-3.5 h-3.5" /> Compartir</span>
@@ -1413,37 +1435,37 @@ export default function GeneratedWebsitePreview({
             </div>
 
             {/* Mockup Instagram */}
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3 text-slate-100 shadow-xl">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+            <div className="bg-white border border-[#DFE3EC] rounded-2xl p-4 space-y-3 text-[#252B3A] shadow-xl">
+              <div className="flex items-center justify-between pb-2 border-b border-[#DFE3EC]/80">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 p-0.5">
-                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-[10px] font-bold text-white">
+                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[10px] font-bold text-[#252B3A]">
                       IG
                     </div>
                   </div>
                   <div>
-                    <h5 className="font-bold text-xs text-white">{siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}</h5>
-                    <span className="text-[10px] text-slate-400">Original Audio</span>
+                    <h5 className="font-bold text-xs text-[#252B3A]">{siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}</h5>
+                    <span className="text-[10px] text-[#5A6172]">Original Audio</span>
                   </div>
                 </div>
-                <span className="text-xs text-slate-500 font-bold">•••</span>
+                <span className="text-xs text-[#5A6172] font-bold">•••</span>
               </div>
 
               {/* Imagen / Arte Generado */}
-              <div className="rounded-xl overflow-hidden bg-slate-900 border border-slate-800 p-6 text-center space-y-2">
-                <Sparkles className="w-8 h-8 mx-auto text-[#98dae9]" />
-                <span className="text-[10px] font-bold uppercase text-[#98dae9] block">Prompt de Arte para Generación</span>
-                <p className="text-xs text-slate-300 italic max-w-sm mx-auto">
+              <div className="rounded-xl overflow-hidden bg-white border border-[#DFE3EC] p-6 text-center space-y-2">
+                <Sparkles className="w-8 h-8 mx-auto text-[#D14842]" />
+                <span className="text-[10px] font-bold uppercase text-[#D14842] block">Prompt de Arte para Generación</span>
+                <p className="text-xs text-[#3A4256] italic max-w-sm mx-auto">
                   "{site.prompt_imagen || 'Fotografía profesional en iluminación de alta fidelidad 8k estilo publicitario.'}"
                 </p>
               </div>
 
-              <div className="space-y-1.5 text-xs text-slate-300">
+              <div className="space-y-1.5 text-xs text-[#3A4256]">
                 <p>
-                  <strong className="text-white mr-1.5">{siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}</strong>
+                  <strong className="text-[#252B3A] mr-1.5">{siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}</strong>
                   {social.instagram?.copy}
                 </p>
-                <p className="text-[#98dae9] font-medium text-[11px] leading-relaxed">
+                <p className="text-[#D14842] font-medium text-[11px] leading-relaxed">
                   {social.instagram?.hashtags}
                 </p>
               </div>
@@ -1452,18 +1474,18 @@ export default function GeneratedWebsitePreview({
           </div>
 
           {/* Calendario Editorial de Redes Sociales (Sincronizado con /Calendario en Drive) */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-3">
+          <div className="bg-white border border-[#DFE3EC] rounded-2xl p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#DFE3EC] pb-3">
               <div>
-                <h5 className="font-bold text-sm text-white flex items-center gap-2">
+                <h5 className="font-bold text-sm text-[#252B3A] flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#1d7eae]" />
                   <span>Calendario de Contenidos — Archivo de Control en Drive (/Calendario)</span>
                 </h5>
-                <p className="text-xs text-slate-400">
-                  Programación automatizada para Meta Graph API / Make. Estado actual: <span className={isApproved ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>{isApproved ? "Listo para Disparo" : "En Espera de Firma Humana"}</span>
+                <p className="text-xs text-[#5A6172]">
+                  Programación automatizada para Meta Graph API / Make. Estado actual: <span className={isApproved ? "text-emerald-700 font-bold" : "text-amber-700 font-bold"}>{isApproved ? "Listo para Disparo" : "En Espera de Firma Humana"}</span>
                 </p>
               </div>
-              <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 text-[#98dae9] border border-slate-700">
+              <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-[#F2F4FA] text-[#D14842] border border-[#C8CEDB]">
                 /Calendario/cronograma_editorial.json
               </span>
             </div>
@@ -1471,7 +1493,7 @@ export default function GeneratedWebsitePreview({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400">
+                  <tr className="border-b border-[#DFE3EC] text-[#5A6172]">
                     <th className="pb-2 font-semibold">Red Social</th>
                     <th className="pb-2 font-semibold">Programación</th>
                     <th className="pb-2 font-semibold">Formato</th>
@@ -1480,18 +1502,18 @@ export default function GeneratedWebsitePreview({
                     <th className="pb-2 font-semibold text-right">Estado Meta</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-slate-800/60 text-[#3A4256]">
                   <tr>
                     <td className="py-2.5 font-bold text-blue-400 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-blue-500"></span> Facebook
                     </td>
-                    <td className="py-2.5 text-slate-300">Hoy, 18:30 hrs</td>
+                    <td className="py-2.5 text-[#3A4256]">Hoy, 18:30 hrs</td>
                     <td className="py-2.5">Post con Enlace Web</td>
-                    <td className="py-2.5 font-mono text-[11px] text-slate-400">/Redes_Sociales/{isApproved ? 'Publicado' : 'Para_Publicar'}/arte_fb_01.jpg</td>
-                    <td className="py-2.5 text-[#98dae9] font-mono">/servicios</td>
+                    <td className="py-2.5 font-mono text-[11px] text-[#5A6172]">/Redes_Sociales/{isApproved ? 'Publicado' : 'Para_Publicar'}/arte_fb_01.jpg</td>
+                    <td className="py-2.5 text-[#D14842] font-mono">/servicios</td>
                     <td className="py-2.5 text-right">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        isApproved ? 'bg-emerald-100 text-emerald-800 border border-emerald-500/30' : 'bg-amber-100 text-amber-800 border border-amber-500/30'
                       }`}>
                         {isApproved ? 'APPROVED' : 'PENDING'}
                       </span>
@@ -1501,13 +1523,13 @@ export default function GeneratedWebsitePreview({
                     <td className="py-2.5 font-bold text-pink-400 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-pink-500"></span> Instagram
                     </td>
-                    <td className="py-2.5 text-slate-300">Mañana, 12:00 hrs</td>
+                    <td className="py-2.5 text-[#3A4256]">Mañana, 12:00 hrs</td>
                     <td className="py-2.5">Carrusel de 3 Slides</td>
-                    <td className="py-2.5 font-mono text-[11px] text-slate-400">/Redes_Sociales/{isApproved ? 'Publicado' : 'Para_Publicar'}/carrusel_ig_01.jpg</td>
-                    <td className="py-2.5 text-[#98dae9] font-mono">/inicio#servicios</td>
+                    <td className="py-2.5 font-mono text-[11px] text-[#5A6172]">/Redes_Sociales/{isApproved ? 'Publicado' : 'Para_Publicar'}/carrusel_ig_01.jpg</td>
+                    <td className="py-2.5 text-[#D14842] font-mono">/inicio#servicios</td>
                     <td className="py-2.5 text-right">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        isApproved ? 'bg-emerald-100 text-emerald-800 border border-emerald-500/30' : 'bg-amber-100 text-amber-800 border border-amber-500/30'
                       }`}>
                         {isApproved ? 'APPROVED' : 'PENDING'}
                       </span>
@@ -1524,12 +1546,12 @@ export default function GeneratedWebsitePreview({
       {/* 4. SUBTAB 3: GOOGLE DRIVE HEADLESS CMS */}
       {subTab === 'drive' && (
         <div className="p-6 space-y-4">
-          <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
+          <div className="border-b border-[#DFE3EC] pb-3 flex justify-between items-center">
             <div>
-              <h4 className="text-base font-bold text-white">Estructura de Archivos en Google Drive (Headless CMS)</h4>
-              <p className="text-xs text-slate-400">Especificación de Carlos: Archivos sincronizados automáticamente con el repositorio central.</p>
+              <h4 className="text-base font-bold text-[#252B3A]">Estructura de Archivos en Google Drive (Headless CMS)</h4>
+              <p className="text-xs text-[#5A6172]">Especificación de Carlos: Archivos sincronizados automáticamente con el repositorio central.</p>
             </div>
-            <span className="text-xs px-2.5 py-1 rounded-lg bg-blue-500/10 text-[#98dae9] border border-blue-500/30 font-mono">
+            <span className="text-xs px-2.5 py-1 rounded-lg bg-blue-500/10 text-[#D14842] border border-blue-500/30 font-mono">
               Drive Sync v1.0
             </span>
           </div>
@@ -1537,108 +1559,108 @@ export default function GeneratedWebsitePreview({
           <div className="grid sm:grid-cols-2 gap-4">
             
             {/* Carpeta /Marca requerida por la arquitectura */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 sm:col-span-2">
+            <div className="p-4 rounded-xl bg-white border border-[#DFE3EC] space-y-2 sm:col-span-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-white">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#252B3A]">
                   <Image className="w-4 h-4 text-[#1d7eae]" />
                   <span>📁 /Marca (Logotipos Oficiales, Códigos Hex y Manual de Identidad)</span>
                 </div>
-                <span className="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="text-[10px] text-emerald-700 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
                   {effectiveLogo ? '✓ Logo Oficial Sincronizado' : 'Insignia Base Sincronizada'}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#5A6172]">
                 Fuente central de verdad para la identidad corporativa utilizada por Django y React:
               </p>
               <div className="grid sm:grid-cols-3 gap-3 pt-1">
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-white border border-[#DFE3EC] flex items-center gap-3">
                   {effectiveLogo ? (
-                    <img src={effectiveLogo} alt="Logo Oficial" className="w-10 h-10 object-contain rounded bg-white/5 p-1 border border-slate-700" />
+                    <img src={effectiveLogo} alt="Logo Oficial" className="w-10 h-10 object-contain rounded bg-white/5 p-1 border border-[#C8CEDB]" />
                   ) : (
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: primaryColor }}>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-[#252B3A] text-sm" style={{ backgroundColor: primaryColor }}>
                       {siteName.charAt(0)}
                     </div>
                   )}
                   <div className="text-[11px] truncate">
-                    <span className="font-bold text-slate-200 block truncate">/Marca/logo_oficial.png</span>
-                    <span className="text-[10px] text-slate-500">{effectiveLogo ? 'Imagen subida por usuario' : 'Insignia corporativa'}</span>
+                    <span className="font-bold text-[#252B3A] block truncate">/Marca/logo_oficial.png</span>
+                    <span className="text-[10px] text-[#5A6172]">{effectiveLogo ? 'Imagen subida por usuario' : 'Insignia corporativa'}</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1 text-[11px]">
-                  <span className="font-bold text-slate-200 block">/Marca/colores_hex.json</span>
+                <div className="p-3 rounded-lg bg-white border border-[#DFE3EC] space-y-1 text-[11px]">
+                  <span className="font-bold text-[#252B3A] block">/Marca/colores_hex.json</span>
                   <div className="flex items-center gap-2">
                     <span className="w-3.5 h-3.5 rounded-full inline-block border border-white/20" style={{ backgroundColor: primaryColor }} title={primaryColor}></span>
-                    <span className="font-mono text-[10px] text-slate-400">{primaryColor} (Primario)</span>
+                    <span className="font-mono text-[10px] text-[#5A6172]">{primaryColor} (Primario)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-3.5 h-3.5 rounded-full inline-block border border-white/20" style={{ backgroundColor: secondaryColor }} title={secondaryColor}></span>
-                    <span className="font-mono text-[10px] text-slate-400">{secondaryColor} (Secundario)</span>
+                    <span className="font-mono text-[10px] text-[#5A6172]">{secondaryColor} (Secundario)</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1 text-[11px]">
-                  <span className="font-bold text-slate-200 block">/Marca/manual_de_voz.md</span>
-                  <span className="text-[10px] text-slate-400 block">Tipografía: Plus Jakarta Sans</span>
-                  <span className="text-[10px] text-[#98dae9] block">Tono: {site.industry || 'PyME'}</span>
+                <div className="p-3 rounded-lg bg-white border border-[#DFE3EC] space-y-1 text-[11px]">
+                  <span className="font-bold text-[#252B3A] block">/Marca/manual_de_voz.md</span>
+                  <span className="text-[10px] text-[#5A6172] block">Tipografía: Plus Jakarta Sans</span>
+                  <span className="text-[10px] text-[#D14842] block">Tono: {site.industry || 'PyME'}</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-white">
+            <div className="p-4 rounded-xl bg-white border border-[#DFE3EC] space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#252B3A]">
                 <FolderTree className="w-4 h-4 text-[#1d7eae]" />
                 <span>📁 /Sitio_Web/Paginas</span>
               </div>
-              <p className="text-xs text-slate-400">
-                Archivo: <code className="text-[#98dae9]">landing_{siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}.json</code>
+              <p className="text-xs text-[#5A6172]">
+                Archivo: <code className="text-[#D14842]">landing_{siteName.toLowerCase().replace(/[^a-z0-9]/g, '_')}.json</code>
               </p>
-              <div className="text-[11px] bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 font-mono text-slate-300 space-y-1">
+              <div className="text-[11px] bg-white p-2.5 rounded-lg border border-[#DFE3EC]/80 font-mono text-[#3A4256] space-y-1">
                 <div>✓ Hero props (badge, title, subtitle, CTAs)</div>
                 <div>✓ Array de servicios ({services.length} items con iconos)</div>
                 <div>✓ Formulario de captura y datos de contacto</div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-white">
+            <div className="p-4 rounded-xl bg-white border border-[#DFE3EC] space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#252B3A]">
                 <FileText className="w-4 h-4 text-[#1d7eae]" />
                 <span>📁 /Sitio_Web/Blog</span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#5A6172]">
                 Artículos generados en formato Markdown listos para renderizar:
               </p>
-              <div className="text-[11px] bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 font-mono text-slate-300 space-y-1">
+              <div className="text-[11px] bg-white p-2.5 rounded-lg border border-[#DFE3EC]/80 font-mono text-[#3A4256] space-y-1">
                 {blogPosts.map((b, i) => (
                   <div key={i} className="truncate">✓ articulo_0{i+1}_{b.title.slice(0, 20).replace(/\s+/g, '_')}.md</div>
                 ))}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-white">
+            <div className="p-4 rounded-xl bg-white border border-[#DFE3EC] space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#252B3A]">
                 <Share2 className="w-4 h-4 text-[#1d7eae]" />
                 <span>📁 /Redes_Sociales/{isApproved ? 'Publicado' : 'Para_Publicar'}</span>
               </div>
-              <p className="text-xs text-slate-400">
-                Estado: <span className={isApproved ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+              <p className="text-xs text-[#5A6172]">
+                Estado: <span className={isApproved ? 'text-emerald-700 font-bold' : 'text-amber-700 font-bold'}>
                   {isApproved ? 'Aprobado y sellado en histórico' : 'Borrador en bandeja de espera'}
                 </span>
               </p>
-              <div className="text-[11px] bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 font-mono text-slate-300">
+              <div className="text-[11px] bg-white p-2.5 rounded-lg border border-[#DFE3EC]/80 font-mono text-[#3A4256]">
                 Payload formateado para webhook hacia Meta Graph API / Make.
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-white">
+            <div className="p-4 rounded-xl bg-white border border-[#DFE3EC] space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#252B3A]">
                 <Calendar className="w-4 h-4 text-[#1d7eae]" />
                 <span>📁 /Calendario</span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#5A6172]">
                 Programación editorial automática registrada con fecha y hora.
               </p>
-              <div className="text-[11px] bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 font-mono text-slate-300">
+              <div className="text-[11px] bg-white p-2.5 rounded-lg border border-[#DFE3EC]/80 font-mono text-[#3A4256]">
                 Disparo agendado tras confirmación humana del auditor.
               </div>
             </div>
@@ -1649,26 +1671,26 @@ export default function GeneratedWebsitePreview({
       {/* 5. SUBTAB 4: CÓDIGO FUENTE HTML5 Y ESPECIFICACIÓN JSON */}
       {subTab === 'code' && (
         <div className="p-6 space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#DFE3EC] pb-4">
             <div>
-              <h4 className="text-base font-bold text-white flex items-center gap-2">
+              <h4 className="text-base font-bold text-[#252B3A] flex items-center gap-2">
                 <span>Código Fuente Generado por IA</span>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-500/30">
                   Listo para Producción
                 </span>
               </h4>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#5A6172]">
                 Página web completa en HTML5 con Tailwind CSS o especificación JSON para React y Vercel.
               </p>
             </div>
 
             {/* Selector de Formato Full Stack */}
             <div className="flex flex-wrap items-center gap-2">
-              <div className="p-1 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap items-center gap-1">
+              <div className="p-1 rounded-xl bg-white border border-[#DFE3EC] flex flex-wrap items-center gap-1">
                 <button
                   onClick={() => setCodeType('html')}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                    codeType === 'html' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    codeType === 'html' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   HTML5 (index.html)
@@ -1676,7 +1698,7 @@ export default function GeneratedWebsitePreview({
                 <button
                   onClick={() => setCodeType('react')}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                    codeType === 'react' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    codeType === 'react' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   React (Next.js)
@@ -1684,7 +1706,7 @@ export default function GeneratedWebsitePreview({
                 <button
                   onClick={() => setCodeType('django')}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                    codeType === 'django' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    codeType === 'django' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   Django (API)
@@ -1692,7 +1714,7 @@ export default function GeneratedWebsitePreview({
                 <button
                   onClick={() => setCodeType('vercel')}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                    codeType === 'vercel' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    codeType === 'vercel' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   vercel.json
@@ -1700,7 +1722,7 @@ export default function GeneratedWebsitePreview({
                 <button
                   onClick={() => setCodeType('json')}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                    codeType === 'json' ? 'bg-[#1d7eae] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                    codeType === 'json' ? 'bg-[#E2554F] text-[#252B3A] shadow-sm' : 'text-[#5A6172] hover:text-[#252B3A]'
                   }`}
                 >
                   Drive JSON
@@ -1711,7 +1733,7 @@ export default function GeneratedWebsitePreview({
                 <>
                   <button
                     onClick={handleDownloadHtml}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-md shadow-emerald-600/20 transition"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-[#252B3A] shadow-md shadow-emerald-600/20 transition"
                     title="Descargar index.html autónomo"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -1719,7 +1741,7 @@ export default function GeneratedWebsitePreview({
                   </button>
                   <button
                     onClick={handleOpenInNewTab}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F2F4FA] hover:bg-[#EEF0F6] text-xs font-semibold text-[#252B3A] border border-[#C8CEDB] transition"
                     title="Ver página en nueva pestaña"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -1730,23 +1752,23 @@ export default function GeneratedWebsitePreview({
 
               <button
                 onClick={handleCopyCode}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700 transition"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F2F4FA] hover:bg-[#EEF0F6] text-xs font-semibold text-[#252B3A] border border-[#C8CEDB] transition"
               >
-                {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedCode ? '¡Copiado!' : 'Copiar'}</span>
               </button>
             </div>
           </div>
 
           <div className="relative">
-            <div className="absolute top-3 right-3 text-[10px] font-mono px-2 py-1 rounded bg-slate-900/90 text-slate-400 border border-slate-800">
+            <div className="absolute top-3 right-3 text-[10px] font-mono px-2 py-1 rounded bg-white/90 text-[#5A6172] border border-[#DFE3EC]">
               {codeType === 'html' && 'HTML5 + Tailwind CSS CDN (Descarga directa)'}
               {codeType === 'react' && 'React / Next.js Component (Tailwind SSR/SSG)'}
               {codeType === 'django' && 'Django REST / Ninja (Modelos & Endpoints para Drive CMS)'}
               {codeType === 'vercel' && 'Vercel Serverless Build & Routing (vercel.json)'}
               {codeType === 'json' && 'Google Drive CMS Headless Payload'}
             </div>
-            <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-[#98dae9] overflow-x-auto max-h-96 overflow-y-auto leading-relaxed">
+            <pre className="p-4 rounded-xl bg-white border border-[#DFE3EC] text-[11px] font-mono text-[#D14842] overflow-x-auto max-h-96 overflow-y-auto leading-relaxed">
               {getActiveCode()}
             </pre>
           </div>
@@ -1754,9 +1776,9 @@ export default function GeneratedWebsitePreview({
       )}
 
       {/* 6. PIE DE AUDITORÍA HUMANA & APROBACIÓN OBLIGATORIA */}
-      <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="text-xs text-slate-400">
-          Evaluador asignado: <strong className="text-white">{currentUser?.displayName || 'Auditor'}</strong> ({currentUser?.email})
+      <div className="px-6 py-4 bg-white border-t border-[#DFE3EC] flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="text-xs text-[#5A6172]">
+          Evaluador asignado: <strong className="text-[#252B3A]">{currentUser?.displayName || 'Auditor'}</strong> ({currentUser?.email})
         </div>
 
         {!isApproved ? (
@@ -1764,21 +1786,21 @@ export default function GeneratedWebsitePreview({
             <button
               onClick={onRegenerate}
               disabled={loading}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700 transition"
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-850 hover:bg-[#F2F4FA] text-[#3A4256] border border-[#C8CEDB] transition"
             >
               🔄 Volver a Generar
             </button>
             <button
               onClick={onApprove}
               disabled={loading}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-[#252B3A] shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Aprobar Sitio Web & Certificar Publicación</span>
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-xl border border-emerald-500/30">
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-500/10 px-3.5 py-1.5 rounded-xl border border-emerald-500/30">
             <CheckCircle2 className="w-4 h-4" />
             <span>Aprobado por {currentUser?.displayName || 'Auditor'} • Despliegue Habilitado</span>
           </div>

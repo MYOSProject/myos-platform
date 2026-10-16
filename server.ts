@@ -3,6 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { timingSafeEqual } from 'node:crypto';
 
 dotenv.config({ override: true });
 
@@ -20,6 +21,8 @@ export interface GeneratedWebsite {
   site_name: string;
   industry: string;
   tagline: string;
+  custom_logo?: string;
+  hero_image?: string;
   brand_colors: {
     primary: string;
     secondary: string;
@@ -42,6 +45,7 @@ export interface GeneratedWebsite {
   about: {
     title: string;
     content: string;
+    image?: string;
     metrics: Array<{
       label: string;
       value: string;
@@ -105,12 +109,9 @@ const contents: ContentItem[] = [
     title: 'Transformación Digital para PyMEs con IoT',
     slug: 'transformacion-digital-iot',
     category: 'PÁGINA WEB / REDES',
-    status: 'APPROVED',
+    status: 'PENDING',
     body_text: 'Implementación de sensores conectados, analítica en tiempo real y dispositivos inteligentes para optimizar procesos operativos y reducir costos en medianas y grandes empresas.',
     created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-    approved_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-    approved_by: 'Carlos Torres (Sales Consultant)',
-    approved_by_email: 'Carlos.Torres@iottechnologies.mx',
     drive_file_id: 'drive_001_iot_intro',
     content: {
       titulo: 'Transformación Digital para PyMEs con IoT',
@@ -165,12 +166,9 @@ const contents: ContentItem[] = [
     title: 'Business Intelligence: De Datos a Decisiones Estratégicas',
     slug: 'business-intelligence-decisiones',
     category: 'PÁGINA WEB / REDES',
-    status: 'APPROVED',
+    status: 'PENDING',
     body_text: 'Tableros interactivos e integración de fuentes de datos dispersas para empoderar a la alta dirección con métricas accionables en minutos y visualización ejecutiva en alta fidelidad.',
     created_at: new Date(Date.now() - 86400000).toISOString(),
-    approved_at: new Date(Date.now() - 86400000).toISOString(),
-    approved_by: 'Miguel García (Multimedia)',
-    approved_by_email: 'miguel.garcia@merkatics.com',
     drive_file_id: 'drive_002_bi_platform',
     content: {
       titulo: 'Business Intelligence: De Datos a Decisiones Estratégicas',
@@ -224,8 +222,8 @@ const contents: ContentItem[] = [
 
 // Helper: Generador de página web completa autónoma en HTML5 + Tailwind CSS
 export function generateStandaloneHtml(site: GeneratedWebsite): string {
-  const primary = site.brand_colors?.primary || '#1d7eae';
-  const secondary = site.brand_colors?.secondary || '#0032a0';
+  const primary = site.brand_colors?.primary || '#E95349';
+  const secondary = site.brand_colors?.secondary || '#C6443F';
   const siteName = site.site_name || site.titulo || 'Mi Negocio';
   const tagline = site.tagline || 'Soluciones de Alta Conversión';
 
@@ -277,7 +275,19 @@ export function generateStandaloneHtml(site: GeneratedWebsite): string {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      color-scheme: light;
+      --myos-primary: ${primary};
+      --myos-secondary: ${secondary};
+      --myos-accent: ${site.brand_colors?.accent || primary};
+    }
+    html { scroll-behavior: smooth; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    input, textarea, select { max-width: 100%; }
+    img { max-width: 100%; }
+    a, button { transition: opacity .2s ease, transform .2s ease; }
+    a:hover, button:hover { opacity: .94; }
+    :focus-visible { outline: 3px solid var(--myos-accent); outline-offset: 3px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased selection:bg-[#1d7eae] selection:text-white">
@@ -1185,8 +1195,22 @@ app.post(['/api/generate', '/api/generate/'], async (req, res) => {
     });
 
     let systemPrompt = '';
+    const generationRules = `
+REGLAS DE INTERPRETACIÓN OBLIGATORIAS:
+- Trata la petición del usuario como requisitos del proyecto, no como texto para copiar literalmente en la web.
+- Antes de redactar, identifica mentalmente: objetivo del sitio, tipo de negocio/proyecto, audiencia, acción principal, estilo visual, colores explícitos, páginas/secciones solicitadas, funcionalidades y contenido que el usuario aportó.
+- Respeta primero las instrucciones explícitas del usuario. No reemplaces colores, tono, estructura, idioma, funcionalidades ni contenido solicitados por preferencias predeterminadas.
+- Si el usuario pide una tienda, catálogo, portafolio, restaurante, reservas, evento, landing page, sitio informativo u otro tipo concreto, adapta el contenido y la jerarquía a ese objetivo; no asumas que todos son sitios corporativos.
+- Si el usuario especifica secciones, conserva esas secciones y su prioridad. Si no especifica estructura, elige una estructura apropiada para el objetivo y no agregues secciones irrelevantes.
+- Para cambios sobre un sitio existente, modifica solo lo solicitado y conserva todos los demás datos y decisiones existentes. No reconstruyas la identidad ni elimines secciones salvo que el usuario lo pida o sea indispensable.
+- No inventes testimonios, certificaciones, clientes, métricas, premios, direcciones, teléfonos, correos ni garantías como si fueran reales. Si falta información real, usa texto neutral o deja un valor vacío/claramente editable.
+- Usa español salvo que el usuario solicite otro idioma.
+- Escribe textos específicos del negocio y evita frases genéricas repetidas.
+- Devuelve JSON válido, sin Markdown, comentarios ni texto fuera del objeto.
+`;
     if (isRefinement && previousSite) {
-      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial del Growth Operating System.
+      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial de MYOS.
+${generationRules}
 El cliente ya tiene este sitio web generado:
 ${JSON.stringify({
   site_name: previousSite.site_name,
@@ -1214,8 +1238,9 @@ Aplica lo que el usuario pide estrictamente:
 Responde ÚNICAMENTE un JSON válido con estas llaves:
 "titulo", "site_name", "industry", "tagline", "brand_colors" ({"primary", "secondary", "accent"}), "hero" ({"badge", "title", "subtitle", "primary_cta", "secondary_cta", "trust_badges"}), "services" ([{"title", "description", "icon", "badge"}]), "about" ({"title", "content", "metrics"}), "blog_posts", "contact" ({"title", "subtitle", "phone", "email", "address"}), "social_posts", "resumen_web", "copy_redes", "prompt_imagen".`;
     } else {
-      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial del Growth Operating System.
-El usuario quiere que le construyas una página web comercial completa y de alta conversión a partir de esta instrucción en lenguaje natural:
+      systemPrompt = `Eres un Diseñador Web y Copywriter Senior con Inteligencia Artificial de MYOS.
+${generationRules}
+El usuario quiere que le construyas una página web adaptada a sus necesidades a partir de esta instrucción en lenguaje natural:
 "${brief.trim()}"
 
 REGLAS CRÍTICAS DE DISEÑO:
@@ -1223,9 +1248,10 @@ REGLAS CRÍTICAS DE DISEÑO:
 2. Interpreta lo que el cliente quiere como un profesional:
    - Si dio un nombre de negocio, úsalo; si no, inventa un nombre comercial atractivo y memorable acorde al giro.
    - Si pidió colores o estilo específicos en su instrucción, aplícalos en "brand_colors" y en el tono.
-   - Crea un catálogo de 3 a 4 servicios o productos detallados y reales con descripciones llamativas y beneficios concretos.
-   - Escribe un titular de hero de alta conversión, un eslogan ganador y una propuesta única de valor.
-   - Redacta una historia de "Nosotros" humana y creíble, métricas de confianza, artículos de blog útiles y datos de contacto reales.
+   - Incluye servicios o productos solo cuando encajen con el tipo de sitio solicitado; si se pidió una tienda, prioriza productos, categorías, precios editables y acciones de compra.
+   - Escribe un titular principal y una propuesta de valor adecuados al objetivo de conversión del sitio.
+   - No fuerces una sección "Nosotros", blog ni métricas si no tienen sentido para la petición. Cuando el esquema exija esos campos, rellénalos de forma breve, neutral y sin inventar hechos.
+   - No inventes datos de contacto: si no se proporcionaron, usa campos vacíos o marcadores claramente editables.
 
 Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
 - "titulo": Título comercial atractivo
@@ -1250,9 +1276,9 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
     "title": "Nuestra Historia / Propuesta de Valor",
     "content": "Historia y misión del negocio",
     "metrics": [
-      { "label": "Métrica 1", "value": "+1,500" },
-      { "label": "Métrica 2", "value": "99.8%" },
-      { "label": "Métrica 3", "value": "8+ Años" }
+      { "label": "Beneficio", "value": "Calidad" },
+      { "label": "Atención", "value": "Cercana" },
+      { "label": "Enfoque", "value": "Personalizado" }
     ]
   }
 - "blog_posts": [
@@ -1261,11 +1287,15 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
   ]
 - "contact": {
     "title": "Contacto y Pedidos",
-    "subtitle": "Atención rápida por WhatsApp",
-    "phone": "+52 (656) 123-4567",
-    "email": "contacto@negocio.com",
-    "address": "Ciudad y cobertura del servicio"
+    "subtitle": "Texto breve para invitar al contacto",
+    "phone": "",
+    "whatsapp": "",
+    "email": "",
+    "address": "",
+    "hours": "",
+    "location_url": ""
   }
+- DATOS PERSONALES Y DEL NEGOCIO: si el usuario proporciona teléfono, WhatsApp, correo, dirección, ubicación, horarios o redes sociales, conserva esos valores exactamente y colócalos en los campos correspondientes. Nunca inventes datos de contacto. Si el usuario solicita esos datos pero no los proporciona, deja el campo vacío y señala fuera del contenido generado que necesita completarlo; si el usuario pide expresamente marcadores editables, usa textos como [Agregar teléfono] claramente identificados como pendientes.
 - "social_posts": {
     "facebook": { "copy": "Copy publicitario para Facebook", "cta": "Ver Más" },
     "instagram": { "copy": "Copy visual para Instagram", "hashtags": "#Negocio #Calidad" }
@@ -1333,6 +1363,36 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
     parsedContent.design_theme = req.body.designTheme;
   }
 
+  // Si el usuario especifica colores en su instrucción, estos prevalecen sobre los colores genéricos que pueda proponer el modelo.
+  // Los colores de la interfaz MYOS no deben imponerse al sitio que se está creando.
+  const requestedBrief = String(req.body?.brief || '');
+  const explicitCustomColors = req.body?.customColors?.primary;
+  if (!explicitCustomColors) {
+    const asksGreen = /\b(verde|green|esmeralda|menta)\b/i.test(requestedBrief);
+    const asksBlack = /\b(negro|negra|black|oscuro|oscura)\b/i.test(requestedBrief);
+    const asksBlue = /\b(azul|blue|marino)\b/i.test(requestedBrief);
+    const asksPurple = /\b(morado|morado|violeta|purple|lila)\b/i.test(requestedBrief);
+    const asksOrange = /\b(naranja|orange|coral)\b/i.test(requestedBrief);
+    const asksRed = /\b(rojo|roja|red|borgoña)\b/i.test(requestedBrief);
+    if (asksGreen) {
+      parsedContent.brand_colors = {
+        primary: '#059669',
+        secondary: asksBlack ? '#111827' : '#047857',
+        accent: '#34D399'
+      };
+    } else if (asksBlue) {
+      parsedContent.brand_colors = { primary: '#2563EB', secondary: '#1E3A8A', accent: '#60A5FA' };
+    } else if (asksPurple) {
+      parsedContent.brand_colors = { primary: '#7C3AED', secondary: '#4C1D95', accent: '#C4B5FD' };
+    } else if (asksOrange) {
+      parsedContent.brand_colors = { primary: '#EA580C', secondary: '#9A3412', accent: '#FDBA74' };
+    } else if (asksRed) {
+      parsedContent.brand_colors = { primary: '#DC2626', secondary: '#7F1D1D', accent: '#FCA5A5' };
+    }
+  }
+
+  // Garantizar contraste legible en botones principales del HTML generado.
+  // La identidad de MYOS solo afecta al editor, nunca al sitio independiente.
   // Generar código HTML5 completo y asignarle archivos para Google Drive CMS
   parsedContent.full_html = generateStandaloneHtml(parsedContent);
   const safeSlug = (parsedContent.site_name || 'sitio').toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -1368,49 +1428,113 @@ Responde ÚNICAMENTE un JSON válido con estas llaves exactas:
   });
 });
 
-// POST /api/approve/:id or /api/approve/:id/
-app.post(['/api/approve/:id', '/api/approve/:id/'], (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const approverEmail = req.body?.approverEmail || 'carlos.torres@iottechnologies.mx';
-  const approverName = req.body?.approverName || 'Aprobador Corporativo';
 
-  let item = contents.find(c => c.id === id);
-  if (!item) {
-    // Si la propuesta fue creada en cliente, la persistimos directamente en el backend
-    const prop = req.body?.proposalData || {};
-    item = {
-      id,
-      title: prop.site_name || prop.titulo || `Sitio Web #${id}`,
-      slug: `sitio-${id}`,
-      category: 'PÁGINA WEB / REDES',
-      status: 'APPROVED',
-      body_text: prop.resumen_web || 'Sitio web aprobado',
-      created_at: new Date().toISOString(),
-      approved_at: new Date().toISOString(),
-      approved_by: approverName,
-      approved_by_email: approverEmail,
-      content: prop
-    };
-    contents.unshift(item);
-  } else {
-    // Regla no negociable: registrar explícitamente quién aprobó y en qué fecha
-    item.status = 'APPROVED';
-    item.approved_at = new Date().toISOString();
-    item.approved_by = approverName;
-    item.approved_by_email = approverEmail;
+// GET /api/drive/files — lectura de archivos directamente dentro de la carpeta compartida.
+// Solo metadatos: no descarga ni modifica archivos de Drive.
+app.get(['/api/drive/files', '/api/drive/files/'], async (req, res) => {
+  const configuredToken = process.env.MYOS_DRIVE_API_TOKEN;
+  const authHeader = req.header('authorization') || '';
+  const suppliedToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
 
-    if (req.body?.proposalData) {
-      item.content = req.body.proposalData;
-      item.title = req.body.proposalData.site_name || req.body.proposalData.titulo || item.title;
-      item.body_text = req.body.proposalData.resumen_web || item.body_text;
-    } else if (item.content?.resumen_web) {
-      item.body_text = item.content.resumen_web;
-      item.title = item.content.titulo;
+  if (!configuredToken) {
+    return res.status(503).json({ error: 'La integración de Google Drive no está configurada en el servidor.' });
+  }
+
+  const expected = Buffer.from(configuredToken);
+  const supplied = Buffer.from(suppliedToken);
+  const tokenMatches = expected.length > 0 &&
+    expected.length === supplied.length &&
+    timingSafeEqual(expected, supplied);
+
+  if (!tokenMatches) {
+    return res.status(401).json({ error: 'No autorizado.' });
+  }
+
+  const folderId = process.env.MYOS_DRIVE_FOLDER_ID;
+  const serviceAccountJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!folderId || !serviceAccountJson) {
+    return res.status(503).json({ error: 'Faltan variables de configuración de Google Drive.' });
+  }
+
+  try {
+    const credentials = JSON.parse(serviceAccountJson);
+    if (!credentials.client_email || !credentials.private_key) {
+      return res.status(503).json({ error: 'La credencial de Google Drive no tiene el formato esperado.' });
     }
+
+    const { google } = await import('googleapis');
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/drive.readonly']
+    });
+    const drive = google.drive({ version: 'v3', auth });
+    const result = await drive.files.list({
+      q: `'${folderId.replace(/'/g, "\\'")}' in parents and trashed = false`,
+      pageSize: 100,
+      orderBy: 'name',
+      fields: 'nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink)',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true
+    });
+
+    return res.json({
+      folderId,
+      files: (result.data.files || []).map(file => ({
+        id: file.id,
+        name: file.name,
+        mimeType: file.mimeType,
+        modifiedTime: file.modifiedTime,
+        webViewLink: file.webViewLink
+      })),
+      nextPageToken: result.data.nextPageToken || null
+    });
+  } catch (error) {
+    // No registrar credenciales ni detalles internos de Google en la respuesta.
+    console.error('Google Drive metadata listing failed.');
+    return res.status(502).json({ error: 'No se pudieron consultar los archivos de Google Drive. Verifica que la cuenta de servicio tenga acceso a la carpeta.' });
+  }
+});
+
+// POST /api/approve/:id — requires explicit human identity and a pending record.
+// TODO(production): verify the Firebase ID token server-side before trusting identity fields.
+app.post(['/api/approve/:id', '/api/approve/:id/'], (req, res) => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  const approverEmail = typeof req.body?.approverEmail === 'string' ? req.body.approverEmail.trim() : '';
+  const approverName = typeof req.body?.approverName === 'string' ? req.body.approverName.trim() : '';
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Identificador de contenido inválido.' });
+  }
+  if (!approverEmail || !approverName) {
+    return res.status(401).json({ error: 'Debes iniciar sesión para registrar una aprobación humana.' });
+  }
+
+  const item = contents.find(c => c.id === id);
+  if (!item) {
+    return res.status(404).json({ error: 'La propuesta no existe en el servidor. No se puede aprobar una propuesta no registrada.' });
+  }
+  if (item.status !== 'PENDING') {
+    return res.status(409).json({ error: 'Solo se puede aprobar contenido en estado PENDING.', status: item.status });
+  }
+
+  // Registrar quién aprobó y cuándo. La aprobación no publica por sí misma en redes sociales.
+  const approvedAt = new Date().toISOString();
+  item.status = 'APPROVED';
+  item.approved_at = approvedAt;
+  item.approved_by = approverName;
+  item.approved_by_email = approverEmail;
+
+  if (req.body?.proposalData) {
+    item.content = req.body.proposalData;
+    item.title = req.body.proposalData.site_name || req.body.proposalData.titulo || item.title;
+    item.body_text = req.body.proposalData.resumen_web || item.body_text;
+  } else if (item.content?.resumen_web) {
+    item.body_text = item.content.resumen_web;
+    item.title = item.content.titulo || item.title;
   }
 
   return res.json({
-    message: 'Contenido aprobado con éxito y registrado en auditoría.',
+    message: 'Aprobación humana registrada. La publicación sigue siendo una acción separada.',
     status: 'APPROVED',
     item
   });
@@ -1418,7 +1542,7 @@ app.post(['/api/approve/:id', '/api/approve/:id/'], (req, res) => {
 
 // GET /preview/:id o /site/:id para abrir la página en otra pestaña como HTML autónomo
 app.get(['/preview/:id', '/site/:id', '/api/site/:id/preview'], (req, res) => {
-  const paramId = req.params.id;
+  const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const numId = parseInt(paramId, 10);
   const item = contents.find(c => c.id === numId || String(c.id) === String(paramId));
   if (!item || !item.content) {
@@ -1455,7 +1579,7 @@ app.post(['/api/site/render-html', '/api/site/render-html/'], (req, res) => {
 
 // PUT /api/content/:id para guardar modificaciones de textos o fotos
 app.put(['/api/content/:id', '/api/content/:id/'], (req, res) => {
-  const paramId = req.params.id;
+  const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(paramId, 10);
   let item = contents.find(c => c.id === id || String(c.id) === String(paramId));
   
