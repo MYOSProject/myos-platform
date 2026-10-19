@@ -13,7 +13,7 @@ function Alert({ kind = 'err', children }) {
 }
 
 // ------------------------------------------------------------------ Login
-function Login({ health, onDev }) {
+function Login({ health, onDev, authError }) {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
@@ -40,6 +40,7 @@ function Login({ health, onDev }) {
         <button className="mk-btn sec" onClick={() => run(() => createUserWithEmailAndPassword(auth, email, pass))}>Crear cuenta</button>
       </div>
       <Alert>{err}</Alert>
+      <Alert>{authError}</Alert>
       <p className="mk-muted">Para aprobar necesitas un correo verificado (Google lo está).</p>
     </div>
   );
@@ -267,9 +268,14 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [page, setPage] = useState('gen');
   const [items, setItems] = useState([]);
+  const [authError, setAuthError] = useState('');
 
   const loadMe = useCallback(async () => {
-    try { setMe((await api('GET', '/api/me')).user); } catch { setMe(null); }
+    setAuthError('');
+    try { setMe((await api('GET', '/api/me')).user); } catch (e) {
+      setMe(null);
+      if (auth.currentUser || getDevUser()) setAuthError(`Entraste con ${auth.currentUser?.email || getDevUser()}, pero el servidor rechazó la sesión: ${e.message}${e.code ? ` (${e.code})` : ''}`);
+    }
     setReady(true);
   }, []);
   const reload = useCallback(async () => { try { setItems(await api('GET', '/api/all-content')); } catch { /* sin sesión */ } }, []);
@@ -280,7 +286,7 @@ export default function App() {
   useEffect(() => { if (me) reload(); }, [me, reload]);
 
   if (!ready) return <p style={{ padding: 24 }}>Cargando…</p>;
-  if (!me) return <Login health={health} onDev={(e) => { setDevUser(e); loadMe(); }} />;
+  if (!me) return <Login authError={authError} health={health} onDev={(e) => { setDevUser(e); loadMe(); }} />;
 
   const pending = items.filter((i) => i.status === 'PENDING').length;
   const nav = [['gen', 'Generar con IA'], ['sites', 'Sitios web'], ['social', 'Redes sociales'], ['status', 'Estado y auditoría']];
