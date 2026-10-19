@@ -72159,7 +72159,7 @@ function iconSvg(name, size = 22) {
 }
 
 // server/gemini.ts
-var DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.1-flash-lite"];
+var DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 var HINTS = {
   NO_API_KEY: "Falta GEMINI_API_KEY. Cr\xE9ala en https://aistudio.google.com/apikey y gu\xE1rdala en un archivo .env en la ra\xEDz del proyecto (o en las variables de entorno de Vercel). Reinicia el servidor despu\xE9s.",
   INVALID_API_KEY: "Google rechaz\xF3 la llave de API (inv\xE1lida, revocada o sin permiso). Genera una nueva en https://aistudio.google.com/apikey y actualiza .env / Vercel.",
@@ -72521,64 +72521,70 @@ async function generateSite(input, opts = {}) {
   const contents = buildUserPrompt(input.brief, input.previousSite);
   let lastError = { code: "UNKNOWN", message: "Sin intentos" };
   const fail2 = (code, message2) => new AiFailure(code, message2, meta({ source: "fallback", error: { code, message: message2, hint: HINTS[code] } }));
-  modelLoop: for (const model of models) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (Date.now() - started > budgetMs) {
-        break modelLoop;
-      }
-      const t0 = Date.now();
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents,
-          config: {
-            systemInstruction,
-            responseMimeType: "application/json",
-            responseJsonSchema: SITE_SCHEMA,
-            temperature: attempt === 0 ? 0.8 : 0.5,
-            maxOutputTokens: 8192
-          }
-        });
-        const { text, blocked } = extractText(response);
-        if (blocked) {
-          attempts.push({ model, ok: false, code: "SAFETY_BLOCK", message: `Bloqueado: ${blocked}`, ms: Date.now() - t0 });
-          throw fail2("SAFETY_BLOCK", `Bloqueado por seguridad (${blocked}).`);
+  roundLoop: for (let round = 0; round < 2; round++) {
+    if (round === 1) {
+      if (lastError.code !== "OVERLOADED" && lastError.code !== "TIMEOUT" && lastError.code !== "NETWORK") break;
+      await sleep2(backoffMs * 4);
+    }
+    modelLoop: for (const model of models) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (Date.now() - started > budgetMs) {
+          break roundLoop;
         }
-        if (!text.trim()) {
-          attempts.push({ model, ok: false, code: "EMPTY", message: "Respuesta vac\xEDa", ms: Date.now() - t0 });
-          lastError = { code: "EMPTY", message: "Respuesta vac\xEDa" };
-          continue;
-        }
-        let site;
+        const t0 = Date.now();
         try {
-          site = normalizeSite(parseJson(text));
-        } catch (e2) {
-          const message2 = `JSON inv\xE1lido: ${e2?.message || e2}`;
-          attempts.push({ model, ok: false, code: "BAD_JSON", message: message2, ms: Date.now() - t0 });
-          lastError = { code: "BAD_JSON", message: message2 };
-          continue;
+          const response = await ai.models.generateContent({
+            model,
+            contents,
+            config: {
+              systemInstruction,
+              responseMimeType: "application/json",
+              responseJsonSchema: SITE_SCHEMA,
+              temperature: attempt === 0 ? 0.8 : 0.5,
+              maxOutputTokens: 8192
+            }
+          });
+          const { text, blocked } = extractText(response);
+          if (blocked) {
+            attempts.push({ model, ok: false, code: "SAFETY_BLOCK", message: `Bloqueado: ${blocked}`, ms: Date.now() - t0 });
+            throw fail2("SAFETY_BLOCK", `Bloqueado por seguridad (${blocked}).`);
+          }
+          if (!text.trim()) {
+            attempts.push({ model, ok: false, code: "EMPTY", message: "Respuesta vac\xEDa", ms: Date.now() - t0 });
+            lastError = { code: "EMPTY", message: "Respuesta vac\xEDa" };
+            continue;
+          }
+          let site;
+          try {
+            site = normalizeSite(parseJson(text));
+          } catch (e2) {
+            const message2 = `JSON inv\xE1lido: ${e2?.message || e2}`;
+            attempts.push({ model, ok: false, code: "BAD_JSON", message: message2, ms: Date.now() - t0 });
+            lastError = { code: "BAD_JSON", message: message2 };
+            continue;
+          }
+          if (copiesBrief(site, input.brief) && attempt < 2) {
+            const message2 = "El modelo copi\xF3 la descripci\xF3n del cliente en los t\xEDtulos";
+            attempts.push({ model, ok: false, code: "BAD_JSON", message: message2, ms: Date.now() - t0 });
+            lastError = { code: "BAD_JSON", message: message2 };
+            continue;
+          }
+          attempts.push({ model, ok: true, ms: Date.now() - t0 });
+          return { site, ai: meta({ model }) };
+        } catch (err) {
+          if (err instanceof AiFailure) throw err;
+          const c = classifyError(err);
+          attempts.push({ model, ok: false, code: c.code, message: c.message, ms: Date.now() - t0 });
+          lastError = { code: c.code, message: c.message };
+          if (c.code === "INVALID_API_KEY") throw fail2(c.code, c.message);
+          if (c.code === "QUOTA" || c.code === "MODEL_NOT_FOUND") continue modelLoop;
+          if (c.code === "OVERLOADED" && attempt >= 1) continue modelLoop;
+          if (c.retryable) {
+            await sleep2(backoffMs * 2 ** attempt);
+            continue;
+          }
+          continue modelLoop;
         }
-        if (copiesBrief(site, input.brief) && attempt < 2) {
-          const message2 = "El modelo copi\xF3 la descripci\xF3n del cliente en los t\xEDtulos";
-          attempts.push({ model, ok: false, code: "BAD_JSON", message: message2, ms: Date.now() - t0 });
-          lastError = { code: "BAD_JSON", message: message2 };
-          continue;
-        }
-        attempts.push({ model, ok: true, ms: Date.now() - t0 });
-        return { site, ai: meta({ model }) };
-      } catch (err) {
-        if (err instanceof AiFailure) throw err;
-        const c = classifyError(err);
-        attempts.push({ model, ok: false, code: c.code, message: c.message, ms: Date.now() - t0 });
-        lastError = { code: c.code, message: c.message };
-        if (c.code === "INVALID_API_KEY") throw fail2(c.code, c.message);
-        if (c.code === "QUOTA" || c.code === "MODEL_NOT_FOUND") continue modelLoop;
-        if (c.code === "OVERLOADED" && attempt >= 1) continue modelLoop;
-        if (c.retryable) {
-          await sleep2(backoffMs * 2 ** attempt);
-          continue;
-        }
-        continue modelLoop;
       }
     }
   }
@@ -72616,52 +72622,58 @@ async function generateStructured(input, opts = {}) {
   const backoffMs = opts.backoffMs ?? 800;
   const ai = makeClient(apiKey, opts.requestTimeoutMs ?? Number(process.env.AI_REQUEST_TIMEOUT_MS || 3e4));
   let lastError = { code: "UNKNOWN", message: "Sin intentos" };
-  modelLoop: for (const model of models) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      if (Date.now() - started > budgetMs) break modelLoop;
-      const t0 = Date.now();
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: input.contents,
-          config: {
-            systemInstruction: input.systemInstruction,
-            responseMimeType: "application/json",
-            responseJsonSchema: input.schema,
-            temperature: input.temperature ?? 0.7,
-            maxOutputTokens: input.maxOutputTokens ?? 4096
-          }
-        });
-        const { text, blocked } = extractText(response);
-        if (blocked) {
-          attempts.push({ model, ok: false, code: "SAFETY_BLOCK", message: `Bloqueado: ${blocked}`, ms: Date.now() - t0 });
-          throw fail2("SAFETY_BLOCK", `Bloqueado por seguridad (${blocked}).`);
-        }
-        let data;
+  roundLoop: for (let round = 0; round < 2; round++) {
+    if (round === 1) {
+      if (lastError.code !== "OVERLOADED" && lastError.code !== "TIMEOUT" && lastError.code !== "NETWORK") break;
+      await sleep2(backoffMs * 4);
+    }
+    modelLoop: for (const model of models) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (Date.now() - started > budgetMs) break roundLoop;
+        const t0 = Date.now();
         try {
-          data = parseJson(text);
-        } catch (e2) {
-          const message2 = text.trim() ? `JSON inv\xE1lido: ${e2?.message || e2}` : "Respuesta vac\xEDa";
-          const code = text.trim() ? "BAD_JSON" : "EMPTY";
-          attempts.push({ model, ok: false, code, message: message2, ms: Date.now() - t0 });
-          lastError = { code, message: message2 };
-          continue;
+          const response = await ai.models.generateContent({
+            model,
+            contents: input.contents,
+            config: {
+              systemInstruction: input.systemInstruction,
+              responseMimeType: "application/json",
+              responseJsonSchema: input.schema,
+              temperature: input.temperature ?? 0.7,
+              maxOutputTokens: input.maxOutputTokens ?? 4096
+            }
+          });
+          const { text, blocked } = extractText(response);
+          if (blocked) {
+            attempts.push({ model, ok: false, code: "SAFETY_BLOCK", message: `Bloqueado: ${blocked}`, ms: Date.now() - t0 });
+            throw fail2("SAFETY_BLOCK", `Bloqueado por seguridad (${blocked}).`);
+          }
+          let data;
+          try {
+            data = parseJson(text);
+          } catch (e2) {
+            const message2 = text.trim() ? `JSON inv\xE1lido: ${e2?.message || e2}` : "Respuesta vac\xEDa";
+            const code = text.trim() ? "BAD_JSON" : "EMPTY";
+            attempts.push({ model, ok: false, code, message: message2, ms: Date.now() - t0 });
+            lastError = { code, message: message2 };
+            continue;
+          }
+          attempts.push({ model, ok: true, ms: Date.now() - t0 });
+          return { data, ai: meta({ model }) };
+        } catch (err) {
+          if (err instanceof AiFailure) throw err;
+          const c = classifyError(err);
+          attempts.push({ model, ok: false, code: c.code, message: c.message, ms: Date.now() - t0 });
+          lastError = { code: c.code, message: c.message };
+          if (c.code === "INVALID_API_KEY") throw fail2(c.code, c.message);
+          if (c.code === "QUOTA" || c.code === "MODEL_NOT_FOUND") continue modelLoop;
+          if (c.code === "OVERLOADED" && attempt >= 1) continue modelLoop;
+          if (c.retryable) {
+            await sleep2(backoffMs * 2 ** attempt);
+            continue;
+          }
+          continue modelLoop;
         }
-        attempts.push({ model, ok: true, ms: Date.now() - t0 });
-        return { data, ai: meta({ model }) };
-      } catch (err) {
-        if (err instanceof AiFailure) throw err;
-        const c = classifyError(err);
-        attempts.push({ model, ok: false, code: c.code, message: c.message, ms: Date.now() - t0 });
-        lastError = { code: c.code, message: c.message };
-        if (c.code === "INVALID_API_KEY") throw fail2(c.code, c.message);
-        if (c.code === "QUOTA" || c.code === "MODEL_NOT_FOUND") continue modelLoop;
-        if (c.code === "OVERLOADED" && attempt >= 1) continue modelLoop;
-        if (c.retryable) {
-          await sleep2(backoffMs * 2 ** attempt);
-          continue;
-        }
-        continue modelLoop;
       }
     }
   }

@@ -13,7 +13,7 @@ import { ICON_NAMES } from './icons.js';
 import { ENV_SOURCES, isPlaceholder, list } from './env.js';
 
 // Nombres vigentes según https://ai.google.dev/gemini-api/docs/models (verificado el 2026-10-19).
-export const DEFAULT_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
+export const DEFAULT_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
 
 export const HINTS: Record<AiErrorCode, string> = {
   NO_API_KEY:
@@ -478,11 +478,17 @@ export async function generateSite(
   const fail = (code: AiErrorCode, message: string) =>
     new AiFailure(code, message, meta({ source: 'fallback', error: { code, message, hint: HINTS[code] } }));
 
+  // Dos vueltas por la cadena de modelos: si todos están saturados, se espera unos segundos y se reintenta.
+  roundLoop: for (let round = 0; round < 2; round++) {
+    if (round === 1) {
+      if (lastError.code !== 'OVERLOADED' && lastError.code !== 'TIMEOUT' && lastError.code !== 'NETWORK') break;
+      await sleep(backoffMs * 4);
+    }
   modelLoop: for (const model of models) {
     // Hasta 3 intentos por modelo, solo repitiendo cuando el error lo amerita.
     for (let attempt = 0; attempt < 3; attempt++) {
       if (Date.now() - started > budgetMs) {
-        break modelLoop;
+        break roundLoop;
       }
       const t0 = Date.now();
       try {
@@ -541,6 +547,7 @@ export async function generateSite(
       }
     }
   }
+  }
 
   throw fail(lastError.code, lastError.message);
 }
@@ -590,9 +597,14 @@ export async function generateStructured(
   const ai = makeClient(apiKey, opts.requestTimeoutMs ?? Number(process.env.AI_REQUEST_TIMEOUT_MS || 30000));
   let lastError: { code: AiErrorCode; message: string } = { code: 'UNKNOWN', message: 'Sin intentos' };
 
+  roundLoop: for (let round = 0; round < 2; round++) {
+  if (round === 1) {
+    if (lastError.code !== 'OVERLOADED' && lastError.code !== 'TIMEOUT' && lastError.code !== 'NETWORK') break;
+    await sleep(backoffMs * 4);
+  }
   modelLoop: for (const model of models) {
     for (let attempt = 0; attempt < 2; attempt++) {
-      if (Date.now() - started > budgetMs) break modelLoop;
+      if (Date.now() - started > budgetMs) break roundLoop;
       const t0 = Date.now();
       try {
         const response = await ai.models.generateContent({
@@ -638,6 +650,7 @@ export async function generateStructured(
         continue modelLoop;
       }
     }
+  }
   }
   throw fail(lastError.code, lastError.message);
 }

@@ -78,7 +78,7 @@ test('health es público y reporta el estado real de IA, auth y publicación', a
   const r = await api('GET', '/api/health');
   assert.equal(r.status, 200);
   assert.equal(r.json.ai.configured, true);
-  assert.deepEqual(r.json.ai.models, ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite']);
+  assert.deepEqual(r.json.ai.models, ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']);
   assert.equal(r.json.auth.mode, 'dev');
   assert.equal(r.json.social.facebook, 'dry-run');
   assert.ok(!JSON.stringify(r.json).includes('test-key-1234567890abcdef'), 'nunca debe exponer la llave');

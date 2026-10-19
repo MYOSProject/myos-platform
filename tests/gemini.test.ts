@@ -24,7 +24,7 @@ const reset = () => (mock.requests.length = 0);
 const BRIEF = 'Taquería de tacos al pastor en Ciudad Juárez con servicio a domicilio, colores rojo y negro';
 
 test('los modelos por defecto son los vigentes y existen en la documentación de Google', () => {
-  assert.deepEqual(DEFAULT_MODELS, ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite']);
+  assert.deepEqual(DEFAULT_MODELS, ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']);
 });
 
 test('éxito al primer intento: sitio normalizado, metadatos y forma de la petición', async () => {
@@ -84,7 +84,7 @@ test('cuota agotada (429) en todos los modelos: error QUOTA visible, con pista y
     assert.equal(e.ai.source, 'fallback');
     return true;
   });
-  assert.equal(mock.requests.length, 3, 'un intento por modelo, sin esperar en 429');
+  assert.equal(mock.requests.length, 4, 'un intento por modelo, sin esperar en 429');
 });
 
 test('llave inválida (400 API key not valid): falla de inmediato, sin probar otros modelos', async () => {
