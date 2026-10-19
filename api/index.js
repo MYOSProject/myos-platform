@@ -72573,6 +72573,7 @@ async function generateSite(input, opts = {}) {
         lastError = { code: c.code, message: c.message };
         if (c.code === "INVALID_API_KEY") throw fail2(c.code, c.message);
         if (c.code === "QUOTA" || c.code === "MODEL_NOT_FOUND") continue modelLoop;
+        if (c.code === "OVERLOADED" && attempt >= 1) continue modelLoop;
         if (c.retryable) {
           await sleep2(backoffMs * 2 ** attempt);
           continue;

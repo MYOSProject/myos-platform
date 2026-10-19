@@ -531,6 +531,8 @@ export async function generateSite(
         lastError = { code: c.code, message: c.message };
         if (c.code === 'INVALID_API_KEY') throw fail(c.code, c.message); // cambiar de modelo no ayuda
         if (c.code === 'QUOTA' || c.code === 'MODEL_NOT_FOUND') continue modelLoop; // probar otro modelo
+        // Saturado: un reintento y se pasa al siguiente modelo (otros modelos suelen tener hueco).
+        if (c.code === 'OVERLOADED' && attempt >= 1) continue modelLoop;
         if (c.retryable) {
           await sleep(backoffMs * 2 ** attempt);
           continue;

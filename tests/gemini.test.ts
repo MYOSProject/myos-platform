@@ -51,12 +51,19 @@ test('éxito al primer intento: sitio normalizado, metadatos y forma de la petic
   assert.ok(sent.body.generationConfig.responseJsonSchema?.properties?.hero, 'debe pedir salida estructurada');
 });
 
-test('503 transitorio: reintenta el mismo modelo y se recupera', async () => {
+test('503 transitorio: un reintento y, si sigue saturado, pasa al siguiente modelo', async () => {
   reset();
   script = (n) => (n < 3 ? geminiError(503, 'The model is overloaded. Please try again later.', 'UNAVAILABLE') : geminiOk(SAMPLE_SITE));
   const { ai } = await generateSite({ brief: BRIEF }, FAST);
-  assert.equal(ai.model, 'gemini-3.8-flash');
+  assert.equal(ai.model, 'gemini-3.6-flash');
   assert.deepEqual(ai.attempts.map((a) => a.code ?? 'ok'), ['OVERLOADED', 'OVERLOADED', 'ok']);
+});
+
+test('503 de un solo golpe: el reintento al mismo modelo lo recupera', async () => {
+  reset();
+  script = (n) => (n < 2 ? geminiError(503, 'overloaded', 'UNAVAILABLE') : geminiOk(SAMPLE_SITE));
+  const { ai } = await generateSite({ brief: BRIEF }, FAST);
+  assert.equal(ai.model, 'gemini-3.8-flash');
 });
 
 test('modelo inexistente (404): pasa al siguiente modelo de la lista', async () => {
