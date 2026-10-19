@@ -229,3 +229,19 @@ export interface MediaItem {
   sha: string;
   at: string;
 }
+
+export interface GuideReport {
+  summary: string;
+  sections: Array<{ heading: string; body: string }>;
+}
+
+export interface GuideStepState {
+  answers: Record<string, string>;
+  report: GuideReport | null;
+  status: 'EMPTY' | 'DRAFT' | 'CONFIRMED';
+  generated_by?: 'ai' | 'local' | 'manual';
+  model?: string;
+  updated_at: string;
+  confirmed_at?: string | null;
+  confirmed_by?: string | null;
+}

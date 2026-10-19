@@ -104,7 +104,8 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
 }
 
 // ------------------------------------------------------------------ Tarjeta de publicación
-export function PostCard({ post, profile, onChange, onRemove, autoImage = false }) {
+export function PostCard({ post, profile, onChange, onRemove, onNewVersion, autoImage = false }) {
+  const [ask, setAsk] = useState('');
   const [imgUrl, setImgUrl] = useState(null);
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
@@ -155,6 +156,15 @@ export function PostCard({ post, profile, onChange, onRemove, autoImage = false 
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
 
+  const revise = async () => {
+    setBusy('revise'); setErr('');
+    try {
+      const p = await api('POST', `/api/social/${post.id}/revise`, { instruction: ask });
+      setAsk('');
+      if (p.is_new_version) onNewVersion?.(p); else onChange(p);
+      await makeImage(p);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
+  };
   const startEdit = () => {
     setDraft({ copy: post.copy, hashtags: post.hashtags, cta: post.cta, headline: post.image_headline || '', subline: post.image_subline || '' });
     setEditing(true);
@@ -216,6 +226,16 @@ export function PostCard({ post, profile, onChange, onRemove, autoImage = false 
         )}
         {post.status === 'FAILED' && <Alert>No se pudo publicar: {post.publish_result?.error}</Alert>}
         {done && <Alert kind="ok">Publicada en {name} · {fmt(post.published_at)} · aprobó {post.approved_by_email}{post.publish_result?.external_id ? ` · id ${post.publish_result.external_id}` : ''}</Alert>}
+        {!editing && (
+          <div className="field revise">
+            <label htmlFor={`rv-${post.id}`}>{done ? 'Crear una nueva versión' : 'Pedir un cambio'}</label>
+            <div className="row">
+              <input id={`rv-${post.id}`} className="grow" type="text" value={ask} placeholder="Ej.: más corto, tono más formal" onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && ask.trim() && !busy) revise(); }} />
+              <button className="btn secondary" disabled={!ask.trim() || Boolean(busy)} onClick={revise}>{busy === 'revise' ? 'Aplicando…' : 'Aplicar'}</button>
+            </div>
+            {done && <small className="muted">Esta ya se publicó y no se modifica: se crea un borrador nuevo que tendrás que aprobar.</small>}
+          </div>
+        )}
         {!done && !editing && (
           <>
             <p className="ask">{post.status === 'APPROVED' ? '¿La publico ahora?' : '¿La apruebas y la publico?'}</p>

@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { PROJECT_ROOT, isProd } from './env.js';
 import { SEED_ITEMS } from './seed.js';
-import type { BusinessProfile, ChatMessage, ContentItem, Lead, MediaItem, SocialPost } from './types.js';
+import type { BusinessProfile, ChatMessage, GuideStepState, ContentItem, Lead, MediaItem, SocialPost } from './types.js';
 
 interface DbShape {
   version: 1;
@@ -18,6 +18,7 @@ interface DbShape {
   profiles?: Record<string, BusinessProfile>;
   chats?: Record<string, ChatMessage[]>;
   media?: Record<string, MediaItem>;
+  guide?: Record<string, Record<string, GuideStepState>>;
 }
 
 export type Persistence = 'file' | 'ephemeral' | 'memory';
@@ -29,6 +30,7 @@ export class Store {
   profiles: Record<string, BusinessProfile> = {};
   chats: Record<string, ChatMessage[]> = {};
   media: Record<string, MediaItem> = {};
+  guide: Record<string, Record<string, GuideStepState>> = {};
   counters = { content: 0, social: 0, lead: 0 };
   persistence: Persistence;
   readonly file: string | null;
@@ -47,6 +49,7 @@ export class Store {
         this.profiles = db.profiles || {};
         this.chats = db.chats || {};
         this.media = db.media || {};
+        this.guide = db.guide || {};
         this.counters = { content: 0, social: 0, lead: 0, ...(db.counters || {}) };
         loaded = true;
       } catch (e) {
@@ -111,7 +114,7 @@ export class Store {
       clearTimeout(this.timer);
       this.timer = null;
     }
-    const db: DbShape = { version: 1, counters: this.counters, contents: this.contents, social: this.social, leads: this.leads, profiles: this.profiles, chats: this.chats, media: this.media };
+    const db: DbShape = { version: 1, counters: this.counters, contents: this.contents, social: this.social, leads: this.leads, profiles: this.profiles, chats: this.chats, media: this.media, guide: this.guide };
     try {
       fs.mkdirSync(path.dirname(this.file), { recursive: true });
       const tmp = `${this.file}.tmp`;

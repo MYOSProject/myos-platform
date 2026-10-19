@@ -4,6 +4,8 @@ import { auth } from './firebase';
 import { api, getDevUser, setDevUser } from './api';
 import Login from './pages/Login';
 import Chat from './pages/Chat';
+import Guide from './pages/Guide';
+import Create from './pages/Create';
 import Business from './pages/Business';
 import Library from './pages/Library';
 import Status from './pages/Status';
@@ -11,9 +13,11 @@ import { Alert } from './components/ui';
 
 const icon = (d) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 const NAV = [
+  ['guide', 'Empezar', icon('M5 12l5 5L20 7')],
+  ['create', 'Crear contenido', icon('M12 5v14M5 12h14')],
   ['chat', 'Asistente', icon('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z')],
   ['business', 'Mi negocio', icon('M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6')],
-  ['library', 'Mis contenidos', icon('M4 4h16v16H4zM4 9h16M9 9v11')],
+  ['library', 'Mis contenidos y cambios', icon('M4 4h16v16H4zM4 9h16M9 9v11')],
   ['status', 'Estado y auditoría', icon('M22 12h-4l-3 9L9 3l-3 9H2')]
 ];
 
@@ -22,7 +26,8 @@ export default function App() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
   const [authError, setAuthError] = useState('');
-  const [page, setPage] = useState('chat');
+  const [page, setPage] = useState('guide');
+  const [guideDone, setGuideDone] = useState(null);
   const [profile, setProfile] = useState(null);
   const [pending, setPending] = useState(0);
 
@@ -41,7 +46,7 @@ export default function App() {
   useEffect(() => { fetch('/api/health').then((r) => r.json()).then(setHealth).catch(() => setHealth({ ok: false })); }, []);
   useEffect(() => onAuthStateChanged(auth, () => loadMe()), [loadMe]);
   useEffect(() => { if (getDevUser()) loadMe(); }, [loadMe]);
-  useEffect(() => { if (me) { refreshPending(); api('GET', '/api/profile').then((d) => setProfile(d.profile)).catch(() => {}); } }, [me, refreshPending]);
+  useEffect(() => { if (me) { refreshPending(); api('GET', '/api/profile').then((d) => setProfile(d.profile)).catch(() => {}); api('GET', '/api/guide').then((g) => { setGuideDone(g.complete); if (g.complete) setPage((p) => (p === 'guide' ? 'create' : p)); }).catch(() => {}); } }, [me, refreshPending]);
 
   if (!ready) return <p style={{ padding: 24 }}>Cargando…</p>;
   if (!me) return <Login authError={authError} health={health} onDev={(e) => { setDevUser(e); loadMe(); }} />;
@@ -63,6 +68,8 @@ export default function App() {
       </aside>
       <main className="main">
         {health?.ai && !health.ai.configured && <div style={{ marginBottom: 16 }}><Alert>Gemini no tiene llave: define GEMINI_API_KEY (en .env o en las variables de Vercel).</Alert></div>}
+        {page === 'guide' && <Guide onProfile={setProfile} onDone={(v) => setGuideDone(v.complete)} setPage={setPage} />}
+        {page === 'create' && <Create profile={profile} setPage={setPage} onSitesChanged={refreshPending} />}
         {page === 'chat' && <Chat me={me} onProfile={setProfile} onSitesChanged={refreshPending} setPage={setPage} />}
         {page === 'business' && <Business onProfile={setProfile} />}
         {page === 'library' && <Library profile={profile} onSitesChanged={refreshPending} setPage={setPage} />}

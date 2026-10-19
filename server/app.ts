@@ -32,7 +32,9 @@ import {
 } from './social.js';
 import { publisherStatus } from './publisher.js';
 import { chatTurn, clearChat, getChat, getProfile, runChatAction, saveProfile } from './chat.js';
-import { completeness, missingEssentials, FIELD_LABELS } from './profile.js';
+import { confirmStep, createPosts, generateStep, guideView, revisePost, saveAnswers, saveReport, suggestIdeas } from './guide.js';
+import { guideForPrompt } from './guide.js';
+import { completeness, composeSiteBrief, missingEssentials, FIELD_LABELS } from './profile.js';
 import type { AuthUser, ContentItem, SocialPost } from './types.js';
 
 function baseUrl(req: Request): string {
@@ -419,6 +421,52 @@ export function createApp() {
       res.json(profileView(req.user as AuthUser));
     })
   );
+
+  // ---------------------------------------------------------------------------------------
+  // Recorrido guiado y creación de contenido
+  // ---------------------------------------------------------------------------------------
+  const aiLimit = rateLimit({ windowMs: 60_000, max: 12, name: 'generación con IA' });
+  app.get('/api/guide', requireAuth, (req, res) => {
+    res.json(guideView(getStore(), req.user as AuthUser));
+  });
+  app.put('/api/guide/:step', requireAuth, wrap((req, res) => {
+    saveAnswers(getStore(), req.user as AuthUser, String(req.params.step), req.body?.answers);
+    res.json(guideView(getStore(), req.user as AuthUser));
+  }));
+  app.post('/api/guide/:step/generate', requireAuth, aiLimit, wrap(async (req, res) => {
+    const user = req.user as AuthUser;
+    if (req.body?.answers) saveAnswers(getStore(), user, String(req.params.step), req.body.answers);
+    await generateStep(getStore(), user, String(req.params.step));
+    res.json(guideView(getStore(), user));
+  }));
+  app.put('/api/guide/:step/report', requireAuth, wrap((req, res) => {
+    saveReport(getStore(), req.user as AuthUser, String(req.params.step), req.body || {});
+    res.json(guideView(getStore(), req.user as AuthUser));
+  }));
+  app.post('/api/guide/:step/confirm', requireAuth, wrap((req, res) => {
+    confirmStep(getStore(), req.user as AuthUser, String(req.params.step));
+    res.json(guideView(getStore(), req.user as AuthUser));
+  }));
+  app.post('/api/create/ideas', requireAuth, aiLimit, wrap(async (req, res) => {
+    res.json({ ideas: await suggestIdeas(getStore(), req.user as AuthUser) });
+  }));
+  app.post('/api/create/posts', requireAuth, aiLimit, wrap(async (req, res) => {
+    const posts = await createPosts(getStore(), req.user as AuthUser, req.body || {});
+    res.status(201).json(posts.map(summarizePost));
+  }));
+  app.post('/api/create/site', requireAuth, aiLimit, wrap(async (req, res) => {
+    const user = req.user as AuthUser;
+    const topic = typeof req.body?.topic === 'string' ? req.body.topic.trim().slice(0, 1500) : '';
+    const profile = getProfile(getStore(), user);
+    const brief = `${composeSiteBrief(profile, topic)}\n\nGuía confirmada (dato):\n${guideForPrompt(getStore(), user)}`.slice(0, 3990);
+    const { item } = await createOrRefineSite(getStore(), user, { brief, customLogo: profile.logo, customColors: profile.brand_colors });
+    res.status(201).json(summary(item));
+  }));
+  app.post('/api/social/:id/revise', requireAuth, aiLimit, wrap(async (req, res) => {
+    const post = findPost(intParam(req.params.id));
+    const out = await revisePost(getStore(), req.user as AuthUser, post, req.body?.instruction);
+    res.json({ ...summarizePost(out), is_new_version: out.id !== post.id });
+  }));
 
   app.get('/api/chat', requireAuth, (req, res) => {
     const user = req.user as AuthUser;
