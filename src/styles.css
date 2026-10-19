@@ -1,0 +1,63 @@
+/* Sistema visual Merkatics (mk-*). Los tokens se derivaron de los logotipos de Downloads:
+   azul marino #0f1c3c (logo-navy) y coral #e8504a (icon-color). */
+:root {
+  --mk-navy: #0f1c3c;
+  --mk-navy-2: #1a2a52;
+  --mk-coral: #e8504a;
+  --mk-coral-dark: #c04040;
+  --mk-coral-soft: #fdecea;
+  --mk-bg: #f6f7fb;
+  --mk-surface: #fff;
+  --mk-border: #dfe3ee;
+  --mk-text: #0f1c3c;
+  --mk-muted: #5d6885;
+  --mk-ok: #1f8a5b;
+  --mk-warn: #b7791f;
+  --mk-radius: 10px;
+  --mk-shadow: 0 1px 2px rgba(15,28,60,.06), 0 4px 14px rgba(15,28,60,.06);
+  font-family: Inter, 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-text); font-size: 15px; line-height: 1.5; }
+h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 0 0 8px; } h3 { font-size: 15px; margin: 0 0 6px; }
+.mk-shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.mk-side { background: var(--mk-navy); color: #fff; padding: 20px 14px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; height: 100vh; }
+.mk-side img.logo { width: 150px; margin: 0 6px 18px; }
+.mk-nav { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #c9d1ea; background: none; border: 0; font: inherit; cursor: pointer; text-align: left; }
+.mk-nav:hover { background: var(--mk-navy-2); color: #fff; }
+.mk-nav[aria-current="page"] { background: var(--mk-coral); color: #fff; font-weight: 600; }
+.mk-badge { margin-left: auto; background: #fff; color: var(--mk-navy); border-radius: 99px; font-size: 12px; padding: 0 8px; font-weight: 700; }
+.mk-user { margin-top: auto; font-size: 13px; color: #c9d1ea; padding: 8px 6px; word-break: break-all; }
+.mk-main { padding: 28px 32px; max-width: 1200px; width: 100%; }
+.mk-sub { color: var(--mk-muted); margin: 0 0 20px; }
+.mk-card { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: var(--mk-radius); padding: 18px; box-shadow: var(--mk-shadow); margin-bottom: 16px; }
+.mk-btn { background: var(--mk-coral); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+.mk-btn:hover { background: var(--mk-coral-dark); }
+.mk-btn:disabled { opacity: .5; cursor: not-allowed; }
+.mk-btn.sec { background: #fff; color: var(--mk-navy); border: 1px solid var(--mk-border); }
+.mk-btn.sec:hover { background: var(--mk-bg); }
+.mk-btn.ok { background: var(--mk-ok); } .mk-btn.danger { background: #fff; color: var(--mk-coral-dark); border: 1px solid var(--mk-coral); }
+.mk-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.mk-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.mk-field label { font-weight: 600; font-size: 13px; }
+.mk-field input, .mk-field textarea, .mk-field select { border: 1px solid var(--mk-border); border-radius: 8px; padding: 9px 11px; font: inherit; background: #fff; color: var(--mk-text); }
+.mk-field input:focus, .mk-field textarea:focus { outline: 2px solid var(--mk-coral); border-color: var(--mk-coral); }
+.mk-tag { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; background: var(--mk-bg); }
+.mk-tag.PENDING, .mk-tag.PENDING_APPROVAL, .mk-tag.DRAFT { background: #fff4de; color: var(--mk-warn); }
+.mk-tag.APPROVED, .mk-tag.PUBLISHED { background: #e2f6ec; color: var(--mk-ok); }
+.mk-tag.REJECTED, .mk-tag.FAILED { background: var(--mk-coral-soft); color: var(--mk-coral-dark); }
+.mk-alert { border-radius: 8px; padding: 12px 14px; margin: 12px 0; border: 1px solid; }
+.mk-alert.err { background: var(--mk-coral-soft); border-color: var(--mk-coral); }
+.mk-alert.warn { background: #fff4de; border-color: #f0c36d; }
+.mk-alert.ok { background: #e2f6ec; border-color: #8fd3b0; }
+.mk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.mk-frame-wrap { width: 100%; background: #e9ecf4; border-radius: 10px; padding: 10px; display: flex; justify-content: center; }
+.mk-frame { border: 0; background: #fff; border-radius: 6px; height: 560px; transition: width .2s; }
+.mk-muted { color: var(--mk-muted); font-size: 13px; }
+.mk-hist { font-size: 12px; color: var(--mk-muted); margin: 0; padding-left: 16px; }
+.mk-login { max-width: 400px; margin: 10vh auto; }
+.mk-login img { width: 180px; display: block; margin: 0 auto 18px; }
+@media (max-width: 800px) {
+  .mk-shell { grid-template-columns: 1fr; } .mk-side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; }
+  .mk-side img.logo { display: none; } .mk-main { padding: 18px 14px; }
+}
