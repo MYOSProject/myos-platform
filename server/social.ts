@@ -16,8 +16,15 @@ import { HttpError } from './http.js';
 import { audit, stableStringify } from './content.js';
 import { composeMessage, publish, publisherConfig } from './publisher.js';
 import type { Store } from './store.js';
+import { isProd } from './env.js';
 
-const LIMITS = { facebook: 5000, instagram: 2200 } as const;
+const LIMITS = { facebook: 5000, instagram: 2200, linkedin: 3000 } as const;
+export const PLATFORMS = ['facebook', 'instagram', 'linkedin'] as const;
+export const platformLabel = (p: string) => (p === 'facebook' ? 'Facebook' : p === 'instagram' ? 'Instagram' : p === 'linkedin' ? 'LinkedIn' : p);
+
+/** https en producción; en desarrollo también se acepta localhost (Meta igual exige https al publicar de verdad). */
+const LOCAL_HTTP = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i;
+const okUrl = (u: string) => /^https:\/\//i.test(u) || (!isProd && LOCAL_HTTP.test(u));
 
 function who(user: AuthUser) {
   return `${user.name} <${user.email}>`;
@@ -34,7 +41,7 @@ function httpsUrl(v: unknown): string {
   if (typeof v !== 'string') return '';
   const s = v.trim();
   if (!s) return '';
-  if (!/^https:\/\/[^\s"'<>]+$/i.test(s) || s.length > 2000) throw new HttpError(400, 'BAD_URL', 'Las URL deben comenzar con https://');
+  if (!(okUrl(s) && /^[^\s"'<>]+$/.test(s)) || s.length > 2000) throw new HttpError(400, 'BAD_URL', 'Las URL deben comenzar con https://');
   return s;
 }
 
@@ -42,13 +49,13 @@ export function validatePost(p: SocialPost): string[] {
   const problems: string[] = [];
   const message = composeMessage(p);
   if (!p.copy.trim()) problems.push('El texto de la publicación está vacío.');
-  if (message.length > LIMITS[p.platform]) problems.push(`El texto final mide ${message.length} caracteres y ${p.platform === 'instagram' ? 'Instagram' : 'Facebook'} permite ${LIMITS[p.platform]}.`);
+  if (message.length > LIMITS[p.platform]) problems.push(`El texto final mide ${message.length} caracteres y ${platformLabel(p.platform)} permite ${LIMITS[p.platform]}.`);
   if (p.platform === 'instagram') {
     if (!p.image_url) problems.push('Instagram exige una imagen (URL https pública).');
     const tags = (p.hashtags.match(/#/g) || []).length;
     if (tags > 30) problems.push('Instagram permite máximo 30 hashtags.');
   }
-  if (p.image_url && !/^https:\/\//i.test(p.image_url)) problems.push('La imagen debe ser una URL https pública (Meta no acepta archivos locales).');
+  if (p.image_url && !okUrl(p.image_url)) problems.push('La imagen debe ser una URL https pública (Meta no acepta archivos locales).');
   return problems;
 }
 
@@ -60,6 +67,8 @@ export interface PostInput {
   link_url?: string;
   image_url?: string;
   image_prompt?: string;
+  image_headline?: string;
+  image_subline?: string;
   scheduled_at?: string | null;
   site_id?: number | null;
 }
@@ -76,7 +85,7 @@ function cleanSchedule(v: unknown): string | null {
 }
 
 export function createPost(store: Store, input: PostInput, user: AuthUser, site?: ContentItem | null): SocialPost {
-  if (input.platform !== 'facebook' && input.platform !== 'instagram') throw new HttpError(400, 'BAD_PLATFORM', 'La plataforma debe ser facebook o instagram.');
+  if (!input.platform || !(PLATFORMS as readonly string[]).includes(input.platform)) throw new HttpError(400, 'BAD_PLATFORM', 'La plataforma debe ser facebook, instagram o linkedin.');
   const now = new Date().toISOString();
   const post: SocialPost = {
     id: store.nextId('social'),
@@ -89,6 +98,8 @@ export function createPost(store: Store, input: PostInput, user: AuthUser, site?
     link_url: httpsUrl(input.link_url),
     image_url: httpsUrl(input.image_url),
     image_prompt: cleanText(input.image_prompt, 500),
+    image_headline: cleanText(input.image_headline, 120),
+    image_subline: cleanText(input.image_subline, 200),
     scheduled_at: cleanSchedule(input.scheduled_at),
     status: 'DRAFT',
     created_at: now,
@@ -131,6 +142,8 @@ export function editPost(store: Store, post: SocialPost, input: PostInput, user:
   if (input.link_url !== undefined) post.link_url = httpsUrl(input.link_url);
   if (input.image_url !== undefined) post.image_url = httpsUrl(input.image_url);
   if (input.image_prompt !== undefined) post.image_prompt = cleanText(input.image_prompt, 500);
+  if (input.image_headline !== undefined) post.image_headline = cleanText(input.image_headline, 120);
+  if (input.image_subline !== undefined) post.image_subline = cleanText(input.image_subline, 200);
   if (input.scheduled_at !== undefined) post.scheduled_at = cleanSchedule(input.scheduled_at);
   post.updated_at = new Date().toISOString();
   const after = postHash(post);
@@ -248,6 +261,25 @@ export function deletePost(store: Store, post: SocialPost, user: AuthUser): void
     throw new HttpError(409, 'BAD_STATE', 'Solo se pueden eliminar borradores o publicaciones rechazadas.');
   }
   store.social = store.social.filter((p) => p.id !== post.id);
+  delete store.media[String(post.id)];
   console.log(`[social] ${who(user)} eliminó la publicación #${post.id}`);
   store.save();
+}
+
+/** Guarda la pieza gráfica (JPEG dibujado en el navegador) y la enlaza a la publicación. */
+export function attachMedia(store: Store, post: SocialPost, dataUrl: unknown, baseUrl: string, user: AuthUser): SocialPost {
+  if (post.status === 'PUBLISHED') throw new HttpError(409, 'BAD_STATE', 'Una publicación ya publicada no se puede editar.');
+  const m = typeof dataUrl === 'string' ? /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl) : null;
+  if (!m) throw new HttpError(400, 'BAD_IMAGE', 'La imagen debe ser un JPEG (data URL).');
+  const buf = Buffer.from(m[1], 'base64');
+  if (buf.length < 500 || buf.length > 1_200_000) throw new HttpError(400, 'BAD_IMAGE', 'La imagen debe pesar entre 1 KB y 1.2 MB.');
+  if (buf[0] !== 0xff || buf[1] !== 0xd8) throw new HttpError(400, 'BAD_IMAGE', 'El archivo no es un JPEG válido.');
+  const sha = crypto.createHash('sha256').update(buf).digest('hex');
+  store.media[String(post.id)] = { mime: 'image/jpeg', b64: m[1], sha, at: new Date().toISOString() };
+  return editPost(store, post, { image_url: `${baseUrl.replace(/\/+$/, '')}/media/${post.id}.jpg?v=${sha.slice(0, 12)}` }, user);
+}
+
+/** ¿Se puede servir la imagen públicamente? Solo cuando la publicación ya fue aprobada (Meta la descarga al publicar). */
+export function mediaIsPublic(post: SocialPost | undefined): boolean {
+  return Boolean(post && (post.status === 'APPROVED' || post.status === 'FAILED' || post.status === 'PUBLISHED'));
 }

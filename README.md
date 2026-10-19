@@ -1,10 +1,13 @@
-# MYOS · Merkatics GrowthLab (2026-544-11)
+# MYOS · My Online System
+
+Asistente de contenido con IA: conoce tu negocio (chat + perfil), crea sitio web y publicaciones (Facebook, Instagram, LinkedIn)
+y **nada se publica sin aprobación humana registrada** (quién, cuándo, huella SHA-256).
 
 1. `npm install`
-2. Copia `.env.example` a `.env` y pon `GEMINI_API_KEY` (también se lee `.env.local` y `frontend/.env`). Pon `APPROVER_EMAILS`.
-3. `npm run dev` → http://localhost:3000. Usa "Probar conexión con Gemini" en *Estado y auditoría*.
-4. `npm test` (pruebas con Gemini/webhook/Graph simulados).
+2. Copia `.env.example` a `.env`: `GEMINI_API_KEY` y `APPROVER_EMAILS`.
+3. `npm run dev` → http://localhost:3000
+4. `npm test`
 
-Regla central: nada se publica sin aprobación humana registrada (quién, cuándo, huella SHA-256). Editar algo aprobado borra la aprobación.
-Publicación en redes: modo simulación hasta configurar `MAKE_WEBHOOK_URL` (o llaves META_*).
-Producción: AUTH_MODE=dev se ignora; en Vercel el archivo de datos es temporal, se requiere una base de datos real.
+Publicación real en redes: configura `MAKE_WEBHOOK_URL` (Make/Zapier) o las llaves `META_*`. Sin eso todo queda en simulación.
+Vercel: `npm run build` genera `api/index.js` (el servidor empaquetado); súbelo al repositorio junto con el resto.
+Diseño: Manual de Identidad MYOS v1.0 (azul marino #111827, coral #E2554F, turquesa #8CCFD9; Plus Jakarta Sans + Inter).

@@ -26,7 +26,7 @@ export function publisherConfig(platform: SocialPost['platform']) {
   const token = process.env.META_PAGE_ACCESS_TOKEN?.trim();
   const pageId = process.env.META_PAGE_ID?.trim();
   const igId = process.env.META_IG_USER_ID?.trim();
-  const graphReady = Boolean(token && (platform === 'facebook' ? pageId : igId));
+  const graphReady = platform === 'linkedin' ? false : Boolean(token && (platform === 'facebook' ? pageId : igId));
 
   let mode: PublishMode = 'dry-run';
   if (forced === 'dry-run') mode = 'dry-run';
@@ -39,9 +39,11 @@ export function publisherConfig(platform: SocialPost['platform']) {
 export function publisherStatus() {
   const fb = publisherConfig('facebook');
   const ig = publisherConfig('instagram');
+  const li = publisherConfig('linkedin');
   return {
     facebook: fb.mode,
     instagram: ig.mode,
+    linkedin: li.mode,
     webhook_configured: Boolean(fb.webhook),
     webhook_signed: Boolean(process.env.MAKE_WEBHOOK_SECRET?.trim()),
     graph_facebook_ready: fb.graphReady,
@@ -177,7 +179,7 @@ export function dryRun(post: SocialPost): PublishResult {
     mode: 'dry-run',
     ok: true,
     at: now(),
-    note: `Simulación: NO se envió nada a ${post.platform === 'facebook' ? 'Facebook' : 'Instagram'}. Configura MAKE_WEBHOOK_URL (o las llaves de Meta) para publicar de verdad.`
+    note: `Simulación: NO se envió nada a ${post.platform === 'facebook' ? 'Facebook' : post.platform === 'instagram' ? 'Instagram' : 'LinkedIn'}. Configura MAKE_WEBHOOK_URL (o las llaves de Meta) para publicar de verdad.`
   };
 }
 

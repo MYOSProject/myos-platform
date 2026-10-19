@@ -4,9 +4,9 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import { ENV_FILES_LOADED } from './env.js';
 import { authMode, approverPolicy, firebaseProjectId, rateLimit, requireApprover, requireAuth } from './auth.js';
-import { AiFailure, getAiStatus, generateSite, pingGemini, normalizeSite, safeColor } from './gemini.js';
-import { generateSmartContent } from './fallbackSite.js';
-import { generateStandaloneHtml, safeImageSrc } from './siteHtml.js';
+import { getAiStatus, pingGemini } from './gemini.js';
+import { createOrRefineSite } from './sites.js';
+import { generateStandaloneHtml } from './siteHtml.js';
 import { getStore } from './store.js';
 import { HttpError, errorHandler, intParam, wrap } from './http.js';
 import {
@@ -14,10 +14,12 @@ import {
   audit,
   editContent,
   isPubliclyServable,
-  rejectContent,
-  titleFor
+  rejectContent
 } from './content.js';
 import {
+  attachMedia,
+  mediaIsPublic,
+  platformLabel,
   approvePost,
   createDraftsFromSite,
   createPost,
@@ -29,9 +31,9 @@ import {
   validatePost
 } from './social.js';
 import { publisherStatus } from './publisher.js';
+import { chatTurn, clearChat, getChat, getProfile, runChatAction, saveProfile } from './chat.js';
+import { completeness, missingEssentials, FIELD_LABELS } from './profile.js';
 import type { AuthUser, ContentItem, SocialPost } from './types.js';
-
-const THEMES = ['dark-modern', 'light-clean', 'luxury-gold'];
 
 function baseUrl(req: Request): string {
   const configured = process.env.PUBLIC_BASE_URL?.trim();
@@ -88,7 +90,7 @@ function detail(item: ContentItem) {
 }
 
 function summarizePost(p: SocialPost) {
-  return { ...p, problems: validatePost(p) };
+  return { ...p, has_media: Boolean(getStore().media[String(p.id)]), problems: validatePost(p) };
 }
 
 function findContent(id: number): ContentItem {
@@ -102,8 +104,6 @@ function findPost(id: number): SocialPost {
   if (!post) throw new HttpError(404, 'NOT_FOUND', `No existe la publicación #${id}.`);
   return post;
 }
-
-const aiStatusFor = (code: string) => (code === 'NO_API_KEY' ? 503 : code === 'QUOTA' ? 429 : code === 'SAFETY_BLOCK' ? 422 : 502);
 
 const notFoundPage = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sitio no disponible</title>
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,sans-serif;background:#f6f7fb;color:#0f1c3c;text-align:center;padding:24px}main{max-width:420px}h1{font-size:22px}p{color:#586178}</style></head>
@@ -184,110 +184,17 @@ export function createApp() {
       const brief = typeof body.brief === 'string' ? body.brief.trim() : '';
       if (!brief) throw new HttpError(400, 'BRIEF_REQUIRED', 'El brief o instrucción es obligatorio.');
       if (brief.length > 4000) throw new HttpError(400, 'BRIEF_TOO_LONG', 'El brief no puede pasar de 4,000 caracteres.');
-
-      const store = getStore();
       const refineId = body.refineOfId ? intParam(body.refineOfId, 'refineOfId') : null;
-      const previous = refineId ? findContent(refineId) : null;
-      const previousSite = previous?.content || null;
-      const allowFallback = body.allowFallback === true;
-
-      let site;
-      let ai;
-      try {
-        ({ site, ai } = await generateSite({ brief, previousSite }));
-      } catch (e: any) {
-        if (!(e instanceof AiFailure)) throw e;
-        console.error(`[ai] ${e.code}: ${e.message} · intentos: ${JSON.stringify(e.ai.attempts)}`);
-        if (!allowFallback) {
-          throw new HttpError(aiStatusFor(e.code), 'AI_FAILED', e.message, {
-            ai_code: e.code,
-            hint: e.ai.error?.hint,
-            attempts: e.ai.attempts,
-            can_fallback: true
-          });
-        }
-        // Respaldo EXPLÍCITO y marcado: nunca se hace pasar por IA.
-        site = normalizeSite(generateSmartContent(brief, { previousSite }));
-        site.review_notes = [
-          'Plantilla de respaldo: NO fue generada por Gemini. Textos, cifras y datos de contacto son de ejemplo.',
-          ...(site.review_notes || [])
-        ];
-        ai = { ...e.ai, source: 'fallback' as const };
-      }
-
-      // Conserva la personalización previa y aplica la que se envía ahora.
-      const keep = previousSite
-        ? {
-            custom_logo: previousSite.custom_logo ?? null,
-            hero_image: previousSite.hero_image ?? null,
-            custom_photos: previousSite.custom_photos,
-            design_theme: previousSite.design_theme,
-            about: previousSite.about?.image ? { image: previousSite.about.image } : undefined
-          }
-        : {};
-      const content: any = { ...site, ...keep, about: { ...site.about, ...(keep as any).about } };
-      const logo = safeImageSrc(body.customLogo);
-      if (logo) content.custom_logo = logo;
-      const hero = safeImageSrc(body.heroImage);
-      if (hero) content.hero_image = hero;
-      if (body.customColors?.primary) {
-        content.brand_colors = {
-          primary: safeColor(body.customColors.primary, content.brand_colors.primary),
-          secondary: safeColor(body.customColors.secondary, content.brand_colors.secondary),
-          accent: safeColor(body.customColors.accent, content.brand_colors.accent)
-        };
-      }
-      if (THEMES.includes(body.designTheme)) content.design_theme = body.designTheme;
-      if (!content.design_theme) content.design_theme = 'dark-modern';
-
-      const slug = (content.site_name || 'sitio').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'sitio';
-      content.drive_files = {
-        pages_file: `/Sitio_Web/Paginas/${slug}_index.html`,
-        blog_file: `/Sitio_Web/Blog/articulos_${slug}.md`,
-        social_file: `/Redes_Sociales/Para_Publicar/campana_${slug}.json`,
-        brand_file: '/Marca/logo_oficial.png'
-      };
-
-      const now = new Date().toISOString();
-      let item: ContentItem;
-      if (previous) {
-        const from = previous.status;
-        item = previous;
-        item.content = content;
-        item.title = titleFor(content, item.title);
-        item.body_text = content.resumen_web;
-        item.brief = brief;
-        item.ai = ai;
-        item.status = 'PENDING';
-        item.approved_at = null;
-        item.approved_by = null;
-        item.approved_by_email = null;
-        item.approved_hash = null;
-        item.updated_at = now;
-        audit(item, { by: `${user.name} <${user.email}>`, action: 'ai_refine', from, to: 'PENDING', note: `Ajuste con ${ai.source === 'gemini' ? ai.model : 'plantilla de respaldo'}: ${brief.slice(0, 160)}` });
-      } else {
-        const id = store.nextId('content');
-        item = {
-          id,
-          title: titleFor(content),
-          slug: `propuesta-${id}`,
-          category: 'PÁGINA WEB / REDES',
-          // REGLA NO NEGOCIABLE: todo lo generado nace PENDIENTE de aprobación humana.
-          status: 'PENDING',
-          brief,
-          body_text: content.resumen_web,
-          created_at: now,
-          created_by: `${user.name} <${user.email}>`,
-          drive_file_id: `drive_draft_${id}`,
-          ai,
-          content,
-          history: []
-        };
-        audit(item, { by: `${user.name} <${user.email}>`, action: 'ai_generate', to: 'PENDING', note: ai.source === 'gemini' ? `Gemini (${ai.model})` : 'Plantilla de respaldo (NO IA)' });
-        store.contents.unshift(item);
-      }
-      store.save();
-      res.status(previous ? 200 : 201).json({ id: item.id, status: item.status, ai, record: detail(item) });
+      const { item, ai, created } = await createOrRefineSite(getStore(), user, {
+        brief,
+        refineOfId: refineId,
+        allowFallback: body.allowFallback === true,
+        customLogo: body.customLogo,
+        heroImage: body.heroImage,
+        customColors: body.customColors,
+        designTheme: body.designTheme
+      });
+      res.status(created ? 201 : 200).json({ id: item.id, status: item.status, ai, record: detail(item) });
     })
   );
 
@@ -462,6 +369,107 @@ export function createApp() {
     })
   );
 
+  // Pieza gráfica de una publicación (JPEG dibujado en el navegador)
+  app.post(
+    '/api/social/:id/image',
+    requireAuth,
+    wrap((req, res) => {
+      const post = attachMedia(getStore(), findPost(intParam(req.params.id)), req.body?.data_url, baseUrl(req), req.user as AuthUser);
+      res.json(summarizePost(post));
+    })
+  );
+
+  app.get(
+    '/api/social/:id/image',
+    requireAuth,
+    wrap((req, res) => {
+      const m = getStore().media[String(intParam(req.params.id))];
+      if (!m) throw new HttpError(404, 'NO_MEDIA', 'Esta publicación no tiene imagen.');
+      res.type(m.mime).send(Buffer.from(m.b64, 'base64'));
+    })
+  );
+
+  // Pública SOLO cuando la publicación está aprobada: es lo que descarga Meta al publicar.
+  app.get('/media/:file', (req, res) => {
+    const id = Number.parseInt(String(req.params.file).replace(/\.jpg$/i, ''), 10);
+    const post = getStore().social.find((p) => p.id === id);
+    const m = getStore().media[String(id)];
+    if (!m || !mediaIsPublic(post)) return res.status(404).type('text/plain').send('No disponible');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.type(m.mime).send(Buffer.from(m.b64, 'base64'));
+  });
+
+  // ---------------------------------------------------------------------------------------
+  // Perfil del negocio y asistente (chatbot)
+  // ---------------------------------------------------------------------------------------
+  const profileView = (user: AuthUser) => {
+    const profile = getProfile(getStore(), user);
+    return { profile, completeness: completeness(profile), missing: missingEssentials(profile).map((f) => FIELD_LABELS[f]) };
+  };
+
+  app.get('/api/profile', requireAuth, (req, res) => {
+    res.json(profileView(req.user as AuthUser));
+  });
+
+  app.put(
+    '/api/profile',
+    requireAuth,
+    wrap((req, res) => {
+      saveProfile(getStore(), req.user as AuthUser, req.body || {});
+      res.json(profileView(req.user as AuthUser));
+    })
+  );
+
+  app.get('/api/chat', requireAuth, (req, res) => {
+    const user = req.user as AuthUser;
+    const store = getStore();
+    const messages = getChat(store, user);
+    const ids = (kind: string) => new Set(messages.flatMap((m) => (m.artifacts || []).filter((a) => a.kind === kind).map((a) => a.id)));
+    const siteIds = ids('site');
+    const postIds = ids('post');
+    res.json({
+      messages,
+      sites: store.contents.filter((c) => siteIds.has(c.id)).map(summary),
+      posts: store.social.filter((p) => postIds.has(p.id)).map(summarizePost),
+      ...profileView(user)
+    });
+  });
+
+  app.post(
+    '/api/chat',
+    requireAuth,
+    rateLimit({ windowMs: 60_000, max: 20, name: 'chat' }),
+    wrap(async (req, res) => {
+      const r = await chatTurn(getStore(), req.user as AuthUser, typeof req.body?.message === 'string' ? req.body.message : '');
+      res.status(201).json({ message: r.message, user_message: r.user_message, posts: r.posts.map(summarizePost), ...profileView(req.user as AuthUser) });
+    })
+  );
+
+  const running = new Set<string>();
+  app.post(
+    '/api/chat/run',
+    requireAuth,
+    rateLimit({ windowMs: 60_000, max: 8, name: 'generación con IA' }),
+    wrap(async (req, res) => {
+      const user = req.user as AuthUser;
+      const id = String(req.body?.message_id || '');
+      const lock = `${user.email}:${id}`;
+      if (running.has(lock)) throw new HttpError(409, 'IN_PROGRESS', 'Esto ya se está generando.');
+      running.add(lock);
+      try {
+        const { message, site } = await runChatAction(getStore(), user, id);
+        res.json({ message, site: summary(site) });
+      } finally {
+        running.delete(lock);
+      }
+    })
+  );
+
+  app.delete('/api/chat', requireAuth, (req, res) => {
+    clearChat(getStore(), req.user as AuthUser);
+    res.json({ ok: true });
+  });
+
   // ---------------------------------------------------------------------------------------
   // Bitácora de auditoría unificada
   // ---------------------------------------------------------------------------------------
@@ -469,7 +477,7 @@ export function createApp() {
     const store = getStore();
     const events = [
       ...store.contents.flatMap((c) => c.history.map((h) => ({ ...h, kind: 'sitio', ref_id: c.id, ref_title: c.title }))),
-      ...store.social.flatMap((p) => p.history.map((h) => ({ ...h, kind: 'publicación', ref_id: p.id, ref_title: `${p.platform === 'facebook' ? 'Facebook' : 'Instagram'} · ${p.site_name || 'sin sitio'}` })))
+      ...store.social.flatMap((p) => p.history.map((h) => ({ ...h, kind: 'publicación', ref_id: p.id, ref_title: `${platformLabel(p.platform)} · ${p.site_name || 'sin sitio'}` })))
     ];
     events.sort((a, b) => b.at.localeCompare(a.at));
     res.json(events.slice(0, 300));

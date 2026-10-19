@@ -112,7 +112,7 @@ export interface ContentItem {
   history: AuditEvent[];
 }
 
-export type SocialPlatform = 'facebook' | 'instagram';
+export type SocialPlatform = 'facebook' | 'instagram' | 'linkedin';
 export type SocialStatus =
   | 'DRAFT'
   | 'PENDING_APPROVAL'
@@ -142,6 +142,10 @@ export interface SocialPost {
   link_url: string;
   image_url: string;
   image_prompt?: string;
+  /** Texto corto para la pieza gráfica (se dibuja en el navegador). */
+  image_headline?: string;
+  image_subline?: string;
+  has_media?: boolean;
   scheduled_at: string | null;
   status: SocialStatus;
   created_at: string;
@@ -175,4 +179,53 @@ export interface AuthUser {
   emailVerified: boolean;
   isApprover: boolean;
   via: 'firebase' | 'dev';
+}
+
+export interface BusinessProfile {
+  business_name: string;
+  what_they_do: string;
+  industry: string;
+  audience: string;
+  location: string;
+  value_proposition: string;
+  offers: string;
+  tone: string;
+  goals: string;
+  channels: string;
+  phone: string;
+  email: string;
+  address: string;
+  hours: string;
+  website: string;
+  notes: string;
+  brand_colors?: { primary: string; secondary: string; accent: string } | null;
+  logo?: string | null;
+  updated_at?: string;
+}
+
+export interface ChatAction {
+  type: 'generate_site' | 'update_site';
+  /** Texto con el que se genera o ajusta el sitio (viene del modelo, se guarda en el servidor). */
+  brief: string;
+  site_id?: number | null;
+  status: 'pending' | 'done' | 'failed';
+  error?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  at: string;
+  artifacts?: Array<{ kind: 'site' | 'post'; id: number }>;
+  action?: ChatAction;
+  learned?: string[];
+  ai?: { model?: string };
+}
+
+export interface MediaItem {
+  mime: 'image/jpeg';
+  b64: string;
+  sha: string;
+  at: string;
 }

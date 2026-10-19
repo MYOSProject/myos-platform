@@ -36,8 +36,17 @@ export async function api(method, path, body) {
   return json;
 }
 
-// Reduce la imagen antes de guardarla (evita mandar fotos de 8 MB al servidor)
-export function fileToSmallDataUrl(file, max = 1000) {
+/** Descarga una imagen protegida (las <img> no mandan el token). */
+export async function apiBlobUrl(path) {
+  const res = await fetch(path, { headers: await headers() });
+  if (!res.ok) throw new ApiError(res.status, { message: 'No se pudo cargar la imagen' });
+  return URL.createObjectURL(await res.blob());
+}
+
+export const errText = (e) => (e?.details?.hint ? `${e.message} ${e.details.hint}` : e?.message || String(e));
+
+/** Reduce una imagen antes de guardarla. Los logos se guardan en PNG para conservar la transparencia. */
+export function fileToSmallDataUrl(file, { max = 1000, png = false } = {}) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -48,7 +57,7 @@ export function fileToSmallDataUrl(file, max = 1000) {
       c.height = Math.round(img.height * k);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/jpeg', 0.82));
+      resolve(png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.82));
     };
     img.onerror = () => reject(new Error('No se pudo leer la imagen'));
     img.src = url;

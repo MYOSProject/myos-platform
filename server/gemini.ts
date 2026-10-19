@@ -566,3 +566,78 @@ export async function pingGemini(opts: GenerateOptions = {}): Promise<{ ok: bool
   }
   return { ok: false, ms: Date.now() - started, error: { code: last.code, message: last.message, hint: HINTS[last.code] } };
 }
+
+/**
+ * Llamada genérica que devuelve JSON validado por esquema (la usa el chatbot).
+ * Misma política de errores que generateSite: pista clara, un reintento si hay saturación y luego el siguiente modelo.
+ */
+export async function generateStructured(
+  input: { systemInstruction: string; contents: any; schema: any; temperature?: number; maxOutputTokens?: number },
+  opts: GenerateOptions = {}
+): Promise<{ data: any; ai: AiMeta }> {
+  const started = Date.now();
+  const attempts: AiAttempt[] = [];
+  const meta = (extra: Partial<AiMeta>): AiMeta => ({ source: 'gemini', attempts, duration_ms: Date.now() - started, ...extra });
+  const fail = (code: AiErrorCode, message: string) =>
+    new AiFailure(code, message, meta({ source: 'fallback', error: { code, message, hint: HINTS[code] } }));
+
+  const apiKey = getApiKey();
+  if (!apiKey) throw fail('NO_API_KEY', 'No hay GEMINI_API_KEY configurada.');
+
+  const models = opts.models?.length ? opts.models : getModels();
+  const budgetMs = opts.budgetMs ?? Number(process.env.AI_BUDGET_MS || 55000);
+  const backoffMs = opts.backoffMs ?? 800;
+  const ai = makeClient(apiKey, opts.requestTimeoutMs ?? Number(process.env.AI_REQUEST_TIMEOUT_MS || 30000));
+  let lastError: { code: AiErrorCode; message: string } = { code: 'UNKNOWN', message: 'Sin intentos' };
+
+  modelLoop: for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (Date.now() - started > budgetMs) break modelLoop;
+      const t0 = Date.now();
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: input.contents,
+          config: {
+            systemInstruction: input.systemInstruction,
+            responseMimeType: 'application/json',
+            responseJsonSchema: input.schema,
+            temperature: input.temperature ?? 0.7,
+            maxOutputTokens: input.maxOutputTokens ?? 4096
+          }
+        });
+        const { text, blocked } = extractText(response);
+        if (blocked) {
+          attempts.push({ model, ok: false, code: 'SAFETY_BLOCK', message: `Bloqueado: ${blocked}`, ms: Date.now() - t0 });
+          throw fail('SAFETY_BLOCK', `Bloqueado por seguridad (${blocked}).`);
+        }
+        let data: any;
+        try {
+          data = parseJson(text);
+        } catch (e: any) {
+          const message = text.trim() ? `JSON inválido: ${e?.message || e}` : 'Respuesta vacía';
+          const code: AiErrorCode = text.trim() ? 'BAD_JSON' : 'EMPTY';
+          attempts.push({ model, ok: false, code, message, ms: Date.now() - t0 });
+          lastError = { code, message };
+          continue;
+        }
+        attempts.push({ model, ok: true, ms: Date.now() - t0 });
+        return { data, ai: meta({ model }) };
+      } catch (err: any) {
+        if (err instanceof AiFailure) throw err;
+        const c = classifyError(err);
+        attempts.push({ model, ok: false, code: c.code, message: c.message, ms: Date.now() - t0 });
+        lastError = { code: c.code, message: c.message };
+        if (c.code === 'INVALID_API_KEY') throw fail(c.code, c.message);
+        if (c.code === 'QUOTA' || c.code === 'MODEL_NOT_FOUND') continue modelLoop;
+        if (c.code === 'OVERLOADED' && attempt >= 1) continue modelLoop;
+        if (c.retryable) {
+          await sleep(backoffMs * 2 ** attempt);
+          continue;
+        }
+        continue modelLoop;
+      }
+    }
+  }
+  throw fail(lastError.code, lastError.message);
+}
