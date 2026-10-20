@@ -116,6 +116,7 @@ export async function createOrRefineSite(store: Store, user: AuthUser, input: Si
       body_text: content.resumen_web,
       created_at: now,
       created_by: by,
+      project_id: user.project_id ?? null,
       drive_file_id: `drive_draft_${id}`,
       ai,
       content,

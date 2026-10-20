@@ -12,6 +12,7 @@ import { aiStatusFor, createOrRefineSite } from './sites.js';
 import { composeSiteBrief, emptyProfile, FIELD_LABELS, mergeProfile, missingEssentials, profileForPrompt, TEXT_FIELDS } from './profile.js';
 import { createPost, PLATFORMS } from './social.js';
 import type { Store } from './store.js';
+import { userScope } from './projects.js';
 import { guideForPrompt } from './guide.js';
 
 const str = { type: 'string' };
@@ -97,7 +98,7 @@ ${siteList}`;
 const newId = () => crypto.randomBytes(6).toString('hex');
 const now = () => new Date().toISOString();
 const MAX_HISTORY = 80;
-const key = (user: AuthUser) => user.email.toLowerCase();
+const key = (user: AuthUser) => userScope(user);
 
 export function getChat(store: Store, user: AuthUser): ChatMessage[] {
   return store.chats[key(user)] || [];
@@ -145,7 +146,7 @@ export async function chatTurn(store: Store, user: AuthUser, rawText: string): P
   const k = key(user);
   const history = store.chats[k] || [];
   const profile = getProfile(store, user);
-  const mine = store.contents.filter((c) => (c.created_by || '').toLowerCase().includes(`<${k}>`) || !c.created_by);
+  const mine = store.contents.filter((c) => (user.project_id ? c.project_id === user.project_id : (c.created_by || '').toLowerCase().includes(`<${user.email.toLowerCase()}>`) || !c.created_by));
   const system = buildChatSystem(profile, mine, new Date().toLocaleDateString('es-MX', { timeZone: 'America/Ciudad_Juarez', dateStyle: 'full' }), guideForPrompt(store, user));
 
   let data: any;

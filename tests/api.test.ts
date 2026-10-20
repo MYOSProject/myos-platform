@@ -202,10 +202,16 @@ test('rechazar registra quién y por qué', async () => {
   assert.equal(r.json.record.history.at(-1).by, `luis <${LUIS}>`);
 });
 
-test('lista de aprobadores: una cuenta fuera de APPROVER_EMAILS no puede aprobar', async () => {
+test('cualquier usuario puede aprobar; la lista de aprobadores solo aplica si se activa RESTRICT_APPROVERS', async () => {
   const g = await generate();
   process.env.APPROVER_EMAILS = 'jefa@merkatics.com';
   try {
+    // Con la lista definida pero sin RESTRICT_APPROVERS, cualquiera aprueba (y queda registrado).
+    const open = await generate();
+    const okOpen = await api('POST', `/api/approve/${open.id}`, { user: ANA, body: { confirm_review: true } });
+    assert.equal(okOpen.status, 200);
+    assert.equal(okOpen.json.record.approved_by_email, ANA);
+    process.env.RESTRICT_APPROVERS = 'true';
     const r = await api('POST', `/api/approve/${g.id}`, { user: ANA, body: { confirm_review: true } });
     assert.equal(r.status, 403);
     assert.equal(r.json.error.code, 'NOT_APPROVER');
@@ -213,6 +219,7 @@ test('lista de aprobadores: una cuenta fuera de APPROVER_EMAILS no puede aprobar
     assert.equal(ok.status, 200);
   } finally {
     delete process.env.APPROVER_EMAILS;
+    delete process.env.RESTRICT_APPROVERS;
   }
 });
 

@@ -170,7 +170,7 @@ export default function Chat({ me, onProfile, onSitesChanged, setPage }) {
         {profileInfo.missing.length > 0 ? (
           <div><p className="muted" style={{ marginBottom: 4 }}>Aún te preguntaré por:</p><ul className="hist" style={{ marginTop: 0 }}>{profileInfo.missing.map((m) => <li key={m}>{m}</li>)}</ul></div>
         ) : <p className="muted">✓ Ya tengo lo esencial para crear tu contenido.</p>}
-        <button className="btn secondary small" onClick={() => setPage('business')}>Ver y editar mi perfil</button>
+        <button className="btn secondary small" onClick={() => setPage('guide')}>Ver y editar lo que sabes de mí</button>
       </aside>
     </div>
   );

@@ -10,6 +10,7 @@
 // Este módulo SOLO envía. Quién puede llamarlo y en qué estado lo decide social.ts (aprobación humana).
 import crypto from 'crypto';
 import type { PublishResult, SocialPost } from './types.js';
+import type { ResolvedConnection } from './connections.js';
 
 export type PublishMode = 'webhook' | 'graph' | 'dry-run';
 
@@ -20,8 +21,16 @@ export function composeMessage(p: Pick<SocialPost, 'copy' | 'cta' | 'link_url' |
   return parts.filter(Boolean).join('\n\n');
 }
 
-export function publisherConfig(platform: SocialPost['platform']) {
+export function publisherConfig(platform: SocialPost['platform'], conn?: ResolvedConnection | null) {
   const forced = process.env.SOCIAL_PUBLISH_MODE as PublishMode | undefined;
+  // Si el proyecto tiene su propia conexión se usa SOLO esa (y solo cuando la persona la activó).
+  // Si la tiene sin activar, todo queda en simulación aunque haya llaves globales: nada sale por accidente.
+  if (conn) {
+    const graphReady = platform === 'linkedin' ? false : Boolean(conn.token && (platform === 'facebook' ? conn.page_id : conn.ig_user_id));
+    let mode: PublishMode = 'dry-run';
+    if (conn.live && forced !== 'dry-run') mode = conn.webhook_url ? 'webhook' : graphReady ? 'graph' : 'dry-run';
+    return { mode, webhook: conn.webhook_url || undefined, token: conn.token, pageId: conn.page_id, igId: conn.ig_user_id, graphReady };
+  }
   const webhook = process.env.MAKE_WEBHOOK_URL?.trim();
   const token = process.env.META_PAGE_ACCESS_TOKEN?.trim();
   const pageId = process.env.META_PAGE_ID?.trim();
@@ -120,7 +129,7 @@ export async function publishToWebhook(post: SocialPost, url: string): Promise<P
   }
 }
 
-function graphBase() {
+export function graphBase() {
   const base = (process.env.META_GRAPH_BASE || 'https://graph.facebook.com').replace(/\/+$/, '');
   const version = process.env.META_GRAPH_VERSION || 'v21.0';
   return `${base}/${version}`;
@@ -141,8 +150,8 @@ async function graphPost(pathname: string, params: Record<string, string>) {
   return data;
 }
 
-export async function publishToGraph(post: SocialPost): Promise<PublishResult> {
-  const cfg = publisherConfig(post.platform);
+export async function publishToGraph(post: SocialPost, conn?: ResolvedConnection | null): Promise<PublishResult> {
+  const cfg = publisherConfig(post.platform, conn);
   const message = composeMessage(post);
   try {
     if (post.platform === 'facebook') {
@@ -174,18 +183,18 @@ export async function publishToGraph(post: SocialPost): Promise<PublishResult> {
   }
 }
 
-export function dryRun(post: SocialPost): PublishResult {
+export function dryRun(post: SocialPost, projectConn = false): PublishResult {
   return {
     mode: 'dry-run',
     ok: true,
     at: now(),
-    note: `Simulación: NO se envió nada a ${post.platform === 'facebook' ? 'Facebook' : post.platform === 'instagram' ? 'Instagram' : 'LinkedIn'}. Configura MAKE_WEBHOOK_URL (o las llaves de Meta) para publicar de verdad.`
+    note: `Simulación: NO se envió nada a ${post.platform === 'facebook' ? 'Facebook' : post.platform === 'instagram' ? 'Instagram' : 'LinkedIn'}. ${projectConn ? 'Entra a «Conexiones», prueba la conexión y activa la publicación real.' : 'Entra a «Conexiones» para conectar tu página, o configura MAKE_WEBHOOK_URL / las llaves de Meta en el servidor.'}`
   };
 }
 
-export async function publish(post: SocialPost): Promise<PublishResult> {
-  const cfg = publisherConfig(post.platform);
+export async function publish(post: SocialPost, conn?: ResolvedConnection | null): Promise<PublishResult> {
+  const cfg = publisherConfig(post.platform, conn);
   if (cfg.mode === 'webhook') return publishToWebhook(post, cfg.webhook!);
-  if (cfg.mode === 'graph') return publishToGraph(post);
-  return dryRun(post);
+  if (cfg.mode === 'graph') return publishToGraph(post, conn);
+  return dryRun(post, Boolean(conn));
 }

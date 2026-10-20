@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api, errText, fileToSmallDataUrl } from '../api';
 import { Alert, fmt } from '../components/ui';
 
@@ -54,6 +54,9 @@ export default function Guide({ onProfile, onDone, setPage }) {
   const [draft, setDraft] = useState(null);
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
+  const [tick, setTick] = useState(0);
+  const [savedAt, setSavedAt] = useState(null);
+  const pendingRef = useRef(null);
 
   const load = async () => {
     try {
@@ -65,7 +68,24 @@ export default function Guide({ onProfile, onDone, setPage }) {
   useEffect(() => { load(); }, []);
 
   const step = useMemo(() => view?.steps.find((s) => s.key === cur), [view, cur]);
-  useEffect(() => { if (step) { setAnswers(step.state.answers); setEditing(false); setErr(''); } }, [cur, view?.steps.find((s) => s.key === cur)?.state.updated_at]); // eslint-disable-line
+  // Las respuestas del formulario se cargan al cambiar de paso o cuando el servidor las cambia (generar/confirmar), no al autoguardar.
+  useEffect(() => { if (step) { setAnswers(step.state.answers); setEditing(false); setErr(''); } }, [cur, tick]); // eslint-disable-line
+
+  // Autoguardado: lo que escribes se guarda solo, también si cambias de paso o de pantalla.
+  const flush = () => {
+    const p = pendingRef.current;
+    if (!p) return;
+    pendingRef.current = null;
+    api('PUT', `/api/guide/${p.key}`, { answers: p.snapshot }).then((v) => { setView(v); setSavedAt(new Date()); }).catch(() => setErr('No se pudo guardar automáticamente. Revisa tu conexión.'));
+  };
+  useEffect(() => {
+    if (!step) return undefined;
+    if (JSON.stringify(answers) === JSON.stringify(step.state.answers)) { pendingRef.current = null; return undefined; }
+    pendingRef.current = { key: cur, snapshot: answers };
+    const t = setTimeout(flush, 900);
+    return () => clearTimeout(t);
+  }, [answers]); // eslint-disable-line
+  useEffect(() => () => flush(), [cur]); // eslint-disable-line
 
   if (!view) return err ? <Alert>{err}</Alert> : <p className="muted">Cargando…</p>;
   if (!step) return null;
@@ -73,10 +93,11 @@ export default function Guide({ onProfile, onDone, setPage }) {
   const st = step.state;
   const filled = step.questions.filter((q) => answers[q.id]?.trim()).length;
   const dirty = JSON.stringify(answers) !== JSON.stringify(st.answers);
+  const needsRegen = Boolean(st.report) && (st.stale || dirty);
 
   const run = async (name, fn) => {
     setBusy(name); setErr('');
-    try { const v = await fn(); if (v) { setView(v); onDone?.(v); } } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
+    try { const v = await fn(); if (v) { setView(v); setTick((t) => t + 1); onDone?.(v); } } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
   const generateAll = async () => {
     setBusy('all'); setErr('');
@@ -142,7 +163,8 @@ export default function Guide({ onProfile, onDone, setPage }) {
               <button className="btn" disabled={Boolean(busy) || filled < step.minAnswers} onClick={generate}>
                 {busy === 'gen' ? 'Preparando vista previa…' : st.report ? 'Volver a generar la vista previa' : step.ai ? 'Generar vista previa con IA' : 'Ver resultado'}
               </button>
-              <button className="btn secondary" disabled={Boolean(busy) || !dirty} onClick={saveAnswers}>{busy === 'save' ? 'Guardando…' : 'Guardar respuestas'}</button>
+              <button className="btn secondary" disabled={Boolean(busy) || !dirty} onClick={saveAnswers}>{busy === 'save' ? 'Guardando…' : 'Guardar ahora'}</button>
+              {!dirty && savedAt && <span className="muted" role="status">Guardado automáticamente</span>}
               {filled < step.minAnswers && <span className="muted">Responde al menos {step.minAnswers} pregunta{step.minAnswers > 1 ? 's' : ''} para continuar.</span>}
             </div>
             {busy === 'gen' && step.ai && <p className="muted" role="status">Gemini está escribiendo tu reporte; puede tardar unos segundos.</p>}
@@ -174,10 +196,10 @@ export default function Guide({ onProfile, onDone, setPage }) {
                   {st.report.sections.map((s, i) => <div key={i} className="rep"><h3>{s.heading}</h3><Body text={s.body} /></div>)}
                   <p className="ask">{st.status === 'CONFIRMED' ? 'Este paso ya está confirmado.' : '¿Así está bien?'}</p>
                   <div className="row">
-                    {st.status !== 'CONFIRMED' && <button className="btn" disabled={Boolean(busy) || dirty} onClick={confirm}>{busy === 'ok' ? 'Confirmando…' : idx + 1 < view.total ? 'Está bien, continuar' : 'Está bien, terminar'}</button>}
+                    {st.status !== 'CONFIRMED' && <button className="btn" disabled={Boolean(busy) || needsRegen} onClick={confirm}>{busy === 'ok' ? 'Confirmando…' : idx + 1 < view.total ? 'Está bien, continuar' : 'Está bien, terminar'}</button>}
                     <button className="btn secondary" disabled={Boolean(busy)} onClick={() => { setDraft({ summary: st.report.summary, sections: st.report.sections.map((s) => ({ ...s })) }); setEditing(true); }}>Editar texto</button>
                   </div>
-                  {dirty && <p className="muted">Cambiaste tus respuestas: genera de nuevo la vista previa para que lo refleje.</p>}
+                  {needsRegen && <Alert kind="warn">Cambiaste tus respuestas después de generar esta vista previa. Pulsa «Volver a generar la vista previa» para que lo refleje y poder confirmar.</Alert>}
                   {st.confirmed_at && <p className="muted">Confirmado por {st.confirmed_by} · {fmt(st.confirmed_at)}</p>}
                 </>
               )}

@@ -8,9 +8,10 @@ import { aiStatusFor } from './sites.js';
 import { emptyProfile, mergeProfile, profileForPrompt, type TextField } from './profile.js';
 import { createPost, editPost, PLATFORMS, platformLabel } from './social.js';
 import type { Store } from './store.js';
+import { userScope } from './projects.js';
 
 const str = { type: 'string' };
-const key = (u: AuthUser) => u.email.toLowerCase();
+const key = (u: AuthUser) => userScope(u);
 
 export interface GuideQuestion {
   id: string;
@@ -205,6 +206,7 @@ export function saveAnswers(store: Store, user: AuthUser, k: string, raw: any) {
   const changed = JSON.stringify(answers) !== JSON.stringify(st.answers);
   st.answers = answers;
   st.updated_at = now();
+  if (changed && st.report) st.stale = true;
   // Si cambian las respuestas, la vista previa anterior ya no corresponde: hay que confirmarla otra vez.
   if (changed && st.status === 'CONFIRMED') {
     st.status = 'DRAFT';
@@ -310,6 +312,7 @@ ${guideForPrompt(store, user)}`;
     }
   }
   st.status = 'DRAFT';
+  st.stale = false;
   st.confirmed_at = null;
   st.confirmed_by = null;
   st.updated_at = now();
@@ -324,6 +327,7 @@ export function saveReport(store: Store, user: AuthUser, k: string, raw: any): G
   const sections = Array.isArray(raw?.sections) ? raw.sections.slice(0, 8).map((s: any) => ({ heading: clean(s?.heading, 120), body: clean(s?.body, 2500) })).filter((s: any) => s.heading || s.body) : st.report.sections;
   st.report = { summary: clean(raw?.summary ?? st.report.summary, 500), sections };
   st.generated_by = st.generated_by === 'ai' ? 'ai' : 'manual';
+  st.stale = false;
   st.status = 'DRAFT';
   st.confirmed_at = null;
   st.confirmed_by = null;
@@ -336,6 +340,7 @@ export function confirmStep(store: Store, user: AuthUser, k: string): GuideStepS
   stepDef(k);
   const st = stepState(store, user, k);
   if (!st.report) throw new HttpError(409, 'NO_REPORT', 'Primero genera y revisa la vista previa.');
+  if (st.stale) throw new HttpError(409, 'STALE_REPORT', 'Cambiaste tus respuestas después de generar la vista previa. Vuelve a generarla antes de confirmar.');
   st.status = 'CONFIRMED';
   st.confirmed_at = now();
   st.confirmed_by = `${user.name} <${user.email}>`;
@@ -465,4 +470,9 @@ CAMBIO PEDIDO: ${ask}`;
     return v;
   }
   return editPost(store, post, input, user);
+}
+
+/** "No me gustó": pide otra versión distinta de la misma publicación (la anterior queda en el historial para volver a ella). */
+export function regeneratePost(store: Store, user: AuthUser, post: SocialPost): Promise<SocialPost> {
+  return revisePost(store, user, post, 'Escribe una versión DISTINTA de esta misma publicación: otro enfoque y otras palabras, sobre el mismo tema y con los mismos datos reales. No inventes datos nuevos.');
 }

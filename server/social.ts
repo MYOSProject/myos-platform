@@ -17,6 +17,7 @@ import { audit, stableStringify } from './content.js';
 import { composeMessage, publish, publisherConfig } from './publisher.js';
 import type { Store } from './store.js';
 import { isProd } from './env.js';
+import { resolveConnection } from './connections.js';
 
 const LIMITS = { facebook: 5000, instagram: 2200, linkedin: 3000 } as const;
 export const PLATFORMS = ['facebook', 'instagram', 'linkedin'] as const;
@@ -90,6 +91,7 @@ export function createPost(store: Store, input: PostInput, user: AuthUser, site?
   const post: SocialPost = {
     id: store.nextId('social'),
     site_id: site?.id ?? null,
+    project_id: user.project_id ?? site?.project_id ?? null,
     site_name: site ? site.content?.site_name || site.title : undefined,
     platform: input.platform,
     copy: cleanText(input.copy, 5000),
@@ -136,6 +138,7 @@ export function createDraftsFromSite(store: Store, site: ContentItem, user: Auth
 export function editPost(store: Store, post: SocialPost, input: PostInput, user: AuthUser): SocialPost {
   if (post.status === 'PUBLISHED') throw new HttpError(409, 'BAD_STATE', 'Una publicación ya publicada no se puede editar.');
   const before = postHash(post);
+  const prevText = { copy: post.copy, hashtags: post.hashtags, cta: post.cta, image_headline: post.image_headline || '', image_subline: post.image_subline || '' };
   if (input.copy !== undefined) post.copy = cleanText(input.copy, 5000);
   if (input.hashtags !== undefined) post.hashtags = cleanText(input.hashtags, 600);
   if (input.cta !== undefined) post.cta = cleanText(input.cta, 40);
@@ -146,6 +149,11 @@ export function editPost(store: Store, post: SocialPost, input: PostInput, user:
   if (input.image_subline !== undefined) post.image_subline = cleanText(input.image_subline, 200);
   if (input.scheduled_at !== undefined) post.scheduled_at = cleanSchedule(input.scheduled_at);
   post.updated_at = new Date().toISOString();
+  const textChanged = prevText.copy !== post.copy || prevText.hashtags !== post.hashtags || prevText.cta !== post.cta || prevText.image_headline !== (post.image_headline || '') || prevText.image_subline !== (post.image_subline || '');
+  if (textChanged) {
+    // Guarda la versión anterior para poder volver atrás (máximo 10).
+    post.versions = [...(post.versions || []), { at: post.updated_at, ...prevText }].slice(-10);
+  }
   const after = postHash(post);
   if (before !== after && post.status !== 'DRAFT') {
     const from = post.status;
@@ -232,8 +240,9 @@ export async function publishPost(store: Store, post: SocialPost, user: AuthUser
 
   publishing.add(post.id);
   try {
-    const result = await publish(post);
-    const mode = publisherConfig(post.platform).mode;
+    const conn = resolveConnection(store, post.project_id);
+    const result = await publish(post, conn);
+    const mode = publisherConfig(post.platform, conn).mode;
     post.updated_at = new Date().toISOString();
     if (result.mode === 'dry-run') {
       post.last_dry_run = result;
@@ -282,4 +291,11 @@ export function attachMedia(store: Store, post: SocialPost, dataUrl: unknown, ba
 /** ¿Se puede servir la imagen públicamente? Solo cuando la publicación ya fue aprobada (Meta la descarga al publicar). */
 export function mediaIsPublic(post: SocialPost | undefined): boolean {
   return Boolean(post && (post.status === 'APPROVED' || post.status === 'FAILED' || post.status === 'PUBLISHED'));
+}
+
+/** Vuelve a una versión anterior del texto (queda como borrador; hay que aprobarla otra vez). */
+export function restoreVersion(store: Store, post: SocialPost, index: number, user: AuthUser): SocialPost {
+  const v = post.versions?.[index];
+  if (!v) throw new HttpError(404, 'VERSION_NOT_FOUND', 'Esa versión ya no existe.');
+  return editPost(store, post, { copy: v.copy, hashtags: v.hashtags, cta: v.cta, image_headline: v.image_headline, image_subline: v.image_subline }, user);
 }

@@ -24,7 +24,7 @@ export default function Status({ health }) {
       </div>
       <div className="card stack">
         <h2>Aprobación humana</h2>
-        <p>Inicio de sesión: <b>{h.auth?.mode}</b> · Quién puede aprobar: {h.auth?.policy === 'allowlist' ? `${h.auth.count} correo(s) autorizados` : 'cualquier cuenta con correo verificado (define APPROVER_EMAILS)'}</p>
+        <p>Inicio de sesión: <b>{h.auth?.mode}</b> · Quién puede aprobar: {h.auth?.policy === 'allowlist' ? `${h.auth.count} correo(s) autorizados` : 'cualquier persona con sesión (queda registrado quién aprobó)'}</p>
       </div>
       <div className="card stack">
         <h2>Publicación en redes</h2>

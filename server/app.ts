@@ -21,6 +21,7 @@ import {
   mediaIsPublic,
   platformLabel,
   approvePost,
+  restoreVersion,
   createDraftsFromSite,
   createPost,
   deletePost,
@@ -32,7 +33,9 @@ import {
 } from './social.js';
 import { publisherStatus } from './publisher.js';
 import { chatTurn, clearChat, getChat, getProfile, runChatAction, saveProfile } from './chat.js';
-import { confirmStep, createPosts, generateStep, guideView, revisePost, saveAnswers, saveReport, suggestIdeas } from './guide.js';
+import { confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas } from './guide.js';
+import { createProject, deleteProject, ensureDefaultProject, getOwnedProject, projectsOf, projectSummary, updateProject } from './projects.js';
+import { connectionView, deleteConnection, saveConnection, setLive, testConnection } from './connections.js';
 import { guideForPrompt } from './guide.js';
 import { completeness, composeSiteBrief, missingEssentials, FIELD_LABELS } from './profile.js';
 import type { AuthUser, ContentItem, SocialPost } from './types.js';
@@ -117,6 +120,41 @@ export function createApp() {
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '12mb' }));
 
+  // Firestore: antes de cada petición se actualiza el estado, y los cambios se guardan ANTES de responder
+  // (en serverless la función puede congelarse apenas se responde).
+  app.use(async (req, res, next) => {
+    const store = getStore();
+    const remote = store.remote;
+    if (!remote || req.path === '/api/health') return next();
+    remote.inflight++;
+    let done = false;
+    const release = () => { if (!done) { done = true; remote.inflight--; } };
+    res.on('close', release);
+    try {
+      await remote.ensureFresh();
+    } catch (e: any) {
+      release();
+      console.error('[remote] no se pudo leer la base de datos:', e?.message || e);
+      return void res.status(503).json({ error: { code: 'DB_UNAVAILABLE', message: 'No se pudo leer la base de datos. Revisa FIREBASE_SERVICE_ACCOUNT y que Firestore esté creado.' } });
+    }
+    const end = res.end.bind(res) as (...a: any[]) => any;
+    (res as any).end = (...args: any[]) => {
+      remote.commit().then(
+        () => { release(); end(...args); },
+        (e: any) => {
+          release();
+          console.error('[remote] no se pudo guardar:', e?.message || e);
+          res.statusCode = 503;
+          res.removeHeader('Content-Length');
+          res.setHeader('Content-Type', 'application/json');
+          end(JSON.stringify({ error: { code: 'DB_WRITE_FAILED', message: 'No se pudo guardar en la base de datos. Inténtalo de nuevo.' } }));
+        }
+      );
+      return res;
+    };
+    next();
+  });
+
   // Cabeceras de seguridad básicas
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -164,8 +202,9 @@ export function createApp() {
     res.json(getStore().contents.filter((c) => c.status === 'APPROVED' || c.status === 'PUBLISHED').map(summary));
   });
 
-  app.get('/api/all-content', requireAuth, (_req, res) => {
-    res.json(getStore().contents.map(summary));
+  app.get('/api/all-content', requireAuth, (req, res) => {
+    const pid = (req.user as AuthUser).project_id;
+    res.json(getStore().contents.filter((c) => (pid ? c.project_id === pid : true)).map(summary));
   });
 
   app.get(
@@ -294,7 +333,8 @@ export function createApp() {
   // ---------------------------------------------------------------------------------------
   app.get('/api/social', requireAuth, (req, res) => {
     const siteId = req.query.site_id ? Number.parseInt(String(req.query.site_id), 10) : null;
-    const posts = getStore().social.filter((p) => (siteId ? p.site_id === siteId : true));
+    const pid = (req.user as AuthUser).project_id;
+    const posts = getStore().social.filter((p) => (siteId ? p.site_id === siteId : true) && (pid ? p.project_id === pid : true));
     res.json(posts.map(summarizePost));
   });
 
@@ -384,22 +424,22 @@ export function createApp() {
   app.get(
     '/api/social/:id/image',
     requireAuth,
-    wrap((req, res) => {
-      const m = getStore().media[String(intParam(req.params.id))];
+    wrap(async (req, res) => {
+      const m = await getStore().mediaData(String(intParam(req.params.id)));
       if (!m) throw new HttpError(404, 'NO_MEDIA', 'Esta publicación no tiene imagen.');
       res.type(m.mime).send(Buffer.from(m.b64, 'base64'));
     })
   );
 
   // Pública SOLO cuando la publicación está aprobada: es lo que descarga Meta al publicar.
-  app.get('/media/:file', (req, res) => {
+  app.get('/media/:file', wrap(async (req, res) => {
     const id = Number.parseInt(String(req.params.file).replace(/\.jpg$/i, ''), 10);
     const post = getStore().social.find((p) => p.id === id);
-    const m = getStore().media[String(id)];
-    if (!m || !mediaIsPublic(post)) return res.status(404).type('text/plain').send('No disponible');
+    const m = mediaIsPublic(post) ? await getStore().mediaData(String(id)) : undefined;
+    if (!m) return res.status(404).type('text/plain').send('No disponible');
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.type(m.mime).send(Buffer.from(m.b64, 'base64'));
-  });
+  }));
 
   // ---------------------------------------------------------------------------------------
   // Perfil del negocio y asistente (chatbot)
@@ -466,6 +506,70 @@ export function createApp() {
     const post = findPost(intParam(req.params.id));
     const out = await revisePost(getStore(), req.user as AuthUser, post, req.body?.instruction);
     res.json({ ...summarizePost(out), is_new_version: out.id !== post.id });
+  }));
+
+  // ---------------------------------------------------------------------------------------
+  // Proyectos y conexiones
+  // ---------------------------------------------------------------------------------------
+  const projectList = (user: AuthUser) => projectsOf(getStore(), user.email).map((p) => projectSummary(getStore(), p));
+  app.get('/api/projects', requireAuth, (req, res) => {
+    const user = req.user as AuthUser;
+    ensureDefaultProject(getStore(), user);
+    res.json({ projects: projectList(user) });
+  });
+  app.post('/api/projects', requireAuth, wrap((req, res) => {
+    const user = req.user as AuthUser;
+    const p = createProject(getStore(), user, req.body || {});
+    res.status(201).json({ project: projectSummary(getStore(), p), projects: projectList(user) });
+  }));
+  app.put('/api/projects/:id', requireAuth, wrap((req, res) => {
+    const user = req.user as AuthUser;
+    updateProject(getStore(), user, intParam(req.params.id), req.body || {});
+    res.json({ projects: projectList(user) });
+  }));
+  app.delete('/api/projects/:id', requireAuth, wrap((req, res) => {
+    const user = req.user as AuthUser;
+    deleteProject(getStore(), user, intParam(req.params.id));
+    res.json({ projects: projectList(user) });
+  }));
+
+  const needProject = (user: AuthUser) => {
+    if (!user.project_id) throw new HttpError(400, 'NEED_PROJECT', 'Elige un proyecto primero.');
+    return getOwnedProject(getStore(), user, user.project_id);
+  };
+  app.get('/api/connections', requireAuth, wrap((req, res) => {
+    const p = needProject(req.user as AuthUser);
+    res.json(connectionView(getStore(), p.id));
+  }));
+  app.put('/api/connections', requireAuth, wrap((req, res) => {
+    const p = needProject(req.user as AuthUser);
+    saveConnection(getStore(), req.user as AuthUser, p.id, req.body || {});
+    res.json(connectionView(getStore(), p.id));
+  }));
+  app.post('/api/connections/test', requireAuth, rateLimit({ windowMs: 60_000, max: 6, name: 'prueba de conexión' }), wrap(async (req, res) => {
+    const p = needProject(req.user as AuthUser);
+    const result = await testConnection(getStore(), p.id);
+    res.json({ result, ...connectionView(getStore(), p.id) });
+  }));
+  app.post('/api/connections/live', requireAuth, wrap((req, res) => {
+    const p = needProject(req.user as AuthUser);
+    setLive(getStore(), req.user as AuthUser, p.id, req.body?.live === true);
+    res.json(connectionView(getStore(), p.id));
+  }));
+  app.delete('/api/connections', requireAuth, wrap((req, res) => {
+    const p = needProject(req.user as AuthUser);
+    deleteConnection(getStore(), p.id);
+    res.json(connectionView(getStore(), p.id));
+  }));
+
+  app.post('/api/social/:id/regenerate', requireAuth, aiLimit, wrap(async (req, res) => {
+    const post = findPost(intParam(req.params.id));
+    const out = await regeneratePost(getStore(), req.user as AuthUser, post);
+    res.json({ ...summarizePost(out), is_new_version: out.id !== post.id });
+  }));
+  app.post('/api/social/:id/restore', requireAuth, wrap((req, res) => {
+    const post = findPost(intParam(req.params.id));
+    res.json(summarizePost(restoreVersion(getStore(), post, Number(req.body?.index), req.user as AuthUser)));
   }));
 
   app.get('/api/chat', requireAuth, (req, res) => {

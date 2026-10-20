@@ -98,6 +98,7 @@ export interface ContentItem {
   body_text: string;
   created_at: string;
   created_by?: string;
+  project_id?: number | null;
   updated_at?: string;
   approved_at?: string | null;
   approved_by?: string | null;
@@ -159,7 +160,46 @@ export interface SocialPost {
   published_at?: string | null;
   publish_result?: PublishResult | null;
   last_dry_run?: PublishResult | null;
+  /** Proyecto al que pertenece (cada persona puede tener varios). */
+  project_id?: number | null;
+  /** Versiones anteriores del texto, para volver atrás después de pedir cambios a la IA. */
+  versions?: PostVersion[];
   history: AuditEvent[];
+}
+
+export interface PostVersion {
+  at: string;
+  copy: string;
+  hashtags: string;
+  cta: string;
+  image_headline: string;
+  image_subline: string;
+  note?: string;
+}
+
+export interface Project {
+  id: number;
+  name: string;
+  description: string;
+  owner_email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Datos para publicar de un proyecto. Los secretos se guardan cifrados y nunca se devuelven al navegador. */
+export interface ProjectConnection {
+  page_id: string;
+  ig_user_id: string;
+  webhook_url: string;
+  /** Cifrado AES-256-GCM (formato iv.tag.datos en base64). */
+  page_token_enc: string;
+  /** Hasta que la persona lo active, todo se queda en simulación. */
+  live: boolean;
+  tested_at?: string | null;
+  tested_ok?: boolean | null;
+  test_note?: string | null;
+  updated_at: string;
+  updated_by: string;
 }
 
 export interface Lead {
@@ -179,6 +219,10 @@ export interface AuthUser {
   emailVerified: boolean;
   isApprover: boolean;
   via: 'firebase' | 'dev';
+  /** Proyecto activo (lo fija el servidor a partir de la cabecera x-project-id). */
+  project_id?: number | null;
+  /** Clave de almacenamiento del proyecto activo: correo + proyecto. */
+  scope?: string;
 }
 
 export interface BusinessProfile {
@@ -240,6 +284,8 @@ export interface GuideStepState {
   report: GuideReport | null;
   status: 'EMPTY' | 'DRAFT' | 'CONFIRMED';
   generated_by?: 'ai' | 'local' | 'manual';
+  /** Las respuestas cambiaron después de generar la vista previa. */
+  stale?: boolean;
   model?: string;
   updated_at: string;
   confirmed_at?: string | null;

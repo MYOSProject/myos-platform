@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, errText } from '../api';
+import { api, errText, getActiveProject } from '../api';
 import { PostCard, SiteCard } from '../components/Cards';
 import { Alert, PLATFORM } from '../components/ui';
 
@@ -29,6 +29,28 @@ export default function Create({ profile, setPage, onSitesChanged }) {
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const [guideDone, setGuideDone] = useState(true);
+
+  // Lo que vas escribiendo se recuerda por proyecto: si cambias de pantalla o recargas, sigues donde te quedaste.
+  const storeKey = `myos_create_${getActiveProject()}`;
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(storeKey) || 'null'); } catch { /* sin almacenamiento */ }
+    if (!saved) { setRestored(true); return; }
+    setN(saved.n || 1); setKind(saved.kind || 'posts'); setPlatforms(saved.platforms || ['facebook', 'instagram']);
+    setTopic(saved.topic || ''); setDetails(saved.details || ''); setIdeas(saved.ideas || []);
+    Promise.all([
+      saved.postIds?.length ? api('GET', '/api/social') : [],
+      saved.siteId ? api('GET', '/api/all-content') : []
+    ]).then(([all, sites]) => {
+      if (saved.postIds?.length) setPosts(all.filter((p) => saved.postIds.includes(p.id)));
+      if (saved.siteId) setSite(sites.find((x) => x.id === saved.siteId) || null);
+    }).catch(() => {}).finally(() => setRestored(true));
+  }, []); // eslint-disable-line
+  useEffect(() => {
+    if (!restored) return;
+    try { localStorage.setItem(storeKey, JSON.stringify({ n, kind, platforms, topic, details, ideas, postIds: posts.map((p) => p.id), siteId: site?.id || null })); } catch { /* sin almacenamiento */ }
+  }, [restored, n, kind, platforms, topic, details, ideas, posts, site]); // eslint-disable-line
 
   useEffect(() => { api('GET', '/api/guide').then((g) => setGuideDone(g.done > 0)).catch(() => {}); }, []);
 
@@ -127,7 +149,7 @@ export default function Create({ profile, setPage, onSitesChanged }) {
           {kind === 'posts' && (
             <div className="grid">
               {posts.map((p) => (
-                <PostCard key={p.id} post={p} profile={profile} autoImage
+                <PostCard key={p.id} post={p} profile={profile} autoImage={!p.has_media}
                   onChange={(x) => { setPosts((l) => l.map((i) => (i.id === x.id ? x : i))); if (x.status === 'PUBLISHED') setN(4); }}
                   onNewVersion={(x) => setPosts((l) => [x, ...l])}
                   onRemove={(id) => setPosts((l) => l.filter((i) => i.id !== id))} />

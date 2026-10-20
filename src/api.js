@@ -7,10 +7,19 @@ export const setDevUser = (email) => {
 };
 export const getDevUser = () => devUser;
 
+// Proyecto activo: se manda en cada petición y se recuerda en este navegador.
+let activeProject = Number(localStorage.getItem('myos_project') || 0) || null;
+export const getActiveProject = () => activeProject;
+export const setActiveProject = (id) => {
+  activeProject = id || null;
+  if (id) localStorage.setItem('myos_project', String(id)); else localStorage.removeItem('myos_project');
+};
+
 async function headers() {
   const h = { 'Content-Type': 'application/json' };
   if (auth.currentUser) h.Authorization = `Bearer ${await auth.currentUser.getIdToken()}`;
   else if (devUser) h['x-dev-user'] = devUser;
+  if (activeProject) h['x-project-id'] = String(activeProject);
   return h;
 }
 

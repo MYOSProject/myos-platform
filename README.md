@@ -11,3 +11,13 @@ y **nada se publica sin aprobación humana registrada** (quién, cuándo, huella
 Publicación real en redes: configura `MAKE_WEBHOOK_URL` (Make/Zapier) o las llaves `META_*`. Sin eso todo queda en simulación.
 Vercel: `npm run build` genera `api/index.js` (el servidor empaquetado); súbelo al repositorio junto con el resto.
 Diseño: Manual de Identidad MYOS v1.0 (azul marino #111827, coral #E2554F, turquesa #8CCFD9; Plus Jakarta Sans + Inter).
+
+
+## Novedades (proyectos, conexiones, persistencia)
+
+- **Mis proyectos**: cada usuario crea varios proyectos; todo (recorrido, chat, publicaciones) queda separado por proyecto.
+- **Lo escrito se guarda**: el recorrido «Empezar» se autoguarda y «Crear contenido» recuerda su avance; las pantallas no pierden el estado al cambiar de página.
+- **Actualizar contenido**: elige proyecto y publicación, pide un cambio, «No me gusta, hazme otra» (la IA genera otra), historial de versiones, y aprueba y publica.
+- **Conexiones**: por proyecto, Facebook/Instagram (token cifrado, «Probar conexión», «Activar publicación real») o webhook de Make/Zapier. Sin activar = simulación.
+- **Aprobación abierta**: cualquier usuario con sesión puede aprobar y publicar; siempre se registra quién. Restringir con `RESTRICT_APPROVERS=true` + `APPROVER_EMAILS`.
+- **Vercel**: define `FIREBASE_SERVICE_ACCOUNT`, `CONNECTIONS_KEY` (y `GEMINI_API_KEY`), activa Firestore y redeploy.

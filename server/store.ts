@@ -7,11 +7,12 @@ import fs from 'fs';
 import path from 'path';
 import { PROJECT_ROOT, isProd } from './env.js';
 import { SEED_ITEMS } from './seed.js';
-import type { BusinessProfile, ChatMessage, GuideStepState, ContentItem, Lead, MediaItem, SocialPost } from './types.js';
+import { RemoteSync, remoteConfigFromEnv } from './remote.js';
+import type { BusinessProfile, ChatMessage, GuideStepState, Project, ProjectConnection, ContentItem, Lead, MediaItem, SocialPost } from './types.js';
 
 interface DbShape {
   version: 1;
-  counters: { content: number; social: number; lead: number };
+  counters: { content: number; social: number; lead: number; project?: number };
   contents: ContentItem[];
   social: SocialPost[];
   leads: Lead[];
@@ -19,9 +20,11 @@ interface DbShape {
   chats?: Record<string, ChatMessage[]>;
   media?: Record<string, MediaItem>;
   guide?: Record<string, Record<string, GuideStepState>>;
+  projects?: Project[];
+  connections?: Record<string, ProjectConnection>;
 }
 
-export type Persistence = 'file' | 'ephemeral' | 'memory';
+export type Persistence = 'file' | 'ephemeral' | 'memory' | 'firestore';
 
 export class Store {
   contents: ContentItem[] = [];
@@ -31,12 +34,25 @@ export class Store {
   chats: Record<string, ChatMessage[]> = {};
   media: Record<string, MediaItem> = {};
   guide: Record<string, Record<string, GuideStepState>> = {};
-  counters = { content: 0, social: 0, lead: 0 };
+  projects: Project[] = [];
+  connections: Record<string, ProjectConnection> = {};
+  counters = { content: 0, social: 0, lead: 0, project: 0 };
   persistence: Persistence;
+  /** Con Firestore: hay cambios sin escribir. */
+  dirty = false;
+  remote: RemoteSync | null = null;
+  loadedFromRemote = false;
   readonly file: string | null;
   private timer: NodeJS.Timeout | null = null;
 
-  constructor(file: string | null, opts: { seed: boolean; ephemeral?: boolean }) {
+  constructor(file: string | null, opts: { seed: boolean; ephemeral?: boolean; remote?: import('./remote.js').RemoteConfig | null }) {
+    if (opts.remote) {
+      // Firestore: no se usa archivo; los datos se cargan en la primera petición (ensureFresh).
+      this.file = null;
+      this.persistence = 'firestore';
+      this.remote = new RemoteSync(opts.remote, this);
+      return;
+    }
     this.file = file;
     this.persistence = !file ? 'memory' : opts.ephemeral ? 'ephemeral' : 'file';
     let loaded = false;
@@ -50,7 +66,9 @@ export class Store {
         this.chats = db.chats || {};
         this.media = db.media || {};
         this.guide = db.guide || {};
-        this.counters = { content: 0, social: 0, lead: 0, ...(db.counters || {}) };
+        this.projects = db.projects || [];
+        this.connections = db.connections || {};
+        this.counters = { content: 0, social: 0, lead: 0, project: 0, ...(db.counters || {}) };
         loaded = true;
       } catch (e) {
         // Archivo dañado: se conserva una copia y se empieza limpio (nunca se pisa en silencio).
@@ -99,6 +117,10 @@ export class Store {
 
   /** Guardado diferido y atómico (archivo temporal + rename). */
   save(): void {
+    if (this.remote) {
+      this.dirty = true;
+      return;
+    }
     if (!this.file) return;
     if (this.timer) return;
     this.timer = setTimeout(() => {
@@ -108,13 +130,25 @@ export class Store {
     this.timer.unref?.();
   }
 
+  /** Imagen de una publicación; con Firestore se baja bajo demanda. */
+  async mediaData(id: string): Promise<MediaItem | undefined> {
+    const m = this.media[id];
+    if (!m) return undefined;
+    if (!m.b64 && this.remote) {
+      const b64 = await this.remote.mediaB64(id);
+      if (!b64) return undefined;
+      m.b64 = b64;
+    }
+    return m.b64 ? m : undefined;
+  }
+
   flush(): void {
     if (!this.file) return;
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
     }
-    const db: DbShape = { version: 1, counters: this.counters, contents: this.contents, social: this.social, leads: this.leads, profiles: this.profiles, chats: this.chats, media: this.media, guide: this.guide };
+    const db: DbShape = { version: 1, counters: this.counters, contents: this.contents, social: this.social, leads: this.leads, profiles: this.profiles, chats: this.chats, media: this.media, guide: this.guide, projects: this.projects, connections: this.connections };
     try {
       fs.mkdirSync(path.dirname(this.file), { recursive: true });
       const tmp = `${this.file}.tmp`;
@@ -134,7 +168,14 @@ export function getStore(): Store {
   const explicit = process.env.DATA_FILE?.trim();
   const file = explicit || (onVercel ? '/tmp/myos-db.json' : path.join(PROJECT_ROOT, 'data', 'db.json'));
   const seed = process.env.SEED_DEMO_DATA ? process.env.SEED_DEMO_DATA !== 'false' : !isProd;
-  instance = new Store(file, { seed, ephemeral: onVercel && !explicit });
+  let dbId = '';
+  try {
+    dbId = String(JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'firebase-applet-config.json'), 'utf8')).firestoreDatabaseId || '');
+  } catch {
+    /* sin config */
+  }
+  const remote = explicit ? null : remoteConfigFromEnv(dbId);
+  instance = new Store(file, { seed, ephemeral: onVercel && !explicit, remote });
   return instance;
 }
 

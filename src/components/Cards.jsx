@@ -165,6 +165,19 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
       await makeImage(p);
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
+  const regenerate = async () => {
+    setBusy('regen'); setErr('');
+    try {
+      const p = await api('POST', `/api/social/${post.id}/regenerate`);
+      if (p.is_new_version) onNewVersion?.(p); else onChange(p);
+      await makeImage(p);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
+  };
+  const restore = async (i) => {
+    setBusy('restore'); setErr('');
+    try { const p = await api('POST', `/api/social/${post.id}/restore`, { index: i }); onChange(p); await makeImage(p); }
+    catch (e) { setErr(errText(e)); } finally { setBusy(''); }
+  };
   const startEdit = () => {
     setDraft({ copy: post.copy, hashtags: post.hashtags, cta: post.cta, headline: post.image_headline || '', subline: post.image_subline || '' });
     setEditing(true);
@@ -236,6 +249,17 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
             {done && <small className="muted">Esta ya se publicó y no se modifica: se crea un borrador nuevo que tendrás que aprobar.</small>}
           </div>
         )}
+        {!done && !editing && post.versions?.length > 0 && (
+          <div className="field">
+            <label htmlFor={`vs-${post.id}`}>Volver a una versión anterior</label>
+            <div className="row">
+              <select id={`vs-${post.id}`} className="grow" defaultValue="" onChange={(e) => { if (e.target.value !== '') { restore(Number(e.target.value)); e.target.value = ''; } }} disabled={Boolean(busy)}>
+                <option value="">Elige una versión…</option>
+                {post.versions.map((v, i) => <option key={i} value={i}>{fmt(v.at)} · {v.copy.slice(0, 50)}{v.copy.length > 50 ? '…' : ''}</option>).reverse()}
+              </select>
+            </div>
+          </div>
+        )}
         {!done && !editing && (
           <>
             <p className="ask">{post.status === 'APPROVED' ? '¿La publico ahora?' : '¿La apruebas y la publico?'}</p>
@@ -245,6 +269,7 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
                 {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : 'Aprobar y publicar'}
               </button>
               <button className="btn secondary" disabled={Boolean(busy)} onClick={startEdit}>Editar</button>
+              <button className="btn secondary" disabled={Boolean(busy)} onClick={regenerate}>{busy === 'regen' ? 'Escribiendo otra…' : 'No me gusta, hazme otra'}</button>
               <button className="btn link" disabled={Boolean(busy)} onClick={remove}>Descartar</button>
             </div>
           </>

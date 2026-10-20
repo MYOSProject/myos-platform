@@ -10,6 +10,8 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { PROJECT_ROOT, isProd, list } from './env.js';
 import type { AuthUser } from './types.js';
+import { applyProject } from './projects.js';
+import { HttpError } from './http.js';
 
 const DEFAULT_JWKS = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 
@@ -47,9 +49,10 @@ export function approverEmails(): string[] {
   return list('APPROVER_EMAILS').map((e) => e.toLowerCase());
 }
 
-export function approverPolicy(): { policy: 'allowlist' | 'any-verified-user'; count: number } {
-  const n = approverEmails().length;
-  return { policy: n > 0 ? 'allowlist' : 'any-verified-user', count: n };
+export const restrictApprovers = () => process.env.RESTRICT_APPROVERS === 'true' && approverEmails().length > 0;
+
+export function approverPolicy(): { policy: 'allowlist' | 'any-user'; count: number } {
+  return restrictApprovers() ? { policy: 'allowlist', count: approverEmails().length } : { policy: 'any-user', count: 0 };
 }
 
 export function isApproverEmail(email: string): boolean {
@@ -94,7 +97,7 @@ export async function verifyFirebaseToken(token: string): Promise<AuthUser> {
       email,
       name: typeof payload.name === 'string' && payload.name ? payload.name : email.split('@')[0],
       emailVerified: payload.email_verified === true,
-      isApprover: payload.email_verified === true && isApproverEmail(email),
+      isApprover: isApproverEmail(email),
       via: 'firebase'
     };
   } catch (e: any) {
@@ -127,33 +130,32 @@ export const requireAuth: RequestHandler = async (req: Request, res: Response, n
   try {
     const user = await authenticate(req);
     if (!user) return sendAuthError(res, new AuthError(401, 'NO_TOKEN', 'Inicia sesión para continuar.'));
+    applyProject(req, user);
     req.user = user;
     next();
   } catch (e) {
+    if (e instanceof HttpError) return void res.status(e.status).json({ error: { code: e.code, message: e.message } });
     sendAuthError(res, e instanceof AuthError ? e : new AuthError(401, 'BAD_TOKEN', 'No se pudo validar la sesión.'));
   }
 };
 
-/** Exige sesión válida + permiso de aprobar/publicar (correo verificado y, si existe, en APPROVER_EMAILS). */
+/**
+ * Aprobar y publicar: cualquier persona con sesión válida puede hacerlo. Lo que no cambia es que quien aprueba
+ * queda REGISTRADO (nombre, correo, fecha y huella del contenido). Si algún día se quiere limitar a ciertas
+ * cuentas, se activa con RESTRICT_APPROVERS=true y la lista APPROVER_EMAILS.
+ */
 export const requireApprover: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await authenticate(req);
     if (!user) return sendAuthError(res, new AuthError(401, 'NO_TOKEN', 'Inicia sesión para continuar.'));
-    if (!user.emailVerified) {
-      return sendAuthError(
-        res,
-        new AuthError(403, 'EMAIL_NOT_VERIFIED', `El correo ${user.email} no está verificado. Entra con Google o verifica tu correo para poder aprobar.`)
-      );
+    if (restrictApprovers() && !user.isApprover) {
+      return sendAuthError(res, new AuthError(403, 'NOT_APPROVER', `Tu cuenta (${user.email}) no está en la lista de aprobadores (APPROVER_EMAILS).`));
     }
-    if (!user.isApprover) {
-      return sendAuthError(
-        res,
-        new AuthError(403, 'NOT_APPROVER', `Tu cuenta (${user.email}) no está en la lista de aprobadores (APPROVER_EMAILS).`)
-      );
-    }
+    applyProject(req, user);
     req.user = user;
     next();
   } catch (e) {
+    if (e instanceof HttpError) return void res.status(e.status).json({ error: { code: e.code, message: e.message } });
     sendAuthError(res, e instanceof AuthError ? e : new AuthError(401, 'BAD_TOKEN', 'No se pudo validar la sesión.'));
   }
 };
