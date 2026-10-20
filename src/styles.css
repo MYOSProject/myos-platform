@@ -176,10 +176,23 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .revise { border-top: 1px dashed var(--line); padding-top: 12px; }
 @media (max-width: 860px) { .guide { grid-template-columns: 1fr; } .guide-nav { position: static; } }
 
-/* Transición entre pestañas: entra difuminado y se enfoca */
-@keyframes pageIn { from { opacity: 0; filter: blur(10px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: none; } }
-.page:not([hidden]) { animation: pageIn .45s cubic-bezier(.2, .7, .2, 1) both; }
-@media (prefers-reduced-motion: reduce) { .page:not([hidden]) { animation: none; } }
+/* Transición entre pestañas: la pantalla entra muy difuminada y se enfoca; sus bloques aparecen escalonados */
+@keyframes pageIn { from { opacity: 0; filter: blur(22px); transform: translateY(18px) scale(.985); } 60% { opacity: 1; } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes riseIn { from { opacity: 0; filter: blur(8px); transform: translateY(14px); } to { opacity: 1; filter: blur(0); transform: none; } }
+.page:not([hidden]) { animation: pageIn .7s cubic-bezier(.2, .7, .2, 1) both; }
+.page:not([hidden]) > .stack > *, .page:not([hidden]) > .stack > .grid > * { animation: riseIn .6s cubic-bezier(.2, .7, .2, 1) both; }
+.page:not([hidden]) > .stack > *:nth-child(2) { animation-delay: .06s; }
+.page:not([hidden]) > .stack > *:nth-child(3) { animation-delay: .12s; }
+.page:not([hidden]) > .stack > *:nth-child(4) { animation-delay: .18s; }
+.page:not([hidden]) > .stack > *:nth-child(n+5) { animation-delay: .24s; }
+.nav { transition: background .25s ease, color .25s ease, transform .25s ease; }
+.nav:hover:not(:disabled) { transform: translateX(3px); }
+/* Con «reducir movimiento» se conserva solo el desenfoque suave, sin desplazamientos */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes pageIn { from { opacity: 0; filter: blur(12px); } to { opacity: 1; filter: blur(0); } }
+  .page:not([hidden]) > .stack > *, .page:not([hidden]) > .stack > .grid > * { animation: none; }
+  .nav:hover:not(:disabled) { transform: none; }
+}
 
 .proj-chip { display: flex; flex-direction: column; text-align: left; gap: 0; background: var(--gray); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; margin: 0 0 12px; cursor: pointer; }
 .proj-chip small { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
