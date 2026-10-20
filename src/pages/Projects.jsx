@@ -77,8 +77,7 @@ export default function Projects({ activeId, onOpen, onList, setPage }) {
                   </ul>
                   <p className="muted">Actualizado {fmt(p.updated_at)}</p>
                   <div className="row">
-                    <button className="btn" onClick={() => onOpen(p, 'guide')}>Abrir</button>
-                    <button className="btn secondary" onClick={() => onOpen(p, 'content')}>Contenido con IA</button>
+                    <button className="btn" onClick={() => onOpen(p, 'guide')}>Abrir y empezar</button>
                     <button className="btn secondary small" onClick={() => setEditing({ id: p.id, name: p.name, description: p.description })}>Editar</button>
                     <button className="btn link" disabled={busy === `del${p.id}`} onClick={() => remove(p)}>Borrar</button>
                   </div>
