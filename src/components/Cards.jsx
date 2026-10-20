@@ -9,22 +9,38 @@ export function SitePreview({ siteId }) {
   const [html, setHtml] = useState(null);
   const [err, setErr] = useState('');
   const [w, setW] = useState('Escritorio');
+  const [full, setFull] = useState(false);
   useEffect(() => {
     let live = true;
     api('GET', `/api/content/${siteId}`).then((d) => live && setHtml(d.content.full_html)).catch((e) => live && setErr(errText(e)));
     return () => { live = false; };
   }, [siteId]);
+  // Pantalla completa: Esc la cierra y se bloquea el scroll de la página de fondo
+  useEffect(() => {
+    if (!full) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setFull(false); };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+  }, [full]);
   if (err) return <Alert>{err}</Alert>;
   if (!html) return <p className="muted">Cargando vista previa…</p>;
-  return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="row" style={{ gap: 8 }}>
-        {Object.keys(WIDTHS).map((k) => <button key={k} className={`btn small ${w === k ? 'navy' : 'secondary'}`} onClick={() => setW(k)}>{k}</button>)}
-      </div>
-      <div className="frame-wrap">
-        <iframe className="frame" title="Vista previa del sitio" sandbox="allow-scripts" srcDoc={html} style={{ width: WIDTHS[w], maxWidth: '100%', flex: w === 'Escritorio' ? 1 : 'none' }} />
-      </div>
+  const bar = (
+    <div className="row" style={{ gap: 8 }}>
+      {Object.keys(WIDTHS).map((k) => <button key={k} className={`btn small ${w === k ? 'navy' : 'secondary'}`} onClick={() => setW(k)}>{k}</button>)}
+      <button className="btn small secondary" style={{ marginLeft: 'auto' }} onClick={() => setFull((f) => !f)}>{full ? '✕ Cerrar (Esc)' : '⛶ Pantalla completa'}</button>
     </div>
+  );
+  const frame = (
+    <div className="frame-wrap">
+      <iframe className={`frame ${full ? 'full' : ''}`} title="Vista previa del sitio" sandbox="allow-scripts" srcDoc={html} style={{ width: WIDTHS[w], maxWidth: '100%', flex: w === 'Escritorio' ? 1 : 'none' }} />
+    </div>
+  );
+  return full ? (
+    <div className="preview-full" role="dialog" aria-modal="true" aria-label="Vista previa en pantalla completa">{bar}{frame}</div>
+  ) : (
+    <div className="stack" style={{ gap: 8 }}>{bar}{frame}</div>
   );
 }
 
