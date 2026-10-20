@@ -202,3 +202,36 @@ test('el chat usa la guía confirmada', async () => {
   const r = await api('POST', '/api/chat', { user: ANA, body: { message: 'hola' } });
   assert.equal(r.status, 201, r.text);
 });
+
+test('IA automática: sin información pide completar «Empezar»; luego crea borradores programados y los renueva', async () => {
+  const NEW = 'nuevo@merkatics.com';
+  const none = await api('POST', '/api/content/auto-create', { user: NEW, body: {} });
+  assert.equal(none.status, 409);
+  assert.equal(none.json.error?.code ?? none.json.code, 'NEEDS_INFO');
+  assert.equal((await api('POST', '/api/content/auto-create', {})).status, 401);
+
+  // Ana ya tiene pasos confirmados (pruebas anteriores)
+  script = (body) => {
+    assert.match(body.systemInstruction.parts[0].text, /control total/);
+    return geminiOk({ posts: [
+      { platform: 'facebook', copy: 'Auto uno 🌮', hashtags: '', cta: 'Pide ya', headline: 'Uno', subheadline: 'a', day_offset: 2 },
+      { platform: 'instagram', copy: 'Auto dos 🌮', hashtags: '#a', cta: 'Pide ya', headline: 'Dos', subheadline: 'b', day_offset: 400 },
+      { platform: 'linkedin', copy: 'no permitido', hashtags: '', cta: '', headline: '', subheadline: '', day_offset: 1 }
+    ] });
+  };
+  const c = await api('POST', '/api/content/auto-create', { user: ANA, body: { count: 3 } });
+  assert.equal(c.status, 201, c.text);
+  assert.deepEqual(c.json.map((p: any) => p.platform), ['facebook', 'instagram']);
+  assert.ok(c.json.every((p: any) => p.status === 'DRAFT' && p.scheduled_at));
+  const in30 = Date.now() + 31 * 86400_000;
+  assert.ok(c.json.every((p: any) => new Date(p.scheduled_at).getTime() < in30), 'la fecha se limita a 30 días');
+
+  script = (body) => {
+    assert.match(body.contents[0].parts[0].text, /Auto uno/);
+    return geminiOk({ posts: [{ n: 1, copy: 'Renovada 🌮', hashtags: '', cta: 'Pide ya', headline: 'Nueva', subheadline: 'x' }] });
+  };
+  const u = await api('POST', '/api/content/auto-update', { user: ANA });
+  assert.equal(u.status, 200, u.text);
+  assert.ok(u.json.posts.length >= 1 || u.json.created.length >= 1);
+  assert.ok([...u.json.posts, ...u.json.created].every((p: any) => p.status === 'DRAFT'), 'nunca se publica solo');
+});

@@ -476,3 +476,131 @@ CAMBIO PEDIDO: ${ask}`;
 export function regeneratePost(store: Store, user: AuthUser, post: SocialPost): Promise<SocialPost> {
   return revisePost(store, user, post, 'Escribe una versión DISTINTA de esta misma publicación: otro enfoque y otras palabras, sobre el mismo tema y con los mismos datos reales. No inventes datos nuevos.');
 }
+
+// ------------------------------------------------------------------------------------------
+// Contenido 100 % automático: la IA decide temas, textos, fechas e imágenes; la persona solo aprueba y publica.
+// ------------------------------------------------------------------------------------------
+const AUTO_PLATFORMS = ['facebook', 'instagram'] as const;
+
+function needInfo(store: Store, user: AuthUser): void {
+  if (!profileOf(store, user).business_name && guideView(store, user).done === 0) {
+    throw new HttpError(409, 'NEEDS_INFO', 'Primero cuéntame de tu negocio en «Empezar» (con confirmar un paso basta) para que la IA pueda crear contenido real.');
+  }
+}
+
+function scheduleFor(offsetDays: unknown): string {
+  const n = Math.min(30, Math.max(1, Math.round(Number(offsetDays)) || 1));
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + n);
+  d.setUTCHours(18, 0, 0, 0); // 12:00 hora de Ciudad Juárez
+  return d.toISOString();
+}
+
+function projectPosts(store: Store, user: AuthUser): SocialPost[] {
+  const pid = user.project_id;
+  return store.social.filter((p) => (pid ? p.project_id === pid : true));
+}
+
+/** La IA arma sola un paquete de publicaciones (borradores) con lo que se sabe del negocio. */
+export async function autoCreate(store: Store, user: AuthUser, count = 6): Promise<SocialPost[]> {
+  needInfo(store, user);
+  const n = Math.min(8, Math.max(2, Math.round(count) || 6));
+  const existing = projectPosts(store, user).slice(-12).map((p) => `- (${platformLabel(p.platform)}) ${p.copy.slice(0, 110)}`).join('\n') || '(ninguna todavía)';
+  const system = `Eres el estratega de contenido de MYOS y tienes el control total: decides tú los temas, el orden y los textos. La persona NO te dará instrucciones; solo revisará, aprobará y publicará.
+Crea un plan de ${n} publicaciones variadas para las próximas 2 semanas, alternando ${AUTO_PLATFORMS.map(platformLabel).join(' e ')}. Mezcla objetivos (dar a conocer, mostrar el producto o servicio, confianza, cercanía con la comunidad, invitar a comprar o contactar) y cuida que ninguna repita el tema de otra. Para cada una indica day_offset (1 a 14: días desde hoy).
+${POST_FIELDS_RULES}
+${RULES}
+Si falta un dato (precio, teléfono, promoción), NO lo menciones ni lo inventes: habla de lo que sí se sabe.
+Fecha de hoy: ${new Date().toISOString().slice(0, 10)}.
+
+YA CREADO (no repetir estos temas):
+${existing}
+
+${context(store, user)}`;
+  let data: any;
+  try {
+    const r = await generateStructured({
+      systemInstruction: system,
+      contents: `Crea las ${n} publicaciones del plan.`,
+      schema: {
+        type: 'object',
+        properties: { posts: { type: 'array', items: { type: 'object', properties: { ...POST_PROPS, platform: { type: 'string', enum: [...AUTO_PLATFORMS] }, day_offset: { type: 'integer' } }, required: [...Object.keys(POST_PROPS), 'day_offset'] } } },
+        required: ['posts']
+      },
+      temperature: 0.9,
+      maxOutputTokens: 6000
+    });
+    data = r.data;
+  } catch (e) {
+    failToHttp(e, 'auto-create');
+  }
+  const name = profileOf(store, user).business_name || undefined;
+  const made: SocialPost[] = [];
+  for (const p of (Array.isArray(data?.posts) ? data.posts : []).slice(0, n)) {
+    if (!(AUTO_PLATFORMS as readonly string[]).includes(p?.platform) || !clean(p?.copy, 5000)) continue;
+    const post = createPost(store, { platform: p.platform, copy: p.copy, hashtags: p.hashtags, cta: p.cta, image_headline: p.headline, image_subline: p.subheadline, scheduled_at: scheduleFor(p.day_offset) }, user);
+    post.site_name = name;
+    made.push(post);
+  }
+  if (!made.length) throw new HttpError(502, 'AI_FAILED', 'La IA no devolvió publicaciones utilizables. Inténtalo otra vez.');
+  store.save();
+  return made;
+}
+
+/**
+ * La IA renueva sola el contenido pendiente con lo último que se sabe del negocio. Lo que aún no se publicó se reescribe
+ * (el texto anterior queda en el historial y la aprobación previa deja de valer); si no hay nada pendiente, crea
+ * versiones nuevas, como borrador, de las últimas publicadas. Nada se publica sin aprobación.
+ */
+export async function autoUpdate(store: Store, user: AuthUser): Promise<{ posts: SocialPost[]; created: SocialPost[] }> {
+  needInfo(store, user);
+  const all = projectPosts(store, user);
+  let targets = all.filter((p) => ['DRAFT', 'PENDING_APPROVAL', 'REJECTED'].includes(p.status)).slice(-6);
+  const fromPublished = targets.length === 0;
+  if (fromPublished) targets = all.filter((p) => p.status === 'PUBLISHED').slice(-3);
+  if (!targets.length) throw new HttpError(409, 'NOTHING_TO_UPDATE', 'Todavía no hay contenido para actualizar. Genera primero el contenido con IA.');
+  const listing = targets.map((p, i) => `#${i + 1} (${platformLabel(p.platform)})\nTexto: ${p.copy}\nHashtags: ${p.hashtags}\nBotón: ${p.cta}\nTitular de imagen: ${p.image_headline}`).join('\n\n');
+  const system = `Eres el estratega de contenido de MYOS y tienes el control total. Renueva cada publicación de la lista con un enfoque nuevo y con lo último que se sabe del negocio, manteniendo su plataforma y su tema general. No repitas las mismas frases.
+${POST_FIELDS_RULES}
+${RULES}
+Fecha de hoy: ${new Date().toISOString().slice(0, 10)}.
+
+${context(store, user)}`;
+  let data: any;
+  try {
+    const r = await generateStructured({
+      systemInstruction: system,
+      contents: `PUBLICACIONES A RENOVAR\n\n${listing}`,
+      schema: {
+        type: 'object',
+        properties: { posts: { type: 'array', items: { type: 'object', properties: { n: { type: 'integer' }, copy: str, hashtags: str, cta: str, headline: str, subheadline: str }, required: ['n', 'copy', 'hashtags', 'cta', 'headline', 'subheadline'] } } },
+        required: ['posts']
+      },
+      temperature: 0.85,
+      maxOutputTokens: 6000
+    });
+    data = r.data;
+  } catch (e) {
+    failToHttp(e, 'auto-update');
+  }
+  const updated: SocialPost[] = [];
+  const created: SocialPost[] = [];
+  const seen = new Set<number>();
+  for (const d of Array.isArray(data?.posts) ? data.posts : []) {
+    const idx = Number(d?.n) - 1;
+    const target = targets[idx];
+    if (!target || seen.has(idx) || !clean(d?.copy, 5000)) continue;
+    seen.add(idx);
+    const input = { copy: d.copy, hashtags: d.hashtags, cta: d.cta, image_headline: d.headline, image_subline: d.subheadline };
+    if (fromPublished) {
+      const v = createPost(store, { platform: target.platform, ...input, link_url: target.link_url }, user);
+      v.site_name = target.site_name;
+      created.push(v);
+    } else {
+      updated.push(editPost(store, target, input, user));
+    }
+  }
+  if (!updated.length && !created.length) throw new HttpError(502, 'AI_FAILED', 'La IA no devolvió textos utilizables. Inténtalo otra vez.');
+  store.save();
+  return { posts: updated, created };
+}

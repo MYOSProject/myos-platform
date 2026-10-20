@@ -33,7 +33,7 @@ import {
 } from './social.js';
 import { publisherStatus } from './publisher.js';
 import { chatTurn, clearChat, getChat, getProfile, runChatAction, saveProfile } from './chat.js';
-import { confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas } from './guide.js';
+import { autoCreate, autoUpdate, confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas } from './guide.js';
 import { createProject, deleteProject, ensureDefaultProject, getOwnedProject, projectsOf, projectSummary, updateProject } from './projects.js';
 import { connectionView, deleteConnection, saveConnection, setLive, testConnection } from './connections.js';
 import { guideForPrompt } from './guide.js';
@@ -493,6 +493,14 @@ export function createApp() {
   app.post('/api/create/posts', requireAuth, aiLimit, wrap(async (req, res) => {
     const posts = await createPosts(getStore(), req.user as AuthUser, req.body || {});
     res.status(201).json(posts.map(summarizePost));
+  }));
+  app.post('/api/content/auto-create', requireAuth, aiLimit, wrap(async (req, res) => {
+    const posts = await autoCreate(getStore(), req.user as AuthUser, Number(req.body?.count) || 6);
+    res.status(201).json(posts.map(summarizePost));
+  }));
+  app.post('/api/content/auto-update', requireAuth, aiLimit, wrap(async (req, res) => {
+    const out = await autoUpdate(getStore(), req.user as AuthUser);
+    res.json({ posts: out.posts.map(summarizePost), created: out.created.map(summarizePost) });
   }));
   app.post('/api/create/site', requireAuth, aiLimit, wrap(async (req, res) => {
     const user = req.user as AuthUser;

@@ -6,8 +6,7 @@ import Login from './pages/Login';
 import Projects from './pages/Projects';
 import Chat from './pages/Chat';
 import Guide from './pages/Guide';
-import Create from './pages/Create';
-import Library from './pages/Library';
+import Content from './pages/Content';
 import Calendar from './pages/Calendar';
 import Connections from './pages/Connections';
 import Status from './pages/Status';
@@ -18,8 +17,7 @@ const icon = (d) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
 const NAV = [
   ['projects', 'Mis proyectos', icon('M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'), false],
   ['guide', 'Empezar', icon('M5 12l5 5L20 7'), true],
-  ['create', 'Crear contenido', icon('M12 5v14M5 12h14'), true],
-  ['library', 'Actualizar contenido', icon('M4 4h16v16H4zM4 9h16M9 9v11'), true],
+  ['content', 'Contenido con IA', icon('M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z'), true],
   ['calendar', 'Calendario', icon('M3 6h18v14H3zM3 10h18M8 3v4M16 3v4'), true],
   ['connections', 'Conexiones', icon('M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'), true],
   ['chat', 'Asistente', icon('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'), true],
@@ -56,7 +54,11 @@ export default function App() {
   }, []);
 
   const refreshPending = useCallback(async () => {
-    try { const s = await api('GET', '/api/social'); setPending(s.filter((i) => i.status === 'DRAFT' || i.status === 'PENDING_APPROVAL').length); } catch { /* sin sesión */ }
+    try {
+      const s = await api('GET', '/api/social');
+      setPending(s.filter((i) => i.status === 'DRAFT' || i.status === 'PENDING_APPROVAL').length);
+      setProjects((await api('GET', '/api/projects')).projects);
+    } catch { /* sin sesión */ }
   }, []);
 
   useEffect(() => { fetch('/api/health').then((r) => r.json()).then(setHealth).catch(() => setHealth({ ok: false })); }, []);
@@ -90,8 +92,7 @@ export default function App() {
   const body = {
     projects: <Projects activeId={projectId} onOpen={openProject} onList={setProjects} setPage={go} />,
     guide: <Guide onProfile={setProfile} setPage={go} />,
-    create: <Create profile={profile} setPage={go} onSitesChanged={refreshPending} />,
-    library: <Library profile={profile} projects={projects} projectId={projectId} onSwitch={(p) => openProject(p, 'library')} onSitesChanged={refreshPending} setPage={go} />,
+    content: <Content profile={profile} setPage={go} onChanged={refreshPending} />,
     calendar: <Calendar profile={profile} setPage={go} />,
     connections: <Connections setPage={go} />,
     chat: <Chat me={me} onProfile={setProfile} onSitesChanged={refreshPending} setPage={go} />,
@@ -110,7 +111,7 @@ export default function App() {
         <nav aria-label="Principal" style={{ display: 'contents' }}>
           {NAV.map(([k, label, ic, req]) => (
             <button key={k} className="nav" aria-current={page === k ? 'page' : undefined} disabled={req && !projectId} onClick={() => go(k)}>
-              {ic}{label}{k === 'library' && pending > 0 && <span className="badge" aria-label={`${pending} por revisar`}>{pending}</span>}
+              {ic}{label}{k === 'content' && pending > 0 && <span className="badge" aria-label={`${pending} por revisar`}>{pending}</span>}
             </button>
           ))}
         </nav>
@@ -120,6 +121,21 @@ export default function App() {
       </aside>
       <main className="main">
         {health?.ai && !health.ai.configured && <div style={{ marginBottom: 16 }}><Alert>Gemini no tiene llave: define GEMINI_API_KEY (en .env o en las variables de Vercel).</Alert></div>}
+        {active && (
+          <header className="topbar" aria-label="Resumen del proyecto">
+            <div className="topbar-main">
+              <small>Proyecto abierto</small>
+              <b>{active.name}</b>
+            </div>
+            <ul className="chips">
+              <li className="chip" title="Pasos del recorrido «Empezar» confirmados"><span aria-hidden="true">🧭</span>Recorrido {active.steps_confirmed}/8</li>
+              <li className={`chip ${pending ? 'warn' : ''}`}><span aria-hidden="true">⏳</span>{pending ? `${pending} por aprobar` : 'Nada por aprobar'}</li>
+              <li className="chip"><span aria-hidden="true">📣</span>{active.posts_published} publicadas</li>
+              <li className={`chip ${active.connected ? 'ok' : ''}`}><span aria-hidden="true">🔗</span>{active.connected ? 'Redes conectadas' : 'Redes en simulación'}</li>
+            </ul>
+            <button className="btn small" onClick={() => go(active.steps_confirmed || active.business_name ? 'content' : 'guide')}>{active.steps_confirmed || active.business_name ? '✨ Generar con IA' : 'Completar «Empezar»'}</button>
+          </header>
+        )}
         {needs && !projectId && <NoProject />}
         {/* Las páginas visitadas siguen montadas (ocultas) para que no se pierda lo escrito al cambiar de pestaña.
             Al cambiar de proyecto se vuelven a montar con los datos del proyecto nuevo. */}

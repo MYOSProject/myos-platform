@@ -104,7 +104,7 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
 }
 
 // ------------------------------------------------------------------ Tarjeta de publicación
-export function PostCard({ post, profile, onChange, onRemove, onNewVersion, autoImage = false }) {
+export function PostCard({ post, profile, onChange, onRemove, onNewVersion, autoImage = false, auto = false }) {
   const [ask, setAsk] = useState('');
   const [imgUrl, setImgUrl] = useState(null);
   const [busy, setBusy] = useState('');
@@ -138,6 +138,7 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
 
+  useEffect(() => { if (!autoImage) rendered.current = false; }, [autoImage]);
   useEffect(() => {
     if (autoImage && !post.has_media && !rendered.current && post.status === 'DRAFT') {
       rendered.current = true;
@@ -205,7 +206,7 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
   return (
     <article className="piece">
       <div className="piece-head">
-        <span className="grow">{name}{post.site_name ? ` · ${post.site_name}` : ''}</span>
+        <span className="grow">{name}{post.site_name ? ` · ${post.site_name}` : ''}{auto && post.scheduled_at && post.status !== 'PUBLISHED' ? ` · sugerida ${new Date(post.scheduled_at).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}` : ''}</span>
         <Tag s={post.status} />
       </div>
       <div className="piece-body">
@@ -239,7 +240,7 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
         )}
         {post.status === 'FAILED' && <Alert>No se pudo publicar: {post.publish_result?.error}</Alert>}
         {done && <Alert kind="ok">Publicada en {name} · {fmt(post.published_at)} · aprobó {post.approved_by_email}{post.publish_result?.external_id ? ` · id ${post.publish_result.external_id}` : ''}</Alert>}
-        {!editing && (
+        {!editing && !auto && (
           <div className="field revise">
             <label htmlFor={`rv-${post.id}`}>{done ? 'Crear una nueva versión' : 'Pedir un cambio'}</label>
             <div className="row">
@@ -249,7 +250,7 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
             {done && <small className="muted">Esta ya se publicó y no se modifica: se crea un borrador nuevo que tendrás que aprobar.</small>}
           </div>
         )}
-        {!done && !editing && post.versions?.length > 0 && (
+        {!done && !editing && !auto && post.versions?.length > 0 && (
           <div className="field">
             <label htmlFor={`vs-${post.id}`}>Volver a una versión anterior</label>
             <div className="row">
@@ -268,8 +269,8 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
               <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={approveAndPublish}>
                 {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : 'Aprobar y publicar'}
               </button>
-              <button className="btn secondary" disabled={Boolean(busy)} onClick={startEdit}>Editar</button>
-              <button className="btn secondary" disabled={Boolean(busy)} onClick={regenerate}>{busy === 'regen' ? 'Escribiendo otra…' : 'No me gusta, hazme otra'}</button>
+              {!auto && <button className="btn secondary" disabled={Boolean(busy)} onClick={startEdit}>Editar</button>}
+              <button className="btn secondary" disabled={Boolean(busy)} onClick={regenerate}>{busy === 'regen' ? 'La IA escribe otra…' : auto ? 'Que la IA haga otra' : 'No me gusta, hazme otra'}</button>
               <button className="btn link" disabled={Boolean(busy)} onClick={remove}>Descartar</button>
             </div>
           </>

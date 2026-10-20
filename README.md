@@ -17,7 +17,7 @@ Diseño: Manual de Identidad MYOS v1.0 (azul marino #111827, coral #E2554F, turq
 
 - **Mis proyectos**: cada usuario crea varios proyectos; todo (recorrido, chat, publicaciones) queda separado por proyecto.
 - **Lo escrito se guarda**: el recorrido «Empezar» se autoguarda y «Crear contenido» recuerda su avance; las pantallas no pierden el estado al cambiar de página.
-- **Actualizar contenido**: elige proyecto y publicación, pide un cambio, «No me gusta, hazme otra» (la IA genera otra), historial de versiones, y aprueba y publica.
+- **Contenido con IA**: una sola pantalla. La IA decide temas, textos, imágenes y fechas con la información del proyecto («Generar contenido con IA»), puede renovarlo («Actualizar con IA») y hasta armar el sitio. La persona solo revisa, aprueba y publica.
 - **Conexiones**: por proyecto, Facebook/Instagram (token cifrado, «Probar conexión», «Activar publicación real») o webhook de Make/Zapier. Sin activar = simulación.
 - **Aprobación abierta**: cualquier usuario con sesión puede aprobar y publicar; siempre se registra quién. Restringir con `RESTRICT_APPROVERS=true` + `APPROVER_EMAILS`.
 - **Vercel**: define `FIREBASE_SERVICE_ACCOUNT`, `CONNECTIONS_KEY` (y `GEMINI_API_KEY`), activa Firestore y redeploy.

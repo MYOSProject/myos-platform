@@ -210,7 +210,7 @@ export default function Guide({ onProfile, onDone, setPage }) {
             <div className="card stack cta-card">
               <h2>¡Ya te conozco!</h2>
               <p>Con lo que me contaste puedo crear contenido que suene a ti. Siempre verás una vista previa y tú decides si se publica.</p>
-              <div><button className="btn" onClick={() => setPage('create')}>Crear mi primer contenido</button></div>
+              <div><button className="btn" onClick={() => setPage('content')}>Generar mi contenido con IA</button></div>
             </div>
           )}
         </section>

@@ -66,16 +66,19 @@ export default function Projects({ activeId, onOpen, onList, setPage }) {
               ) : (
                 <>
                   {p.description && <p>{p.description}</p>}
+                  <div className="meter" role="img" aria-label={`Recorrido ${p.steps_confirmed} de 8 pasos`}><i style={{ width: `${(p.steps_confirmed / 8) * 100}%` }} /></div>
+                  <p className="next">{p.steps_confirmed === 0 ? 'Siguiente: cuéntale a la IA de tu negocio en «Empezar».' : p.steps_confirmed < 8 ? `Siguiente: terminar el recorrido (${8 - p.steps_confirmed} pasos más) para que la IA te conozca mejor.` : p.posts === 0 ? 'Siguiente: dejar que la IA genere tu contenido.' : p.posts_pending ? `Siguiente: revisar y aprobar ${p.posts_pending} publicaciones.` : 'Todo al día. La IA puede preparar contenido nuevo.'}</p>
                   <ul className="stats">
                     <li><b>{p.steps_confirmed}</b> pasos confirmados</li>
                     <li><b>{p.posts}</b> publicaciones{p.posts_pending ? ` (${p.posts_pending} por revisar)` : ''}</li>
                     <li><b>{p.posts_published}</b> publicadas</li>
-                    <li>{p.connected ? 'Redes conectadas ✓' : 'Redes sin conectar'}</li>
+                    <li>{p.sites || 0} sitios web</li>
+                    <li>{p.connected ? 'Redes conectadas ✓' : 'Redes en simulación'}</li>
                   </ul>
                   <p className="muted">Actualizado {fmt(p.updated_at)}</p>
                   <div className="row">
                     <button className="btn" onClick={() => onOpen(p, 'guide')}>Abrir</button>
-                    <button className="btn secondary" onClick={() => onOpen(p, 'create')}>Crear contenido</button>
+                    <button className="btn secondary" onClick={() => onOpen(p, 'content')}>Contenido con IA</button>
                     <button className="btn secondary small" onClick={() => setEditing({ id: p.id, name: p.name, description: p.description })}>Editar</button>
                     <button className="btn link" disabled={busy === `del${p.id}`} onClick={() => remove(p)}>Borrar</button>
                   </div>

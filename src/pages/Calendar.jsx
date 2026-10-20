@@ -29,10 +29,10 @@ export default function Calendar({ setPage }) {
     <div className="stack">
       <div>
         <h1>Calendario editorial</h1>
-        <p className="sub">Fecha y hora planeada de cada publicación, con su estado. La fecha es una guía de planeación: <b>publicar siempre requiere tu aprobación</b> en «Actualizar contenido».</p>
+        <p className="sub">Fecha y hora planeada de cada publicación, con su estado. La fecha es una guía de planeación: <b>publicar siempre requiere tu aprobación</b> en «Contenido con IA».</p>
       </div>
       <Alert>{err}</Alert>
-      {!posts.length && <div className="card"><p className="muted">Aún no hay publicaciones en este proyecto.</p><button className="btn" onClick={() => setPage('create')}>Crear contenido</button></div>}
+      {!posts.length && <div className="card"><p className="muted">Aún no hay publicaciones en este proyecto.</p><button className="btn" onClick={() => setPage('content')}>Generar contenido con IA</button></div>}
       {groups.map((g) => (
         <section key={g.k} className="card stack">
           <h2 style={{ textTransform: 'capitalize' }}>{g.k}</h2>

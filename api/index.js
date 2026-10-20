@@ -75884,6 +75884,125 @@ CAMBIO PEDIDO: ${ask}`;
 function regeneratePost(store, user, post) {
   return revisePost(store, user, post, "Escribe una versi\xF3n DISTINTA de esta misma publicaci\xF3n: otro enfoque y otras palabras, sobre el mismo tema y con los mismos datos reales. No inventes datos nuevos.");
 }
+var AUTO_PLATFORMS = ["facebook", "instagram"];
+function needInfo(store, user) {
+  if (!profileOf(store, user).business_name && guideView(store, user).done === 0) {
+    throw new HttpError(409, "NEEDS_INFO", "Primero cu\xE9ntame de tu negocio en \xABEmpezar\xBB (con confirmar un paso basta) para que la IA pueda crear contenido real.");
+  }
+}
+function scheduleFor(offsetDays) {
+  const n = Math.min(30, Math.max(1, Math.round(Number(offsetDays)) || 1));
+  const d = /* @__PURE__ */ new Date();
+  d.setUTCDate(d.getUTCDate() + n);
+  d.setUTCHours(18, 0, 0, 0);
+  return d.toISOString();
+}
+function projectPosts(store, user) {
+  const pid = user.project_id;
+  return store.social.filter((p) => pid ? p.project_id === pid : true);
+}
+async function autoCreate(store, user, count = 6) {
+  needInfo(store, user);
+  const n = Math.min(8, Math.max(2, Math.round(count) || 6));
+  const existing = projectPosts(store, user).slice(-12).map((p) => `- (${platformLabel(p.platform)}) ${p.copy.slice(0, 110)}`).join("\n") || "(ninguna todav\xEDa)";
+  const system = `Eres el estratega de contenido de MYOS y tienes el control total: decides t\xFA los temas, el orden y los textos. La persona NO te dar\xE1 instrucciones; solo revisar\xE1, aprobar\xE1 y publicar\xE1.
+Crea un plan de ${n} publicaciones variadas para las pr\xF3ximas 2 semanas, alternando ${AUTO_PLATFORMS.map(platformLabel).join(" e ")}. Mezcla objetivos (dar a conocer, mostrar el producto o servicio, confianza, cercan\xEDa con la comunidad, invitar a comprar o contactar) y cuida que ninguna repita el tema de otra. Para cada una indica day_offset (1 a 14: d\xEDas desde hoy).
+${POST_FIELDS_RULES}
+${RULES}
+Si falta un dato (precio, tel\xE9fono, promoci\xF3n), NO lo menciones ni lo inventes: habla de lo que s\xED se sabe.
+Fecha de hoy: ${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.
+
+YA CREADO (no repetir estos temas):
+${existing}
+
+${context(store, user)}`;
+  let data;
+  try {
+    const r2 = await generateStructured({
+      systemInstruction: system,
+      contents: `Crea las ${n} publicaciones del plan.`,
+      schema: {
+        type: "object",
+        properties: { posts: { type: "array", items: { type: "object", properties: { ...POST_PROPS, platform: { type: "string", enum: [...AUTO_PLATFORMS] }, day_offset: { type: "integer" } }, required: [...Object.keys(POST_PROPS), "day_offset"] } } },
+        required: ["posts"]
+      },
+      temperature: 0.9,
+      maxOutputTokens: 6e3
+    });
+    data = r2.data;
+  } catch (e2) {
+    failToHttp(e2, "auto-create");
+  }
+  const name = profileOf(store, user).business_name || void 0;
+  const made = [];
+  for (const p of (Array.isArray(data?.posts) ? data.posts : []).slice(0, n)) {
+    if (!AUTO_PLATFORMS.includes(p?.platform) || !clean4(p?.copy, 5e3)) continue;
+    const post = createPost(store, { platform: p.platform, copy: p.copy, hashtags: p.hashtags, cta: p.cta, image_headline: p.headline, image_subline: p.subheadline, scheduled_at: scheduleFor(p.day_offset) }, user);
+    post.site_name = name;
+    made.push(post);
+  }
+  if (!made.length) throw new HttpError(502, "AI_FAILED", "La IA no devolvi\xF3 publicaciones utilizables. Int\xE9ntalo otra vez.");
+  store.save();
+  return made;
+}
+async function autoUpdate(store, user) {
+  needInfo(store, user);
+  const all = projectPosts(store, user);
+  let targets = all.filter((p) => ["DRAFT", "PENDING_APPROVAL", "REJECTED"].includes(p.status)).slice(-6);
+  const fromPublished = targets.length === 0;
+  if (fromPublished) targets = all.filter((p) => p.status === "PUBLISHED").slice(-3);
+  if (!targets.length) throw new HttpError(409, "NOTHING_TO_UPDATE", "Todav\xEDa no hay contenido para actualizar. Genera primero el contenido con IA.");
+  const listing = targets.map((p, i2) => `#${i2 + 1} (${platformLabel(p.platform)})
+Texto: ${p.copy}
+Hashtags: ${p.hashtags}
+Bot\xF3n: ${p.cta}
+Titular de imagen: ${p.image_headline}`).join("\n\n");
+  const system = `Eres el estratega de contenido de MYOS y tienes el control total. Renueva cada publicaci\xF3n de la lista con un enfoque nuevo y con lo \xFAltimo que se sabe del negocio, manteniendo su plataforma y su tema general. No repitas las mismas frases.
+${POST_FIELDS_RULES}
+${RULES}
+Fecha de hoy: ${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.
+
+${context(store, user)}`;
+  let data;
+  try {
+    const r2 = await generateStructured({
+      systemInstruction: system,
+      contents: `PUBLICACIONES A RENOVAR
+
+${listing}`,
+      schema: {
+        type: "object",
+        properties: { posts: { type: "array", items: { type: "object", properties: { n: { type: "integer" }, copy: str2, hashtags: str2, cta: str2, headline: str2, subheadline: str2 }, required: ["n", "copy", "hashtags", "cta", "headline", "subheadline"] } } },
+        required: ["posts"]
+      },
+      temperature: 0.85,
+      maxOutputTokens: 6e3
+    });
+    data = r2.data;
+  } catch (e2) {
+    failToHttp(e2, "auto-update");
+  }
+  const updated = [];
+  const created = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const d of Array.isArray(data?.posts) ? data.posts : []) {
+    const idx = Number(d?.n) - 1;
+    const target = targets[idx];
+    if (!target || seen.has(idx) || !clean4(d?.copy, 5e3)) continue;
+    seen.add(idx);
+    const input = { copy: d.copy, hashtags: d.hashtags, cta: d.cta, image_headline: d.headline, image_subline: d.subheadline };
+    if (fromPublished) {
+      const v = createPost(store, { platform: target.platform, ...input, link_url: target.link_url }, user);
+      v.site_name = target.site_name;
+      created.push(v);
+    } else {
+      updated.push(editPost(store, target, input, user));
+    }
+  }
+  if (!updated.length && !created.length) throw new HttpError(502, "AI_FAILED", "La IA no devolvi\xF3 textos utilizables. Int\xE9ntalo otra vez.");
+  store.save();
+  return { posts: updated, created };
+}
 
 // server/chat.ts
 var str3 = { type: "string" };
@@ -76471,6 +76590,14 @@ function createApp() {
   app2.post("/api/create/posts", requireAuth, aiLimit, wrap(async (req, res) => {
     const posts = await createPosts(getStore(), req.user, req.body || {});
     res.status(201).json(posts.map(summarizePost));
+  }));
+  app2.post("/api/content/auto-create", requireAuth, aiLimit, wrap(async (req, res) => {
+    const posts = await autoCreate(getStore(), req.user, Number(req.body?.count) || 6);
+    res.status(201).json(posts.map(summarizePost));
+  }));
+  app2.post("/api/content/auto-update", requireAuth, aiLimit, wrap(async (req, res) => {
+    const out = await autoUpdate(getStore(), req.user);
+    res.json({ posts: out.posts.map(summarizePost), created: out.created.map(summarizePost) });
   }));
   app2.post("/api/create/site", requireAuth, aiLimit, wrap(async (req, res) => {
     const user = req.user;
