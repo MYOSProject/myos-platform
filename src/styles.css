@@ -119,10 +119,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .piece-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .ask { background: var(--gray); border-radius: var(--r-sm); padding: 12px 16px; font-weight: 600; }
 .frame-wrap { background: #e9edf5; border-radius: var(--r-sm); padding: 8px; display: flex; justify-content: center; }
-.frame { border: 0; background: #fff; border-radius: 6px; height: 72vh; min-height: 460px; }
-.preview-full { position: fixed; inset: 0; z-index: 1000; background: #e9edf5; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-.preview-full .frame-wrap { flex: 1; min-height: 0; padding: 0; }
-.preview-full .frame { height: 100%; min-height: 0; }
+.frame { border: 0; background: #fff; border-radius: 6px; height: 88vh; min-height: 560px; }
 .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
 .check input { margin-top: 4px; width: 16px; height: 16px; accent-color: var(--coral); }
 .colors { display: flex; gap: 16px; flex-wrap: wrap; }

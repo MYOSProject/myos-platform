@@ -88,7 +88,7 @@ export default function Content({ profile, setPage, onChanged }) {
       <Alert>{err}</Alert>
       {errCode === 'NEEDS_INFO' && <div><button className="btn" onClick={() => setPage('guide')}>Ir a «Empezar»</button></div>}
 
-      {pendingSites.length > 0 && <div className="stack"><h2>Sitio web por aprobar</h2><div className="grid">{pendingSites.map((s) => <SiteCard key={s.id} site={s} defaultOpen onChange={(n) => { setSites((x) => x.map((i) => (i.id === n.id ? n : i))); load(); }} />)}</div></div>}
+      {pendingSites.length > 0 && <div className="stack"><h2>Sitio web por aprobar</h2><div className="stack">{pendingSites.map((s) => <SiteCard key={s.id} site={s} defaultOpen onChange={(n) => { setSites((x) => x.map((i) => (i.id === n.id ? n : i))); load(); }} />)}</div></div>}
 
       <div className="stack">
         <h2>Por aprobar y publicar {todo.length > 0 && <span className="count">{todo.length}</span>}</h2>
@@ -104,7 +104,7 @@ export default function Content({ profile, setPage, onChanged }) {
           <button className="btn secondary" disabled={aiBusy} onClick={generateSite}>{busy === 'site' ? 'Armando sitio…' : 'Generar sitio web con IA'}</button>
           <button className="btn link" onClick={() => setPage('calendar')}>Ver calendario</button>
         </div>
-        {sites.filter((s) => s.status !== 'PENDING').length > 0 && <div className="grid">{sites.filter((s) => s.status !== 'PENDING').map((s) => <SiteCard key={s.id} site={s} onChange={(n) => { setSites((x) => x.map((i) => (i.id === n.id ? n : i))); load(); }} onAskChanges={() => setPage('chat')} />)}</div>}
+        {sites.filter((s) => s.status !== 'PENDING').length > 0 && <div className="stack">{sites.filter((s) => s.status !== 'PENDING').map((s) => <SiteCard key={s.id} site={s} onChange={(n) => { setSites((x) => x.map((i) => (i.id === n.id ? n : i))); load(); }} onAskChanges={() => setPage('chat')} />)}</div>}
       </div>
     </div>
   );
