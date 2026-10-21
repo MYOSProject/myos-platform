@@ -248,3 +248,17 @@ test('Cron: apagado sin CRON_SECRET, rechaza claves malas y acepta la correcta',
   }
   assert.equal((await api('POST', '/api/schedule/run', { user: ANA })).status, 200);
 });
+
+test('Drive: DRIVE_SERVICE_ACCOUNT tiene prioridad sobre FIREBASE_SERVICE_ACCOUNT', async () => {
+  const k = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' });
+  process.env.DRIVE_SERVICE_ACCOUNT = JSON.stringify({ project_id: 'myos-drive-reader', client_email: 'drive@myos-drive-reader.iam.gserviceaccount.com', private_key: k });
+  try {
+    const d = await api('GET', '/api/drive', { user: ANA });
+    assert.equal(d.json.service_account_email, 'drive@myos-drive-reader.iam.gserviceaccount.com');
+    assert.equal(d.json.service_account_project, 'myos-drive-reader');
+    assert.equal((await api('POST', '/api/drive/sync', { user: ANA })).status, 200, 'sigue pudiendo leer con la otra cuenta');
+  } finally {
+    delete process.env.DRIVE_SERVICE_ACCOUNT;
+  }
+  assert.equal((await api('GET', '/api/drive', { user: ANA })).json.service_account_email, 'svc@proj-x.iam.gserviceaccount.com');
+});

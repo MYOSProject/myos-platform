@@ -5,7 +5,7 @@
 //   4) guarda en Redes_Sociales/Publicado la evidencia de lo publicado (si Drive lo permite).
 // Todo lo que viene de Drive es información de terceros: entra a los prompts como DATO, nunca como instrucciones.
 import { HttpError } from './http.js';
-import { serviceAccountEmail, serviceAccountToken } from './remote.js';
+import { serviceAccountEmail, serviceAccountProject, serviceAccountToken } from './remote.js';
 import type { Store } from './store.js';
 import type { AuthUser, DriveConfig, DriveNote, SocialPost } from './types.js';
 
@@ -27,7 +27,7 @@ async function call(method: string, path: string, opts: { query?: Record<string,
   try {
     token = await serviceAccountToken(SCOPE);
   } catch (e: any) {
-    if (e?.message === 'NO_SERVICE_ACCOUNT') throw new HttpError(503, 'DRIVE_NOT_CONFIGURED', 'Drive necesita la cuenta de servicio: define FIREBASE_SERVICE_ACCOUNT en Vercel.');
+    if (e?.message === 'NO_SERVICE_ACCOUNT') throw new HttpError(503, 'DRIVE_NOT_CONFIGURED', 'Drive necesita la cuenta de servicio: define DRIVE_SERVICE_ACCOUNT (o FIREBASE_SERVICE_ACCOUNT) en Vercel.');
     throw new HttpError(502, 'DRIVE_AUTH', `No se pudo entrar a Google Drive: ${e?.message || e}`);
   }
   const url = new URL(base() + path);
@@ -44,7 +44,10 @@ async function call(method: string, path: string, opts: { query?: Record<string,
     try { msg = JSON.parse(text)?.error?.message || msg; } catch { /* no json */ }
     const mail = serviceAccountEmail();
     if (res.status === 404) throw new HttpError(404, 'DRIVE_NOT_FOUND', `No encuentro esa carpeta o archivo. Comparte la carpeta con ${mail} (como Editor) e inténtalo otra vez.`);
-    if (res.status === 403 && /has not been used|disabled|accessNotConfigured/i.test(msg + text)) throw new HttpError(503, 'DRIVE_API_DISABLED', 'La API de Google Drive no está activada en tu proyecto de Google Cloud. Actívala en console.cloud.google.com/apis/library/drive.googleapis.com');
+    if (res.status === 403 && /has not been used|disabled|accessNotConfigured/i.test(msg + text)) {
+      const proj = serviceAccountProject();
+      throw new HttpError(503, 'DRIVE_API_DISABLED', `La API de Google Drive no está activada en el proyecto de Google Cloud «${proj}», que es al que pertenece la cuenta de servicio de MYOS. Actívala en ese proyecto (no en otro): https://console.cloud.google.com/apis/library/drive.googleapis.com?project=${proj} — si ya la activaste ahí, espera unos 2 minutos y vuelve a intentar.`);
+    }
     if (res.status === 403) throw new HttpError(403, 'DRIVE_FORBIDDEN', `Drive no permitió la acción (${msg}). Revisa que ${mail} sea Editor de la carpeta.`);
     throw new HttpError(502, 'DRIVE_ERROR', `Drive respondió ${res.status}: ${msg}`);
   }
@@ -113,6 +116,7 @@ export function driveView(store: Store, projectId: number | null | undefined) {
   return {
     available: driveAvailable(),
     service_account_email: serviceAccountEmail(),
+    service_account_project: serviceAccountProject(),
     connected: Boolean(d),
     folder_id: d?.folder_id || '',
     folder_name: d?.folder_name || '',

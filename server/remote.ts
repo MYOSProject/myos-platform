@@ -22,18 +22,18 @@ export interface RemoteConfig {
   tokenUrl: string;
 }
 
-export function remoteConfigFromEnv(databaseIdFromConfig = ''): RemoteConfig | null {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT?.trim();
+export function remoteConfigFromEnv(databaseIdFromConfig = '', envName = 'FIREBASE_SERVICE_ACCOUNT'): RemoteConfig | null {
+  const raw = process.env[envName]?.trim();
   if (!raw) return null;
   let json: any;
   try {
     json = JSON.parse(raw.startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8'));
   } catch {
-    console.error('[remote] FIREBASE_SERVICE_ACCOUNT no es un JSON válido (ni base64 de un JSON).');
+    console.error(`[remote] ${envName} no es un JSON válido (ni base64 de un JSON).`);
     return null;
   }
   if (!json.client_email || !json.private_key || !json.project_id) {
-    console.error('[remote] FIREBASE_SERVICE_ACCOUNT no trae client_email, private_key y project_id.');
+    console.error(`[remote] ${envName} no trae client_email, private_key y project_id.`);
     return null;
   }
   return {
@@ -340,14 +340,24 @@ export class RemoteSync {
 // ------------------------------------------------------------------------------------------
 const scopeTokens = new Map<string, { value: string; exp: number }>();
 
+/** Cuenta de servicio para Drive: DRIVE_SERVICE_ACCOUNT si existe (proyecto de Google Cloud aparte), si no la de Firebase. */
+export function driveAccountConfig(): RemoteConfig | null {
+  return remoteConfigFromEnv('', 'DRIVE_SERVICE_ACCOUNT') || remoteConfigFromEnv();
+}
+
+export function serviceAccountProject(): string | null {
+  return driveAccountConfig()?.projectId || null;
+}
+
 export function serviceAccountEmail(): string | null {
-  return remoteConfigFromEnv()?.clientEmail || null;
+  return driveAccountConfig()?.clientEmail || null;
 }
 
 export async function serviceAccountToken(scope: string): Promise<string> {
-  const cfg = remoteConfigFromEnv();
+  const cfg = driveAccountConfig();
   if (!cfg) throw new Error('NO_SERVICE_ACCOUNT');
-  const hit = scopeTokens.get(scope);
+  const cacheKey = `${cfg.clientEmail}|${scope}`;
+  const hit = scopeTokens.get(cacheKey);
   if (hit && Date.now() < hit.exp - 60_000) return hit.value;
   const key = await importPKCS8(cfg.privateKey, 'RS256');
   const jwt = await new SignJWT({ scope })
@@ -366,6 +376,6 @@ export async function serviceAccountToken(scope: string): Promise<string> {
   });
   const data: any = await res.json().catch(() => ({}));
   if (!res.ok || !data.access_token) throw new Error(`Google no entregó el token (${res.status}): ${data?.error_description || data?.error || ''}`);
-  scopeTokens.set(scope, { value: data.access_token, exp: Date.now() + (Number(data.expires_in) || 3600) * 1000 });
+  scopeTokens.set(cacheKey, { value: data.access_token, exp: Date.now() + (Number(data.expires_in) || 3600) * 1000 });
   return data.access_token;
 }

@@ -30,7 +30,7 @@ function DriveCard() {
       <div className="row"><h2 className="grow">Google Drive</h2>
         {d.connected ? <span className="tag ok"><span aria-hidden="true">✓</span>Conectado</span> : <span className="tag draft"><span aria-hidden="true">◌</span>Sin conectar</span>}</div>
       <p className="muted">Deja en tu carpeta de Drive los documentos de tu negocio (en «Marca», «Sitio_Web», «Redes_Sociales» o «Calendario») y la IA los usa para escribir. Lo que ya leyó se mueve a «Procesados».</p>
-      {!d.available && <Alert kind="warn">Drive aún no está disponible: falta la cuenta de servicio (FIREBASE_SERVICE_ACCOUNT en Vercel).</Alert>}
+      {!d.available && <Alert kind="warn">Drive aún no está disponible: falta la cuenta de servicio (DRIVE_SERVICE_ACCOUNT o FIREBASE_SERVICE_ACCOUNT en Vercel).</Alert>}
       {d.available && (
         <>
           <button className="btn secondary" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? 'Ocultar la guía' : '¿Cómo lo conecto? (paso a paso)'}</button>
@@ -38,7 +38,7 @@ function DriveCard() {
             <ol className="howto">
               <li><b>Crea una carpeta en tu Drive</b><p>Por ejemplo «MYOS - mi negocio». MYOS creará adentro las subcarpetas que falten.</p></li>
               <li><b>Compártela con la cuenta de MYOS</b><p>Botón «Compartir» → pega este correo y dale permiso de <b>Editor</b>: <b>{d.service_account_email}</b></p></li>
-              <li><b>Activa la API de Drive (una sola vez)</b><p>En console.cloud.google.com/apis/library/drive.googleapis.com, en el mismo proyecto de Firebase, pulsa «Habilitar».</p></li>
+              <li><b>Activa la API de Drive (una sola vez)</b><p>Tiene que ser en el proyecto <b>{d.service_account_project}</b> (el de la cuenta de servicio que usa MYOS para Drive; arriba en Google Cloud elige ese proyecto, no otro). Abre console.cloud.google.com/apis/library/drive.googleapis.com?project={d.service_account_project} y pulsa «Habilitar».</p></li>
               <li><b>Pega el enlace de la carpeta aquí</b><p>Abre la carpeta, copia el enlace de la barra del navegador y pégalo abajo.</p></li>
             </ol>
           )}
