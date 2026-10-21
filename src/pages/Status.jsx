@@ -6,7 +6,8 @@ export default function Status({ health }) {
   const [audit, setAudit] = useState([]);
   const [test, setTest] = useState(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { api('GET', '/api/audit').then(setAudit).catch(() => {}); }, []);
+  const [drive, setDrive] = useState(null);
+  useEffect(() => { api('GET', '/api/audit').then(setAudit).catch(() => {}); api('GET', '/api/drive').then(setDrive).catch(() => {}); }, []);
   const ping = async () => {
     setBusy(true);
     try { setTest(await api('POST', '/api/ai/test')); } catch (e) { setTest({ ok: false, error: { message: errText(e) } }); } finally { setBusy(false); }
@@ -31,14 +32,19 @@ export default function Status({ health }) {
         <p>Facebook: <b>{mode(h.social?.facebook)}</b><br />Instagram: <b>{mode(h.social?.instagram)}</b><br />LinkedIn: <b>{mode(h.social?.linkedin)}</b></p>
         {h.social?.facebook === 'dry-run' && <Alert kind="info">Hasta que se configure Make/Zapier (MAKE_WEBHOOK_URL) o las llaves de Meta, las publicaciones aprobadas NO se envían a las redes reales.</Alert>}
         <h2>Datos</h2>
-        <p className="muted">{h.persistence === 'file' ? 'Se guardan en un archivo local.' : h.persistence === 'ephemeral' ? 'ATENCIÓN: almacenamiento temporal; los datos se pierden. Hace falta una base de datos real.' : 'Solo en memoria.'}</p>
+        <p className="muted">{h.persistence === 'firestore' ? 'Se guardan en Firestore (base de datos permanente).' : h.persistence === 'file' ? 'Se guardan en un archivo local.' : h.persistence === 'ephemeral' ? 'ATENCIÓN: almacenamiento temporal; los datos se pierden. Hace falta una base de datos real.' : 'Solo en memoria.'}</p>
       </div>
       <div className="card stack">
         <h2>Bitácora de auditoría</h2>
         <ul className="hist">{audit.map((e, i) => <li key={i}>{fmt(e.at)} · {e.by} · {e.action} · {e.kind} #{e.ref_id} {e.ref_title}{e.note ? ` — ${e.note}` : ''}</li>)}</ul>
         {!audit.length && <p className="muted">Aún no hay movimientos.</p>}
       </div>
-      <div className="card"><h2>Google Drive</h2><p className="muted" style={{ marginTop: 8 }}>La estructura de carpetas en Drive (fase 1 de la asignación) aún no está integrada.</p></div>
+      <div className="card stack">
+        <h2>Google Drive</h2>
+        {!drive ? <p className="muted">Consultando…</p> : !drive.available ? <p className="muted">Falta la cuenta de servicio (FIREBASE_SERVICE_ACCOUNT en Vercel) para usar Drive.</p> : drive.connected ? (
+          <p>Conectado a la carpeta <b>{drive.folder_name}</b>. {drive.last_sync_at ? `Última lectura: ${fmt(drive.last_sync_at)} · ${drive.last_sync_note || ''}` : 'Aún no se ha leído nada.'} Se administra en «Conexiones».</p>
+        ) : <p className="muted">Disponible, pero sin carpeta conectada en este proyecto. Conéctala en «Conexiones».</p>}
+      </div>
     </div>
   );
 }
