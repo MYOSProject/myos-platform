@@ -235,3 +235,8 @@ test('IA automática: sin información pide completar «Empezar»; luego crea bo
   assert.ok(u.json.posts.length >= 1 || u.json.created.length >= 1);
   assert.ok([...u.json.posts, ...u.json.created].every((p: any) => p.status === 'DRAFT'), 'nunca se publica solo');
 });
+
+test('«quiero cambiar…» en el sitio: exige sesión y un sitio existente', async () => {
+  assert.equal((await api('POST', '/api/content/1/revise', { body: { instruction: 'x' } })).status, 401);
+  assert.equal((await api('POST', '/api/content/99999/revise', { user: ANA, body: { instruction: 'color azul' } })).status, 404);
+});

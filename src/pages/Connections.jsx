@@ -5,7 +5,9 @@ import { Alert, fmt } from '../components/ui';
 const GUIDE = [
   ['Ten lista tu página', 'Necesitas una Página de Facebook (no un perfil personal). Para Instagram, la cuenta debe ser profesional (negocio o creador) y estar vinculada a esa página desde la configuración de la página.'],
   ['Crea una app en Meta', 'Entra a developers.facebook.com, crea una app de tipo «Negocio» y agrega el producto «Facebook Login para empresas» (o usa solo el Explorador de la API Graph). Mientras la app esté en modo desarrollo, solo publica en páginas donde tú tengas rol.'],
-  ['Genera el token de la página', 'En el Explorador de la API Graph elige tu app, pide los permisos pages_show_list, pages_read_engagement, pages_manage_posts, instagram_basic e instagram_content_publish, genera el token de usuario y luego pide /me/accounts: ahí aparece el token de tu página. Es el que debes pegar abajo.'],
+  ['Genera el token de usuario', 'En el Explorador de la API Graph (developers.facebook.com/tools/explorer) elige tu app, pide los permisos pages_show_list, pages_read_engagement, pages_manage_posts, instagram_basic e instagram_content_publish y pulsa «Generate Access Token».'],
+  ['Hazlo de larga duración', 'Ese token dura solo 1 o 2 horas. Pégalo en developers.facebook.com/tools/debug/accesstoken y pulsa «Extend Access Token»: te da uno de unos 60 días. Cópialo.'],
+  ['Saca el token de la página', 'Con el token largo, en el Explorador pide /me/accounts. Ahí aparece tu página con su propio «access_token»: ese token de página ya no caduca y es el que debes pegar abajo. También ahí sale el id de la página.'],
   ['Copia los IDs', 'El ID de la página sale en /me/accounts (campo id). El ID de Instagram sale con /ID_DE_TU_PAGINA?fields=instagram_business_account. Son solo números.'],
   ['Pega, prueba y activa', 'Pega los datos abajo, pulsa «Probar conexión» (no publica nada) y, si sale bien, activa la publicación real. Hasta que la actives, todo se queda en simulación.']
 ];

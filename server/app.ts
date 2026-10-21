@@ -502,6 +502,17 @@ export function createApp() {
     const out = await autoUpdate(getStore(), req.user as AuthUser);
     res.json({ posts: out.posts.map(summarizePost), created: out.created.map(summarizePost) });
   }));
+  // «Quiero cambiar…»: la IA ajusta el sitio con lo que la persona pide en lenguaje normal (color, textos, etc.). El sitio vuelve a revisión.
+  app.post('/api/content/:id/revise', requireAuth, aiLimit, wrap(async (req, res) => {
+    const item = findContent(intParam(req.params.id));
+    const ask = typeof req.body?.instruction === 'string' ? req.body.instruction.trim().slice(0, 800) : '';
+    if (!ask) throw new HttpError(400, 'INSTRUCTION_REQUIRED', 'Dime qué quieres cambiar.');
+    const { item: out } = await createOrRefineSite(getStore(), req.user as AuthUser, {
+      brief: `Cambio que pide la persona sobre el sitio actual. Aplica SOLO este cambio y conserva todo lo demás: ${ask}`,
+      refineOfId: item.id
+    });
+    res.json(summary(out));
+  }));
   app.post('/api/create/site', requireAuth, aiLimit, wrap(async (req, res) => {
     const user = req.user as AuthUser;
     const topic = typeof req.body?.topic === 'string' ? req.body.topic.trim().slice(0, 1500) : '';

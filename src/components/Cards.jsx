@@ -35,6 +35,7 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
   const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [ask, setAsk] = useState('');
   const needsAck = site.ai?.source === 'fallback' || site.ai?.source === 'seed';
   const approved = site.status === 'APPROVED' || site.status === 'PUBLISHED';
   const url = `${window.location.origin}/site/${site.id}`;
@@ -45,6 +46,11 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
       const r = await api('POST', `/api/approve/${site.id}`, { confirm_review: true, acknowledge_fallback: ack });
       onChange({ ...site, status: r.status, approved_by: r.record.approved_by, approved_by_email: r.record.approved_by_email, approved_at: r.record.approved_at });
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  };
+  const revise = async () => {
+    setBusy(true); setErr('');
+    try { const n = await api('POST', `/api/content/${site.id}/revise`, { instruction: ask }); setAsk(''); onChange({ ...site, ...n }); }
+    catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   };
   const reject = async () => {
     const reason = window.prompt('¿Por qué lo rechazas? (opcional)') ?? null;
@@ -73,7 +79,15 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
           <button className="btn secondary small" onClick={() => setOpen((o) => !o)}>{open ? 'Ocultar vista previa' : 'Revisar vista previa'}</button>
           {approved && <a className="btn secondary small" href={url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>Abrir sitio público ↗</a>}
         </div>
-        {open && <SitePreview siteId={site.id} />}
+        {open && <SitePreview key={site.updated_at} siteId={site.id} />}
+        <div className="field revise">
+          <label htmlFor={`sr-${site.id}`}>¿Qué quieres cambiar de la página?</label>
+          <div className="row">
+            <input id={`sr-${site.id}`} className="grow" type="text" value={ask} placeholder="Ej.: cambia el color a azul, un título más corto, quita la sección del blog" onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && ask.trim() && !busy) revise(); }} />
+            <button className="btn secondary" disabled={!ask.trim() || busy} onClick={revise}>{busy ? 'La IA lo está cambiando…' : 'Cambiar'}</button>
+          </div>
+          <small className="muted">La IA aplica el cambio y la página vuelve a quedar pendiente de tu aprobación.</small>
+        </div>
         {site.status === 'PENDING' && (
           <>
             <p className="ask">¿Lo apruebas y lo publico?</p>
@@ -240,12 +254,12 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
         )}
         {post.status === 'FAILED' && <Alert>No se pudo publicar: {post.publish_result?.error}</Alert>}
         {done && <Alert kind="ok">Publicada en {name} · {fmt(post.published_at)} · aprobó {post.approved_by_email}{post.publish_result?.external_id ? ` · id ${post.publish_result.external_id}` : ''}</Alert>}
-        {!editing && !auto && (
+        {!editing && (
           <div className="field revise">
-            <label htmlFor={`rv-${post.id}`}>{done ? 'Crear una nueva versión' : 'Pedir un cambio'}</label>
+            <label htmlFor={`rv-${post.id}`}>{done ? 'Crear una nueva versión' : '¿Qué quieres cambiar de esta publicación?'}</label>
             <div className="row">
-              <input id={`rv-${post.id}`} className="grow" type="text" value={ask} placeholder="Ej.: más corto, tono más formal" onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && ask.trim() && !busy) revise(); }} />
-              <button className="btn secondary" disabled={!ask.trim() || Boolean(busy)} onClick={revise}>{busy === 'revise' ? 'Aplicando…' : 'Aplicar'}</button>
+              <input id={`rv-${post.id}`} className="grow" type="text" value={ask} placeholder="Ej.: más corto, otro tono, cambia el color de la imagen" onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && ask.trim() && !busy) revise(); }} />
+              <button className="btn secondary" disabled={!ask.trim() || Boolean(busy)} onClick={revise}>{busy === 'revise' ? 'La IA lo está cambiando…' : 'Cambiar'}</button>
             </div>
             {done && <small className="muted">Esta ya se publicó y no se modifica: se crea un borrador nuevo que tendrás que aprobar.</small>}
           </div>
