@@ -274,6 +274,11 @@ test('Drive: acepta el JSON pegado de varias formas y explica por qué descarta 
   assert.equal(parseServiceAccount(Buffer.from(plain).toString('base64')).json.project_id, 'myos-drive-reader', 'base64');
   const realNewlines = plain.replace(/\\n/g, '\n');
   assert.equal(parseServiceAccount(realNewlines).json.project_id, 'myos-drive-reader', 'saltos de línea reales en la llave');
+  assert.equal(parseServiceAccount('\uFEFF' + plain).json.project_id, 'myos-drive-reader', 'con BOM');
+  assert.equal(parseServiceAccount(`Value: ${plain}`).json.project_id, 'myos-drive-reader', 'texto antes del JSON');
+  assert.equal(parseServiceAccount(Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(plain, 'utf16le')]).toString('base64')).json.project_id, 'myos-drive-reader', 'base64 de un archivo UTF-16');
+  assert.match(parseServiceAccount('-----BEGIN PRIVATE KEY-----\nabc').error!, /empieza con «-».*llave privada/);
+  assert.match(parseServiceAccount('hola mundo, esto no sirve').error!, /empieza con «h»/);
   assert.match(parseServiceAccount('hola').error!, /JSON/);
   assert.match(parseServiceAccount('{"a":1}').error!, /client_email/);
 

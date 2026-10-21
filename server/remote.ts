@@ -22,22 +22,27 @@ export interface RemoteConfig {
   tokenUrl: string;
 }
 
-/** Lee el JSON de una cuenta de servicio pegado de varias formas: tal cual, entre comillas, con saltos de línea reales en la llave, o en base64. */
+/** Lee el JSON de una cuenta de servicio pegado de varias formas: tal cual, entre comillas, con saltos de línea reales en la llave, con BOM, o en base64. */
 export function parseServiceAccount(rawInput: string): { json?: any; error?: string } {
-  let raw = rawInput.trim();
+  let raw = rawInput.replace(/^\uFEFF/, '').trim();
   if (/^(["'`]).*\1$/s.test(raw)) raw = raw.slice(1, -1).trim();
+  const looksBase64 = /^[A-Za-z0-9+/_=\s-]+$/.test(raw) && !raw.startsWith('{');
+  // Texto con basura alrededor (por ejemplo "Value: {...}"): se toma desde la primera { hasta la última }.
+  if (!raw.startsWith('{') && !looksBase64 && raw.includes('{') && raw.includes('}')) raw = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
+  const hint = `el valor guardado mide ${raw.length} caracteres y empieza con «${raw.slice(0, 1) || '(vacío)'}»${raw.startsWith('-') ? ' (parece solo la llave privada: hace falta el archivo JSON completo)' : ''}`;
   const attempts: string[] = [];
   if (raw.startsWith('{')) {
     attempts.push(raw);
     // Saltos de línea reales dentro de private_key invalidan el JSON: se convierten en \n.
     attempts.push(raw.replace(/("private_key"\s*:\s*")([\s\S]*?)("\s*[,}])/, (_m, a1, key, a3) => a1 + key.replace(/\r?\n/g, '\\n') + a3));
     attempts.push(raw.replace(/\\"/g, '"'));
-  } else {
-    try {
-      attempts.push(Buffer.from(raw.replace(/\s+/g, ''), 'base64').toString('utf8').trim());
-    } catch { /* se informa abajo */ }
+  } else if (looksBase64) {
+    const buf = Buffer.from(raw.replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+    // Archivos guardados por PowerShell con «>» salen en UTF-16.
+    const text = buf[0] === 0xff && buf[1] === 0xfe ? buf.toString('utf16le') : buf.toString('utf8');
+    attempts.push(text.replace(/^\uFEFF/, '').trim());
   }
-  let lastErr = 'no parece un JSON (debe empezar con { o ser base64 de un JSON)';
+  let lastErr = `no parece un JSON ni base64 de un JSON (${hint})`;
   for (const t of attempts) {
     try {
       const json = JSON.parse(t);
@@ -45,8 +50,8 @@ export function parseServiceAccount(rawInput: string): { json?: any; error?: str
       const missing = ['client_email', 'private_key', 'project_id'].filter((k) => !json[k]);
       if (missing.length) return { error: `el JSON no trae: ${missing.join(', ')} (¿es la clave de una cuenta de servicio?)` };
       return { json };
-    } catch (e: any) {
-      lastErr = `no se pudo leer el JSON (${String(e?.message || e).slice(0, 80)})`;
+    } catch {
+      lastErr = `no se pudo leer como JSON (${hint})`;
     }
   }
   return { error: lastErr };
