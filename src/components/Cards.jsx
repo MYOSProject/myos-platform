@@ -9,22 +9,38 @@ export function SitePreview({ siteId }) {
   const [html, setHtml] = useState(null);
   const [err, setErr] = useState('');
   const [w, setW] = useState('Escritorio');
+  const [full, setFull] = useState(false);
   useEffect(() => {
     let live = true;
     api('GET', `/api/content/${siteId}`).then((d) => live && setHtml(d.content.full_html)).catch((e) => live && setErr(errText(e)));
     return () => { live = false; };
   }, [siteId]);
+  // Pantalla completa: Esc la cierra y se bloquea el scroll de la página de fondo
+  useEffect(() => {
+    if (!full) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setFull(false); };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+  }, [full]);
   if (err) return <Alert>{err}</Alert>;
   if (!html) return <p className="muted">Cargando vista previa…</p>;
-  return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="row" style={{ gap: 8 }}>
-        {Object.keys(WIDTHS).map((k) => <button key={k} className={`btn small ${w === k ? 'navy' : 'secondary'}`} onClick={() => setW(k)}>{k}</button>)}
-      </div>
-      <div className="frame-wrap">
-        <iframe className="frame" title="Vista previa del sitio" sandbox="allow-scripts" srcDoc={html} style={{ width: WIDTHS[w], maxWidth: '100%', flex: w === 'Escritorio' ? 1 : 'none' }} />
-      </div>
+  const bar = (
+    <div className="row" style={{ gap: 8 }}>
+      {Object.keys(WIDTHS).map((k) => <button key={k} className={`btn small ${w === k ? 'navy' : 'secondary'}`} onClick={() => setW(k)}>{k}</button>)}
+      <button className="btn small secondary" style={{ marginLeft: 'auto' }} onClick={() => setFull((f) => !f)}>{full ? '✕ Cerrar (Esc)' : '⛶ Pantalla completa'}</button>
     </div>
+  );
+  const frame = (
+    <div className="frame-wrap">
+      <iframe className={`frame ${full ? 'full' : ''}`} title="Vista previa del sitio" sandbox="allow-scripts" srcDoc={html} style={{ width: WIDTHS[w], maxWidth: '100%', flex: w === 'Escritorio' ? 1 : 'none' }} />
+    </div>
+  );
+  return full ? (
+    <div className="preview-full" role="dialog" aria-modal="true" aria-label="Vista previa en pantalla completa">{bar}{frame}</div>
+  ) : (
+    <div className="stack" style={{ gap: 8 }}>{bar}{frame}</div>
   );
 }
 
@@ -35,7 +51,6 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
   const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [ask, setAsk] = useState('');
   const needsAck = site.ai?.source === 'fallback' || site.ai?.source === 'seed';
   const approved = site.status === 'APPROVED' || site.status === 'PUBLISHED';
   const url = `${window.location.origin}/site/${site.id}`;
@@ -46,11 +61,6 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
       const r = await api('POST', `/api/approve/${site.id}`, { confirm_review: true, acknowledge_fallback: ack });
       onChange({ ...site, status: r.status, approved_by: r.record.approved_by, approved_by_email: r.record.approved_by_email, approved_at: r.record.approved_at });
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
-  };
-  const revise = async () => {
-    setBusy(true); setErr('');
-    try { const n = await api('POST', `/api/content/${site.id}/revise`, { instruction: ask }); setAsk(''); onChange({ ...site, ...n }); }
-    catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   };
   const reject = async () => {
     const reason = window.prompt('¿Por qué lo rechazas? (opcional)') ?? null;
@@ -79,15 +89,7 @@ export function SiteCard({ site, onChange, onAskChanges, onAnnounce, defaultOpen
           <button className="btn secondary small" onClick={() => setOpen((o) => !o)}>{open ? 'Ocultar vista previa' : 'Revisar vista previa'}</button>
           {approved && <a className="btn secondary small" href={url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>Abrir sitio público ↗</a>}
         </div>
-        {open && <SitePreview key={site.updated_at} siteId={site.id} />}
-        <div className="field revise">
-          <label htmlFor={`sr-${site.id}`}>¿Qué quieres cambiar de la página?</label>
-          <div className="row">
-            <input id={`sr-${site.id}`} className="grow" type="text" value={ask} placeholder="Ej.: cambia el color a azul, un título más corto, quita la sección del blog" onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && ask.trim() && !busy) revise(); }} />
-            <button className="btn secondary" disabled={!ask.trim() || busy} onClick={revise}>{busy ? 'La IA lo está cambiando…' : 'Cambiar'}</button>
-          </div>
-          <small className="muted">La IA aplica el cambio y la página vuelve a quedar pendiente de tu aprobación.</small>
-        </div>
+        {open && <SitePreview siteId={site.id} />}
         {site.status === 'PENDING' && (
           <>
             <p className="ask">¿Lo apruebas y lo publico?</p>
@@ -161,18 +163,15 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
     // eslint-disable-next-line
   }, [autoImage, post.id]);
 
-  // mode 'now': aprueba y publica ya. mode 'schedule': aprueba y deja que se publique sola en su fecha.
-  const approveAndPublish = async (mode = 'now') => {
-    setBusy(mode === 'schedule' ? 'schedule' : 'publish'); setErr('');
+  const approveAndPublish = async () => {
+    setBusy('publish'); setErr('');
     try {
       let p = post;
       if (p.status === 'DRAFT' || p.status === 'REJECTED') { p = await api('POST', `/api/social/${p.id}/submit`); onChange(p); }
-      if (p.status === 'PENDING_APPROVAL') { p = await api('POST', `/api/social/${p.id}/approve`, { confirm_review: true, schedule: mode === 'schedule' }); onChange(p); }
-      if (mode !== 'schedule' && (p.status === 'APPROVED' || p.status === 'FAILED')) { p = await api('POST', `/api/social/${p.id}/publish`); onChange(p); }
+      if (p.status === 'PENDING_APPROVAL') { p = await api('POST', `/api/social/${p.id}/approve`, { confirm_review: true }); onChange(p); }
+      if (p.status === 'APPROVED' || p.status === 'FAILED') { p = await api('POST', `/api/social/${p.id}/publish`); onChange(p); }
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
-  const canSchedule = post.scheduled_at && new Date(post.scheduled_at).getTime() > Date.now() && ['DRAFT', 'PENDING_APPROVAL', 'REJECTED'].includes(post.status);
-  const when = post.scheduled_at ? new Date(post.scheduled_at).toLocaleString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 
   const revise = async () => {
     setBusy('revise'); setErr('');
@@ -252,18 +251,17 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
         )}
         {post.problems?.length > 0 && pending && <Alert kind="warn">{post.problems.join(' · ')}</Alert>}
         {post.status === 'REJECTED' && post.rejected_reason && <Alert>Rechazada: {post.rejected_reason}</Alert>}
-        {post.auto_publish && post.status === 'APPROVED' && <Alert kind="ok">Aprobada por {post.approved_by_email}. Se publicará sola el {when} (si el proyecto tiene la publicación real activa en «Conexiones»).</Alert>}
-        {post.last_dry_run && post.status === 'APPROVED' && !post.auto_publish && (
+        {post.last_dry_run && post.status === 'APPROVED' && (
           <Alert kind="info"><b>Aprobada, pero no se envió a {name}.</b> {post.last_dry_run.note}</Alert>
         )}
         {post.status === 'FAILED' && <Alert>No se pudo publicar: {post.publish_result?.error}</Alert>}
         {done && <Alert kind="ok">Publicada en {name} · {fmt(post.published_at)} · aprobó {post.approved_by_email}{post.publish_result?.external_id ? ` · id ${post.publish_result.external_id}` : ''}</Alert>}
-        {!editing && (
+        {!editing && !auto && (
           <div className="field revise">
-            <label htmlFor={`rv-${post.id}`}>{done ? 'Crear una nueva versión' : '¿Qué quieres cambiar de esta publicación?'}</label>
+            <label htmlFor={`rv-${post.id}`}>{done ? 'Crear una nueva versión' : 'Pedir un cambio'}</label>
             <div className="row">
-              <input id={`rv-${post.id}`} className="grow" type="text" value={ask} placeholder="Ej.: más corto, otro tono, cambia el color de la imagen" onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && ask.trim() && !busy) revise(); }} />
-              <button className="btn secondary" disabled={!ask.trim() || Boolean(busy)} onClick={revise}>{busy === 'revise' ? 'La IA lo está cambiando…' : 'Cambiar'}</button>
+              <input id={`rv-${post.id}`} className="grow" type="text" value={ask} placeholder="Ej.: más corto, tono más formal" onChange={(e) => setAsk(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && ask.trim() && !busy) revise(); }} />
+              <button className="btn secondary" disabled={!ask.trim() || Boolean(busy)} onClick={revise}>{busy === 'revise' ? 'Aplicando…' : 'Aplicar'}</button>
             </div>
             {done && <small className="muted">Esta ya se publicó y no se modifica: se crea un borrador nuevo que tendrás que aprobar.</small>}
           </div>
@@ -284,9 +282,8 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
             <p className="ask">{post.status === 'APPROVED' ? '¿La publico ahora?' : '¿La apruebas y la publico?'}</p>
             {post.status !== 'APPROVED' && <p className="muted">Al continuar confirmas que revisaste el texto y la imagen. Se registrará tu correo como persona que aprueba.</p>}
             <div className="row">
-              {canSchedule && <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('schedule')}>{busy === 'schedule' ? 'Programando…' : `Aprobar y programar (${when})`}</button>}
-              <button className={canSchedule ? 'btn secondary' : 'btn'} disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('now')}>
-                {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : canSchedule ? 'Aprobar y publicar ya' : 'Aprobar y publicar'}
+              <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={approveAndPublish}>
+                {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : 'Aprobar y publicar'}
               </button>
               {!auto && <button className="btn secondary" disabled={Boolean(busy)} onClick={startEdit}>Editar</button>}
               <button className="btn secondary" disabled={Boolean(busy)} onClick={regenerate}>{busy === 'regen' ? 'La IA escribe otra…' : auto ? 'Que la IA haga otra' : 'No me gusta, hazme otra'}</button>
