@@ -48436,20 +48436,43 @@ var SEED_ITEMS = [
 // server/remote.ts
 import crypto5 from "crypto";
 var PART = 15e4;
+function parseServiceAccount(rawInput) {
+  let raw = rawInput.trim();
+  if (/^(["'`]).*\1$/s.test(raw)) raw = raw.slice(1, -1).trim();
+  const attempts = [];
+  if (raw.startsWith("{")) {
+    attempts.push(raw);
+    attempts.push(raw.replace(/("private_key"\s*:\s*")([\s\S]*?)("\s*[,}])/, (_m, a1, key3, a3) => a1 + key3.replace(/\r?\n/g, "\\n") + a3));
+    attempts.push(raw.replace(/\\"/g, '"'));
+  } else {
+    try {
+      attempts.push(Buffer.from(raw.replace(/\s+/g, ""), "base64").toString("utf8").trim());
+    } catch {
+    }
+  }
+  let lastErr = "no parece un JSON (debe empezar con { o ser base64 de un JSON)";
+  for (const t2 of attempts) {
+    try {
+      const json2 = JSON.parse(t2);
+      if (typeof json2 !== "object" || !json2) continue;
+      const missing = ["client_email", "private_key", "project_id"].filter((k) => !json2[k]);
+      if (missing.length) return { error: `el JSON no trae: ${missing.join(", ")} (\xBFes la clave de una cuenta de servicio?)` };
+      return { json: json2 };
+    } catch (e2) {
+      lastErr = `no se pudo leer el JSON (${String(e2?.message || e2).slice(0, 80)})`;
+    }
+  }
+  return { error: lastErr };
+}
 function remoteConfigFromEnv(databaseIdFromConfig = "", envName = "FIREBASE_SERVICE_ACCOUNT") {
   const raw = process.env[envName]?.trim();
   if (!raw) return null;
-  let json2;
-  try {
-    json2 = JSON.parse(raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8"));
-  } catch {
-    console.error(`[remote] ${envName} no es un JSON v\xE1lido (ni base64 de un JSON).`);
+  const parsed = parseServiceAccount(raw);
+  if (!parsed.json) {
+    console.error(`[remote] ${envName}: ${parsed.error}`);
     return null;
   }
-  if (!json2.client_email || !json2.private_key || !json2.project_id) {
-    console.error(`[remote] ${envName} no trae client_email, private_key y project_id.`);
-    return null;
-  }
+  const json2 = parsed.json;
   return {
     projectId: String(json2.project_id),
     databaseId: process.env.FIRESTORE_DATABASE_ID?.trim() || databaseIdFromConfig || "(default)",
@@ -48718,6 +48741,15 @@ var RemoteSync = class {
 var scopeTokens = /* @__PURE__ */ new Map();
 function driveAccountConfig() {
   return remoteConfigFromEnv("", "DRIVE_SERVICE_ACCOUNT") || remoteConfigFromEnv();
+}
+function driveAccountStatus() {
+  const raw = process.env.DRIVE_SERVICE_ACCOUNT?.trim();
+  if (raw) {
+    const parsed = parseServiceAccount(raw);
+    if (parsed.json) return { source: "DRIVE_SERVICE_ACCOUNT", error: null };
+    return { source: remoteConfigFromEnv() ? "FIREBASE_SERVICE_ACCOUNT" : null, error: `DRIVE_SERVICE_ACCOUNT est\xE1 mal guardada: ${parsed.error}. Por eso se est\xE1 usando la cuenta de Firebase.` };
+  }
+  return { source: remoteConfigFromEnv() ? "FIREBASE_SERVICE_ACCOUNT" : null, error: null };
 }
 function serviceAccountProject() {
   return driveAccountConfig()?.projectId || null;
@@ -75206,7 +75238,8 @@ async function call(method, path5, opts = {}) {
     if (res.status === 404) throw new HttpError(404, "DRIVE_NOT_FOUND", `No encuentro esa carpeta o archivo. Comparte la carpeta con ${mail} (como Editor) e int\xE9ntalo otra vez.`);
     if (res.status === 403 && /has not been used|disabled|accessNotConfigured/i.test(msg + text)) {
       const proj = serviceAccountProject();
-      throw new HttpError(503, "DRIVE_API_DISABLED", `La API de Google Drive no est\xE1 activada en el proyecto de Google Cloud \xAB${proj}\xBB, que es al que pertenece la cuenta de servicio de MYOS. Act\xEDvala en ese proyecto (no en otro): https://console.cloud.google.com/apis/library/drive.googleapis.com?project=${proj} \u2014 si ya la activaste ah\xED, espera unos 2 minutos y vuelve a intentar.`);
+      const why = driveAccountStatus().error;
+      throw new HttpError(503, "DRIVE_API_DISABLED", `${why ? `\u26A0 ${why} ` : ""}La API de Google Drive no est\xE1 activada en el proyecto de Google Cloud \xAB${proj}\xBB, que es al que pertenece la cuenta de servicio de MYOS. Act\xEDvala en ese proyecto (no en otro): https://console.cloud.google.com/apis/library/drive.googleapis.com?project=${proj} \u2014 si ya la activaste ah\xED, espera unos 2 minutos y vuelve a intentar.`);
     }
     if (res.status === 403) throw new HttpError(403, "DRIVE_FORBIDDEN", `Drive no permiti\xF3 la acci\xF3n (${msg}). Revisa que ${mail} sea Editor de la carpeta.`);
     throw new HttpError(502, "DRIVE_ERROR", `Drive respondi\xF3 ${res.status}: ${msg}`);
@@ -75271,6 +75304,8 @@ function driveView(store, projectId) {
     available: driveAvailable(),
     service_account_email: serviceAccountEmail(),
     service_account_project: serviceAccountProject(),
+    account_source: driveAccountStatus().source,
+    account_error: driveAccountStatus().error,
     connected: Boolean(d),
     folder_id: d?.folder_id || "",
     folder_name: d?.folder_name || "",

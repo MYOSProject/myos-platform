@@ -30,6 +30,8 @@ function DriveCard() {
       <div className="row"><h2 className="grow">Google Drive</h2>
         {d.connected ? <span className="tag ok"><span aria-hidden="true">✓</span>Conectado</span> : <span className="tag draft"><span aria-hidden="true">◌</span>Sin conectar</span>}</div>
       <p className="muted">Deja en tu carpeta de Drive los documentos de tu negocio (en «Marca», «Sitio_Web», «Redes_Sociales» o «Calendario») y la IA los usa para escribir. Lo que ya leyó se mueve a «Procesados».</p>
+      {d.account_error && <Alert kind="warn">{d.account_error}</Alert>}
+      {d.available && <p className="muted">Cuenta que usa MYOS para Drive: <b>{d.service_account_email}</b> ({d.service_account_project}).</p>}
       {!d.available && <Alert kind="warn">Drive aún no está disponible: falta la cuenta de servicio (DRIVE_SERVICE_ACCOUNT o FIREBASE_SERVICE_ACCOUNT en Vercel).</Alert>}
       {d.available && (
         <>

@@ -262,3 +262,30 @@ test('Drive: DRIVE_SERVICE_ACCOUNT tiene prioridad sobre FIREBASE_SERVICE_ACCOUN
   }
   assert.equal((await api('GET', '/api/drive', { user: ANA })).json.service_account_email, 'svc@proj-x.iam.gserviceaccount.com');
 });
+
+test('Drive: acepta el JSON pegado de varias formas y explica por qué descarta uno malo', async () => {
+  const { parseServiceAccount, driveAccountStatus } = await import('../server/remote.ts');
+  const k = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;
+  const acc = { type: 'service_account', project_id: 'myos-drive-reader', client_email: 'd@myos-drive-reader.iam.gserviceaccount.com', private_key: k };
+  const plain = JSON.stringify(acc);
+  assert.equal(parseServiceAccount(plain).json.project_id, 'myos-drive-reader');
+  assert.equal(parseServiceAccount(JSON.stringify(acc, null, 2)).json.project_id, 'myos-drive-reader', 'con formato');
+  assert.equal(parseServiceAccount(`"${plain.replace(/"/g, '\\"')}"`).json.project_id, 'myos-drive-reader', 'entre comillas');
+  assert.equal(parseServiceAccount(Buffer.from(plain).toString('base64')).json.project_id, 'myos-drive-reader', 'base64');
+  const realNewlines = plain.replace(/\\n/g, '\n');
+  assert.equal(parseServiceAccount(realNewlines).json.project_id, 'myos-drive-reader', 'saltos de línea reales en la llave');
+  assert.match(parseServiceAccount('hola').error!, /JSON/);
+  assert.match(parseServiceAccount('{"a":1}').error!, /client_email/);
+
+  process.env.DRIVE_SERVICE_ACCOUNT = '{esto no sirve';
+  try {
+    const st = driveAccountStatus();
+    assert.equal(st.source, 'FIREBASE_SERVICE_ACCOUNT');
+    assert.match(st.error!, /DRIVE_SERVICE_ACCOUNT está mal guardada/);
+    const v = await api('GET', '/api/drive', { user: ANA });
+    assert.match(v.json.account_error, /mal guardada/);
+  } finally {
+    delete process.env.DRIVE_SERVICE_ACCOUNT;
+  }
+  assert.equal(driveAccountStatus().error, null);
+});

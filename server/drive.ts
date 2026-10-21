@@ -5,7 +5,7 @@
 //   4) guarda en Redes_Sociales/Publicado la evidencia de lo publicado (si Drive lo permite).
 // Todo lo que viene de Drive es información de terceros: entra a los prompts como DATO, nunca como instrucciones.
 import { HttpError } from './http.js';
-import { serviceAccountEmail, serviceAccountProject, serviceAccountToken } from './remote.js';
+import { driveAccountStatus, serviceAccountEmail, serviceAccountProject, serviceAccountToken } from './remote.js';
 import type { Store } from './store.js';
 import type { AuthUser, DriveConfig, DriveNote, SocialPost } from './types.js';
 
@@ -46,7 +46,8 @@ async function call(method: string, path: string, opts: { query?: Record<string,
     if (res.status === 404) throw new HttpError(404, 'DRIVE_NOT_FOUND', `No encuentro esa carpeta o archivo. Comparte la carpeta con ${mail} (como Editor) e inténtalo otra vez.`);
     if (res.status === 403 && /has not been used|disabled|accessNotConfigured/i.test(msg + text)) {
       const proj = serviceAccountProject();
-      throw new HttpError(503, 'DRIVE_API_DISABLED', `La API de Google Drive no está activada en el proyecto de Google Cloud «${proj}», que es al que pertenece la cuenta de servicio de MYOS. Actívala en ese proyecto (no en otro): https://console.cloud.google.com/apis/library/drive.googleapis.com?project=${proj} — si ya la activaste ahí, espera unos 2 minutos y vuelve a intentar.`);
+      const why = driveAccountStatus().error;
+      throw new HttpError(503, 'DRIVE_API_DISABLED', `${why ? `⚠ ${why} ` : ''}La API de Google Drive no está activada en el proyecto de Google Cloud «${proj}», que es al que pertenece la cuenta de servicio de MYOS. Actívala en ese proyecto (no en otro): https://console.cloud.google.com/apis/library/drive.googleapis.com?project=${proj} — si ya la activaste ahí, espera unos 2 minutos y vuelve a intentar.`);
     }
     if (res.status === 403) throw new HttpError(403, 'DRIVE_FORBIDDEN', `Drive no permitió la acción (${msg}). Revisa que ${mail} sea Editor de la carpeta.`);
     throw new HttpError(502, 'DRIVE_ERROR', `Drive respondió ${res.status}: ${msg}`);
@@ -117,6 +118,8 @@ export function driveView(store: Store, projectId: number | null | undefined) {
     available: driveAvailable(),
     service_account_email: serviceAccountEmail(),
     service_account_project: serviceAccountProject(),
+    account_source: driveAccountStatus().source,
+    account_error: driveAccountStatus().error,
     connected: Boolean(d),
     folder_id: d?.folder_id || '',
     folder_name: d?.folder_name || '',

@@ -22,20 +22,45 @@ export interface RemoteConfig {
   tokenUrl: string;
 }
 
+/** Lee el JSON de una cuenta de servicio pegado de varias formas: tal cual, entre comillas, con saltos de línea reales en la llave, o en base64. */
+export function parseServiceAccount(rawInput: string): { json?: any; error?: string } {
+  let raw = rawInput.trim();
+  if (/^(["'`]).*\1$/s.test(raw)) raw = raw.slice(1, -1).trim();
+  const attempts: string[] = [];
+  if (raw.startsWith('{')) {
+    attempts.push(raw);
+    // Saltos de línea reales dentro de private_key invalidan el JSON: se convierten en \n.
+    attempts.push(raw.replace(/("private_key"\s*:\s*")([\s\S]*?)("\s*[,}])/, (_m, a1, key, a3) => a1 + key.replace(/\r?\n/g, '\\n') + a3));
+    attempts.push(raw.replace(/\\"/g, '"'));
+  } else {
+    try {
+      attempts.push(Buffer.from(raw.replace(/\s+/g, ''), 'base64').toString('utf8').trim());
+    } catch { /* se informa abajo */ }
+  }
+  let lastErr = 'no parece un JSON (debe empezar con { o ser base64 de un JSON)';
+  for (const t of attempts) {
+    try {
+      const json = JSON.parse(t);
+      if (typeof json !== 'object' || !json) continue;
+      const missing = ['client_email', 'private_key', 'project_id'].filter((k) => !json[k]);
+      if (missing.length) return { error: `el JSON no trae: ${missing.join(', ')} (¿es la clave de una cuenta de servicio?)` };
+      return { json };
+    } catch (e: any) {
+      lastErr = `no se pudo leer el JSON (${String(e?.message || e).slice(0, 80)})`;
+    }
+  }
+  return { error: lastErr };
+}
+
 export function remoteConfigFromEnv(databaseIdFromConfig = '', envName = 'FIREBASE_SERVICE_ACCOUNT'): RemoteConfig | null {
   const raw = process.env[envName]?.trim();
   if (!raw) return null;
-  let json: any;
-  try {
-    json = JSON.parse(raw.startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8'));
-  } catch {
-    console.error(`[remote] ${envName} no es un JSON válido (ni base64 de un JSON).`);
+  const parsed = parseServiceAccount(raw);
+  if (!parsed.json) {
+    console.error(`[remote] ${envName}: ${parsed.error}`);
     return null;
   }
-  if (!json.client_email || !json.private_key || !json.project_id) {
-    console.error(`[remote] ${envName} no trae client_email, private_key y project_id.`);
-    return null;
-  }
+  const json = parsed.json;
   return {
     projectId: String(json.project_id),
     databaseId: process.env.FIRESTORE_DATABASE_ID?.trim() || databaseIdFromConfig || '(default)',
@@ -343,6 +368,17 @@ const scopeTokens = new Map<string, { value: string; exp: number }>();
 /** Cuenta de servicio para Drive: DRIVE_SERVICE_ACCOUNT si existe (proyecto de Google Cloud aparte), si no la de Firebase. */
 export function driveAccountConfig(): RemoteConfig | null {
   return remoteConfigFromEnv('', 'DRIVE_SERVICE_ACCOUNT') || remoteConfigFromEnv();
+}
+
+/** Qué cuenta usa Drive y, si DRIVE_SERVICE_ACCOUNT existe pero no sirve, por qué se descartó. */
+export function driveAccountStatus(): { source: 'DRIVE_SERVICE_ACCOUNT' | 'FIREBASE_SERVICE_ACCOUNT' | null; error: string | null } {
+  const raw = process.env.DRIVE_SERVICE_ACCOUNT?.trim();
+  if (raw) {
+    const parsed = parseServiceAccount(raw);
+    if (parsed.json) return { source: 'DRIVE_SERVICE_ACCOUNT', error: null };
+    return { source: remoteConfigFromEnv() ? 'FIREBASE_SERVICE_ACCOUNT' : null, error: `DRIVE_SERVICE_ACCOUNT está mal guardada: ${parsed.error}. Por eso se está usando la cuenta de Firebase.` };
+  }
+  return { source: remoteConfigFromEnv() ? 'FIREBASE_SERVICE_ACCOUNT' : null, error: null };
 }
 
 export function serviceAccountProject(): string | null {
