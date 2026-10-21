@@ -2,11 +2,34 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "functions": { "api/index.js": { "maxDuration": 60, "includeFiles": "firebase-applet-config.json" } },
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 60,
+      "includeFiles": "firebase-applet-config.json"
+    }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/preview/(.*)", "destination": "/api" },
-    { "source": "/site/(.*)", "destination": "/api" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/preview/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/site/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/publish",
+      "schedule": "0 18 * * *"
+    }
   ]
 }

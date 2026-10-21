@@ -205,7 +205,7 @@ export class RemoteSync {
     const social: any[] = [];
     const leads: any[] = [];
     const projects: any[] = [];
-    const maps = { profile: {} as any, guide: {} as any, chat: {} as any, conn: {} as any };
+    const maps = { profile: {} as any, guide: {} as any, chat: {} as any, conn: {} as any, drive: {} as any };
     const media: Record<string, any> = {};
     let counters: any = null;
     const written = new Map<string, { hash: string; parts: number }>();
@@ -228,6 +228,7 @@ export class RemoteSync {
       else if (id.startsWith('guide-')) maps.guide[doc.key] = v;
       else if (id.startsWith('chat-')) maps.chat[doc.key] = v;
       else if (id.startsWith('conn-')) maps.conn[doc.key] = v;
+      else if (id.startsWith('drive-')) maps.drive[doc.key] = v;
       else if (id.startsWith('mediaidx-')) media[doc.key] = { ...v, b64: '' };
     }
     contents.sort((a, b) => b.id - a.id);
@@ -242,6 +243,7 @@ export class RemoteSync {
     s.guide = maps.guide;
     s.chats = maps.chat;
     s.connections = maps.conn;
+    s.drive = maps.drive;
     s.media = media;
     if (counters) s.counters = { content: 0, social: 0, lead: 0, project: 0, ...counters };
     this.written = written;
@@ -263,6 +265,7 @@ export class RemoteSync {
     for (const [k, v] of Object.entries(s.guide)) add(`guide-${k}`, v, k);
     for (const [k, v] of Object.entries(s.chats)) add(`chat-${k}`, v, k);
     for (const [k, v] of Object.entries(s.connections)) add(`conn-${k}`, v, k);
+    for (const [k, v] of Object.entries(s.drive)) add(`drive-${k}`, v, k);
     for (const [k, m] of Object.entries(s.media)) add(`mediaidx-${k}`, { mime: m.mime, sha: m.sha, at: m.at }, k);
     return out;
   }
@@ -330,4 +333,39 @@ export class RemoteSync {
       return null;
     }
   }
+}
+
+// ------------------------------------------------------------------------------------------
+// Token de la cuenta de servicio para otras APIs de Google (Drive). Misma llave que Firestore.
+// ------------------------------------------------------------------------------------------
+const scopeTokens = new Map<string, { value: string; exp: number }>();
+
+export function serviceAccountEmail(): string | null {
+  return remoteConfigFromEnv()?.clientEmail || null;
+}
+
+export async function serviceAccountToken(scope: string): Promise<string> {
+  const cfg = remoteConfigFromEnv();
+  if (!cfg) throw new Error('NO_SERVICE_ACCOUNT');
+  const hit = scopeTokens.get(scope);
+  if (hit && Date.now() < hit.exp - 60_000) return hit.value;
+  const key = await importPKCS8(cfg.privateKey, 'RS256');
+  const jwt = await new SignJWT({ scope })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuer(cfg.clientEmail)
+    .setSubject(cfg.clientEmail)
+    .setAudience(cfg.tokenUrl)
+    .setIssuedAt()
+    .setExpirationTime('55m')
+    .sign(key);
+  const res = await fetch(cfg.tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
+    signal: AbortSignal.timeout(15000)
+  });
+  const data: any = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) throw new Error(`Google no entregó el token (${res.status}): ${data?.error_description || data?.error || ''}`);
+  scopeTokens.set(scope, { value: data.access_token, exp: Date.now() + (Number(data.expires_in) || 3600) * 1000 });
+  return data.access_token;
 }

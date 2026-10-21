@@ -85,6 +85,7 @@ export function deleteProject(store: Store, user: AuthUser, id: number): void {
   delete store.guide[k];
   delete store.chats[k];
   delete store.connections[String(id)];
+  delete store.drive[String(id)];
   store.projects = store.projects.filter((x) => x.id !== p.id);
   store.save();
 }

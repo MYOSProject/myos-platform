@@ -164,6 +164,8 @@ export interface SocialPost {
   project_id?: number | null;
   /** Versiones anteriores del texto, para volver atrás después de pedir cambios a la IA. */
   versions?: PostVersion[];
+  /** Aprobada por una persona con «Aprobar y programar»: el programador la publica solo cuando llegue su fecha. */
+  auto_publish?: boolean;
   history: AuditEvent[];
 }
 
@@ -202,6 +204,27 @@ export interface ProjectConnection {
   updated_by: string;
 }
 
+export interface DriveNote {
+  file_id: string;
+  folder: string;
+  name: string;
+  text: string;
+  at: string;
+}
+
+/** Carpeta de Google Drive de un proyecto (compartida con la cuenta de servicio). */
+export interface DriveConfig {
+  folder_id: string;
+  folder_name: string;
+  /** Ruta lógica -> id de carpeta (Marca, Sitio_Web, Redes_Sociales, Calendario, sus «Procesados», etc.). */
+  folders: Record<string, string>;
+  last_sync_at?: string | null;
+  last_sync_note?: string | null;
+  notes: DriveNote[];
+  updated_at: string;
+  updated_by: string;
+}
+
 export interface Lead {
   id: number;
   site_id: number | null;
@@ -218,7 +241,7 @@ export interface AuthUser {
   name: string;
   emailVerified: boolean;
   isApprover: boolean;
-  via: 'firebase' | 'dev';
+  via: 'firebase' | 'dev' | 'system';
   /** Proyecto activo (lo fija el servidor a partir de la cabecera x-project-id). */
   project_id?: number | null;
   /** Clave de almacenamiento del proyecto activo: correo + proyecto. */

@@ -18,6 +18,7 @@ import { composeMessage, publish, publisherConfig } from './publisher.js';
 import type { Store } from './store.js';
 import { isProd } from './env.js';
 import { resolveConnection } from './connections.js';
+import { saveEvidence } from './drive.js';
 
 const LIMITS = { facebook: 5000, instagram: 2200, linkedin: 3000 } as const;
 export const PLATFORMS = ['facebook', 'instagram', 'linkedin'] as const;
@@ -161,6 +162,7 @@ export function editPost(store: Store, post: SocialPost, input: PostInput, user:
     post.approved_at = null;
     post.approved_by = null;
     post.approved_by_email = null;
+    post.auto_publish = false;
     post.approved_hash = null;
     post.publish_result = null;
     audit(post, { by: who(user), action: 'edit', from, to: 'DRAFT', note: 'Contenido modificado: la aprobación anterior quedó sin efecto.' });
@@ -186,21 +188,26 @@ export function submitPost(store: Store, post: SocialPost, user: AuthUser): Soci
   return post;
 }
 
-export function approvePost(store: Store, post: SocialPost, user: AuthUser, body: { confirm_review?: boolean }): SocialPost {
+export function approvePost(store: Store, post: SocialPost, user: AuthUser, body: { confirm_review?: boolean; schedule?: boolean }): SocialPost {
   if (post.status !== 'PENDING_APPROVAL') {
     throw new HttpError(409, 'BAD_STATE', `Solo se puede aprobar una publicación pendiente (estado actual: ${post.status}).`);
   }
   if (body?.confirm_review !== true) throw new HttpError(400, 'REVIEW_NOT_CONFIRMED', 'Debes confirmar que revisaste el texto y la imagen antes de aprobar.');
   const problems = validatePost(post);
   if (problems.length) throw new HttpError(422, 'INVALID_POST', problems[0], problems);
+  const scheduling = body?.schedule === true;
+  if (scheduling && (!post.scheduled_at || new Date(post.scheduled_at).getTime() <= Date.now())) {
+    throw new HttpError(400, 'BAD_SCHEDULE', 'Para programarla necesita una fecha futura. Cambia la fecha en el Calendario o publícala ahora.');
+  }
   const now = new Date().toISOString();
   post.status = 'APPROVED';
+  post.auto_publish = scheduling;
   post.approved_at = now;
   post.approved_by = user.name;
   post.approved_by_email = user.email;
   post.approved_hash = postHash(post);
   post.updated_at = now;
-  audit(post, { by: who(user), action: 'approve', from: 'PENDING_APPROVAL', to: 'APPROVED', note: `Revisión confirmada. Huella ${post.approved_hash.slice(0, 12)}` });
+  audit(post, { by: who(user), action: 'approve', from: 'PENDING_APPROVAL', to: 'APPROVED', note: `Revisión confirmada. Huella ${post.approved_hash.slice(0, 12)}${scheduling ? ` · programada para ${post.scheduled_at}` : ''}` });
   store.save();
   return post;
 }
@@ -215,6 +222,7 @@ export function rejectPost(store: Store, post: SocialPost, user: AuthUser, reaso
   post.approved_at = null;
   post.approved_by = null;
   post.approved_by_email = null;
+  post.auto_publish = false;
   post.approved_hash = null;
   post.updated_at = new Date().toISOString();
   audit(post, { by: who(user), action: 'reject', from, to: 'REJECTED', note: post.rejected_reason || undefined });
@@ -252,6 +260,7 @@ export async function publishPost(store: Store, post: SocialPost, user: AuthUser
       post.published_at = result.at;
       post.publish_result = result;
       post.last_dry_run = null;
+      post.auto_publish = false;
       audit(post, { by: who(user), action: 'publish', from: 'APPROVED', to: 'PUBLISHED', note: `Vía ${mode}${result.external_id ? ` · id ${result.external_id}` : ''}` });
     } else {
       post.status = 'FAILED';
@@ -259,6 +268,7 @@ export async function publishPost(store: Store, post: SocialPost, user: AuthUser
       audit(post, { by: who(user), action: 'publish_failed', to: 'FAILED', note: result.error });
     }
     store.save();
+    if (post.status === 'PUBLISHED') await saveEvidence(store, post);
     return post;
   } finally {
     publishing.delete(post.id);
@@ -298,4 +308,40 @@ export function restoreVersion(store: Store, post: SocialPost, index: number, us
   const v = post.versions?.[index];
   if (!v) throw new HttpError(404, 'VERSION_NOT_FOUND', 'Esa versión ya no existe.');
   return editPost(store, post, { copy: v.copy, hashtags: v.hashtags, cta: v.cta, image_headline: v.image_headline, image_subline: v.image_subline }, user);
+}
+
+// ------------------------------------------------------------------------------------------
+// Publicación programada. Solo publica lo que una persona YA aprobó con «Aprobar y programar»
+// y cuya fecha ya llegó. El programador no aprueba nada: la aprobación queda a nombre de la persona.
+// ------------------------------------------------------------------------------------------
+export const SCHEDULER: AuthUser = { uid: 'scheduler', email: 'programador@myos.local', name: 'Publicación programada', emailVerified: true, isApprover: true, via: 'system' };
+
+export async function runScheduled(store: Store, opts: { projectId?: number | null; now?: Date; limit?: number } = {}): Promise<{ checked: number; published: number; failed: number; skipped: number; details: string[] }> {
+  const now = opts.now || new Date();
+  const due = store.social
+    .filter((p) => p.status === 'APPROVED' && p.auto_publish === true && p.scheduled_at && new Date(p.scheduled_at).getTime() <= now.getTime() && (opts.projectId ? p.project_id === opts.projectId : true))
+    .slice(0, opts.limit ?? 10);
+  const out = { checked: due.length, published: 0, failed: 0, skipped: 0, details: [] as string[] };
+  for (const p of due) {
+    try {
+      await publishPost(store, p, SCHEDULER);
+    } catch (e: any) {
+      out.failed++;
+      out.details.push(`#${p.id}: ${e?.message || e}`);
+      p.auto_publish = false;
+      audit(p, { by: who(SCHEDULER), action: 'schedule_error', note: String(e?.message || e).slice(0, 300) });
+      continue;
+    }
+    if (p.status === 'PUBLISHED') out.published++;
+    else if (p.status === 'FAILED') { out.failed++; out.details.push(`#${p.id}: ${p.publish_result?.error || 'falló'}`); p.auto_publish = false; }
+    else {
+      // Sin conexión real quedó en simulación: no se repite en cada pasada.
+      out.skipped++;
+      p.auto_publish = false;
+      audit(p, { by: who(SCHEDULER), action: 'schedule_dry_run', note: 'Llegó la hora, pero el proyecto no tiene publicación real activa: quedó en simulación.' });
+      out.details.push(`#${p.id}: simulación (sin conexión real activa)`);
+    }
+  }
+  if (due.length) store.save();
+  return out;
 }

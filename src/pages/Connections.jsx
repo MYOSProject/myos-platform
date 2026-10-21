@@ -12,6 +12,53 @@ const GUIDE = [
   ['Pega, prueba y activa', 'Pega los datos abajo, pulsa «Probar conexión» (no publica nada) y, si sale bien, activa la publicación real. Hasta que la actives, todo se queda en simulación.']
 ];
 
+function DriveCard() {
+  const [d, setD] = useState(null);
+  const [folder, setFolder] = useState('');
+  const [busy, setBusy] = useState('');
+  const [err, setErr] = useState('');
+  const [msg, setMsg] = useState('');
+  const [open, setOpen] = useState(false);
+  useEffect(() => { api('GET', '/api/drive').then(setD).catch((e) => setErr(errText(e))); }, []);
+  const run = async (name, fn, ok) => {
+    setBusy(name); setErr(''); setMsg('');
+    try { const r = await fn(); setD(r); if (ok) setMsg(typeof ok === 'function' ? ok(r) : ok); } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
+  };
+  if (!d) return err ? <Alert>{err}</Alert> : null;
+  return (
+    <div className="card stack">
+      <div className="row"><h2 className="grow">Google Drive</h2>
+        {d.connected ? <span className="tag ok"><span aria-hidden="true">✓</span>Conectado</span> : <span className="tag draft"><span aria-hidden="true">◌</span>Sin conectar</span>}</div>
+      <p className="muted">Deja en tu carpeta de Drive los documentos de tu negocio (en «Marca», «Sitio_Web», «Redes_Sociales» o «Calendario») y la IA los usa para escribir. Lo que ya leyó se mueve a «Procesados».</p>
+      {!d.available && <Alert kind="warn">Drive aún no está disponible: falta la cuenta de servicio (FIREBASE_SERVICE_ACCOUNT en Vercel).</Alert>}
+      {d.available && (
+        <>
+          <button className="btn secondary" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? 'Ocultar la guía' : '¿Cómo lo conecto? (paso a paso)'}</button>
+          {open && (
+            <ol className="howto">
+              <li><b>Crea una carpeta en tu Drive</b><p>Por ejemplo «MYOS - mi negocio». MYOS creará adentro las subcarpetas que falten.</p></li>
+              <li><b>Compártela con la cuenta de MYOS</b><p>Botón «Compartir» → pega este correo y dale permiso de <b>Editor</b>: <b>{d.service_account_email}</b></p></li>
+              <li><b>Activa la API de Drive (una sola vez)</b><p>En console.cloud.google.com/apis/library/drive.googleapis.com, en el mismo proyecto de Firebase, pulsa «Habilitar».</p></li>
+              <li><b>Pega el enlace de la carpeta aquí</b><p>Abre la carpeta, copia el enlace de la barra del navegador y pégalo abajo.</p></li>
+            </ol>
+          )}
+          <div className="field"><label htmlFor="df">Enlace de la carpeta de Drive</label>
+            <input id="df" type="text" value={folder} onChange={(e) => setFolder(e.target.value)} placeholder={d.folder_name ? `Conectada: ${d.folder_name}` : 'https://drive.google.com/drive/folders/…'} /></div>
+          <div className="row">
+            <button className="btn" disabled={Boolean(busy) || !folder.trim()} onClick={() => run('c', () => api('PUT', '/api/drive', { folder }), 'Carpeta conectada y estructura creada.')}>{busy === 'c' ? 'Conectando…' : d.connected ? 'Cambiar carpeta' : 'Conectar y crear estructura'}</button>
+            {d.connected && <button className="btn secondary" disabled={Boolean(busy)} onClick={() => run('s', async () => { const r = await api('POST', '/api/drive/sync'); return r; }, (r) => r.result?.note)}>{busy === 's' ? 'Leyendo…' : 'Sincronizar ahora'}</button>}
+            {d.connected && <button className="btn link" disabled={Boolean(busy)} onClick={() => { if (window.confirm('¿Desconectar Drive de este proyecto?')) run('d', () => api('DELETE', '/api/drive'), 'Drive desconectado.'); }}>Desconectar</button>}
+          </div>
+          {d.connected && <p className="muted">Carpeta: {d.folder_name}{d.last_sync_at ? ` · última lectura ${fmt(d.last_sync_at)} · ${d.last_sync_note || ''}` : ' · aún no se ha leído nada.'}</p>}
+          {d.notes?.length > 0 && <ul className="stats" style={{ gridTemplateColumns: '1fr' }}>{d.notes.slice(0, 8).map((n) => <li key={n.file_id}><b>{n.folder}</b> / {n.name}</li>)}</ul>}
+        </>
+      )}
+      {msg && <Alert kind="ok">{msg}</Alert>}
+      <Alert>{err}</Alert>
+    </div>
+  );
+}
+
 export default function Connections() {
   const [c, setC] = useState(null);
   const [form, setForm] = useState({ page_id: '', ig_user_id: '', webhook_url: '', page_token: '' });
@@ -87,6 +134,8 @@ export default function Connections() {
 
       {msg && <Alert kind="ok">{msg}</Alert>}
       <Alert>{err}</Alert>
+
+      <DriveCard />
     </div>
   );
 }

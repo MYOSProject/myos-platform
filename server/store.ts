@@ -8,7 +8,7 @@ import path from 'path';
 import { PROJECT_ROOT, isProd } from './env.js';
 import { SEED_ITEMS } from './seed.js';
 import { RemoteSync, remoteConfigFromEnv } from './remote.js';
-import type { BusinessProfile, ChatMessage, GuideStepState, Project, ProjectConnection, ContentItem, Lead, MediaItem, SocialPost } from './types.js';
+import type { BusinessProfile, ChatMessage, GuideStepState, Project, ProjectConnection, DriveConfig, ContentItem, Lead, MediaItem, SocialPost } from './types.js';
 
 interface DbShape {
   version: 1;
@@ -22,6 +22,7 @@ interface DbShape {
   guide?: Record<string, Record<string, GuideStepState>>;
   projects?: Project[];
   connections?: Record<string, ProjectConnection>;
+  drive?: Record<string, DriveConfig>;
 }
 
 export type Persistence = 'file' | 'ephemeral' | 'memory' | 'firestore';
@@ -36,6 +37,7 @@ export class Store {
   guide: Record<string, Record<string, GuideStepState>> = {};
   projects: Project[] = [];
   connections: Record<string, ProjectConnection> = {};
+  drive: Record<string, DriveConfig> = {};
   counters = { content: 0, social: 0, lead: 0, project: 0 };
   persistence: Persistence;
   /** Con Firestore: hay cambios sin escribir. */
@@ -68,6 +70,7 @@ export class Store {
         this.guide = db.guide || {};
         this.projects = db.projects || [];
         this.connections = db.connections || {};
+        this.drive = db.drive || {};
         this.counters = { content: 0, social: 0, lead: 0, project: 0, ...(db.counters || {}) };
         loaded = true;
       } catch (e) {
@@ -148,7 +151,7 @@ export class Store {
       clearTimeout(this.timer);
       this.timer = null;
     }
-    const db: DbShape = { version: 1, counters: this.counters, contents: this.contents, social: this.social, leads: this.leads, profiles: this.profiles, chats: this.chats, media: this.media, guide: this.guide, projects: this.projects, connections: this.connections };
+    const db: DbShape = { version: 1, counters: this.counters, contents: this.contents, social: this.social, leads: this.leads, profiles: this.profiles, chats: this.chats, media: this.media, guide: this.guide, projects: this.projects, connections: this.connections, drive: this.drive };
     try {
       fs.mkdirSync(path.dirname(this.file), { recursive: true });
       const tmp = `${this.file}.tmp`;

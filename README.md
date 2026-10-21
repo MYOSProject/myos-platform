@@ -21,3 +21,8 @@ Diseño: Manual de Identidad MYOS v1.0 (azul marino #111827, coral #E2554F, turq
 - **Conexiones**: por proyecto, Facebook/Instagram (token cifrado, «Probar conexión», «Activar publicación real») o webhook de Make/Zapier. Sin activar = simulación.
 - **Aprobación abierta**: cualquier usuario con sesión puede aprobar y publicar; siempre se registra quién. Restringir con `RESTRICT_APPROVERS=true` + `APPROVER_EMAILS`.
 - **Vercel**: define `FIREBASE_SERVICE_ACCOUNT`, `CONNECTIONS_KEY` (y `GEMINI_API_KEY`), activa Firestore y redeploy.
+
+## Google Drive y publicación programada
+
+- **Drive**: en «Conexiones» se pega el enlace de una carpeta compartida con la cuenta de servicio (Editor). MYOS crea `Marca`, `Sitio_Web`, `Redes_Sociales` (`Para_Publicar`, `Publicado`) y `Calendario`, cada una con `Procesados`. «Sincronizar ahora» lee los documentos de texto (Google Docs, Hojas como CSV, .txt, .md, .json), los usa como contexto de la IA (siempre como dato, nunca como instrucciones) y los mueve a `Procesados`. Imágenes y PDFs no se leen ni se mueven. Al publicar, se intenta guardar la evidencia en `Redes_Sociales/Publicado` (si Drive no deja escribir en Mi unidad por la cuota de la cuenta de servicio, solo se registra en el log; con una unidad compartida funciona).
+- **Programar**: «Aprobar y programar» deja la publicación aprobada (a nombre de la persona) y el programador la publica cuando llega su fecha. Editarla después cancela la aprobación y la programación. Requiere `CRON_SECRET`; `vercel.json` trae un cron diario (`0 18 * * *`, 12:00 en Ciudad Juárez). En un plan Pro puede cambiarse a cada hora o cada minuto. En «Calendario» hay un botón para adelantar la revisión.

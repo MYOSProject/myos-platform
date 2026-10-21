@@ -28,6 +28,7 @@ import {
   editPost,
   publishPost,
   rejectPost,
+  runScheduled,
   submitPost,
   validatePost
 } from './social.js';
@@ -35,6 +36,7 @@ import { publisherStatus } from './publisher.js';
 import { chatTurn, clearChat, getChat, getProfile, runChatAction, saveProfile } from './chat.js';
 import { autoCreate, autoUpdate, confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas } from './guide.js';
 import { createProject, deleteProject, ensureDefaultProject, getOwnedProject, projectsOf, projectSummary, updateProject } from './projects.js';
+import { connectDrive, disconnectDrive, driveView, syncDrive } from './drive.js';
 import { connectionView, deleteConnection, saveConnection, setLive, testConnection } from './connections.js';
 import { guideForPrompt } from './guide.js';
 import { completeness, composeSiteBrief, missingEssentials, FIELD_LABELS } from './profile.js';
@@ -579,6 +581,42 @@ export function createApp() {
     const p = needProject(req.user as AuthUser);
     deleteConnection(getStore(), p.id);
     res.json(connectionView(getStore(), p.id));
+  }));
+
+  // ---------------------------------------------------------------------------------------
+  // Google Drive y publicación programada
+  // ---------------------------------------------------------------------------------------
+  app.get('/api/drive', requireAuth, (req, res) => {
+    res.json(driveView(getStore(), (req.user as AuthUser).project_id));
+  });
+  app.put('/api/drive', requireAuth, rateLimit({ windowMs: 60_000, max: 10, name: 'conexión con Drive' }), wrap(async (req, res) => {
+    const user = req.user as AuthUser;
+    await connectDrive(getStore(), user, req.body?.folder);
+    res.json(driveView(getStore(), user.project_id));
+  }));
+  app.post('/api/drive/sync', requireAuth, rateLimit({ windowMs: 60_000, max: 6, name: 'sincronización con Drive' }), wrap(async (req, res) => {
+    const user = req.user as AuthUser;
+    const result = await syncDrive(getStore(), user);
+    res.json({ ...driveView(getStore(), user.project_id), result });
+  }));
+  app.delete('/api/drive', requireAuth, wrap((req, res) => {
+    const user = req.user as AuthUser;
+    disconnectDrive(getStore(), user);
+    res.json(driveView(getStore(), user.project_id));
+  }));
+
+  // Botón «Publicar lo programado ahora» (solo lo ya aprobado por una persona y con la hora vencida).
+  app.post('/api/schedule/run', requireApprover, rateLimit({ windowMs: 60_000, max: 6, name: 'publicación programada' }), wrap(async (req, res) => {
+    res.json(await runScheduled(getStore(), { projectId: (req.user as AuthUser).project_id }));
+  }));
+  // Programador automático (cron de Vercel). Sin CRON_SECRET queda apagado. Vercel manda «Authorization: Bearer <CRON_SECRET>».
+  app.get('/api/cron/publish', wrap(async (req, res) => {
+    const secret = process.env.CRON_SECRET?.trim();
+    if (!secret) throw new HttpError(503, 'CRON_DISABLED', 'El programador automático está apagado: define CRON_SECRET.');
+    const got = Buffer.from(String(req.headers.authorization || ''));
+    const want = Buffer.from(`Bearer ${secret}`);
+    if (got.length !== want.length || !crypto.timingSafeEqual(got, want)) throw new HttpError(401, 'BAD_CRON_SECRET', 'No autorizado.');
+    res.json(await runScheduled(getStore()));
   }));
 
   app.post('/api/social/:id/regenerate', requireAuth, aiLimit, wrap(async (req, res) => {

@@ -161,15 +161,18 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
     // eslint-disable-next-line
   }, [autoImage, post.id]);
 
-  const approveAndPublish = async () => {
-    setBusy('publish'); setErr('');
+  // mode 'now': aprueba y publica ya. mode 'schedule': aprueba y deja que se publique sola en su fecha.
+  const approveAndPublish = async (mode = 'now') => {
+    setBusy(mode === 'schedule' ? 'schedule' : 'publish'); setErr('');
     try {
       let p = post;
       if (p.status === 'DRAFT' || p.status === 'REJECTED') { p = await api('POST', `/api/social/${p.id}/submit`); onChange(p); }
-      if (p.status === 'PENDING_APPROVAL') { p = await api('POST', `/api/social/${p.id}/approve`, { confirm_review: true }); onChange(p); }
-      if (p.status === 'APPROVED' || p.status === 'FAILED') { p = await api('POST', `/api/social/${p.id}/publish`); onChange(p); }
+      if (p.status === 'PENDING_APPROVAL') { p = await api('POST', `/api/social/${p.id}/approve`, { confirm_review: true, schedule: mode === 'schedule' }); onChange(p); }
+      if (mode !== 'schedule' && (p.status === 'APPROVED' || p.status === 'FAILED')) { p = await api('POST', `/api/social/${p.id}/publish`); onChange(p); }
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
+  const canSchedule = post.scheduled_at && new Date(post.scheduled_at).getTime() > Date.now() && ['DRAFT', 'PENDING_APPROVAL', 'REJECTED'].includes(post.status);
+  const when = post.scheduled_at ? new Date(post.scheduled_at).toLocaleString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 
   const revise = async () => {
     setBusy('revise'); setErr('');
@@ -249,7 +252,8 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
         )}
         {post.problems?.length > 0 && pending && <Alert kind="warn">{post.problems.join(' · ')}</Alert>}
         {post.status === 'REJECTED' && post.rejected_reason && <Alert>Rechazada: {post.rejected_reason}</Alert>}
-        {post.last_dry_run && post.status === 'APPROVED' && (
+        {post.auto_publish && post.status === 'APPROVED' && <Alert kind="ok">Aprobada por {post.approved_by_email}. Se publicará sola el {when} (si el proyecto tiene la publicación real activa en «Conexiones»).</Alert>}
+        {post.last_dry_run && post.status === 'APPROVED' && !post.auto_publish && (
           <Alert kind="info"><b>Aprobada, pero no se envió a {name}.</b> {post.last_dry_run.note}</Alert>
         )}
         {post.status === 'FAILED' && <Alert>No se pudo publicar: {post.publish_result?.error}</Alert>}
@@ -280,8 +284,9 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
             <p className="ask">{post.status === 'APPROVED' ? '¿La publico ahora?' : '¿La apruebas y la publico?'}</p>
             {post.status !== 'APPROVED' && <p className="muted">Al continuar confirmas que revisaste el texto y la imagen. Se registrará tu correo como persona que aprueba.</p>}
             <div className="row">
-              <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={approveAndPublish}>
-                {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : 'Aprobar y publicar'}
+              {canSchedule && <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('schedule')}>{busy === 'schedule' ? 'Programando…' : `Aprobar y programar (${when})`}</button>}
+              <button className={canSchedule ? 'btn secondary' : 'btn'} disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('now')}>
+                {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : canSchedule ? 'Aprobar y publicar ya' : 'Aprobar y publicar'}
               </button>
               {!auto && <button className="btn secondary" disabled={Boolean(busy)} onClick={startEdit}>Editar</button>}
               <button className="btn secondary" disabled={Boolean(busy)} onClick={regenerate}>{busy === 'regen' ? 'La IA escribe otra…' : auto ? 'Que la IA haga otra' : 'No me gusta, hazme otra'}</button>
