@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, errText } from '../api';
-import { drawWatermark } from '../graphic';
+import { drawWatermark, loadWatermarkLogo } from '../graphic';
 import { Alert, TONES } from '../components/ui';
 
 // Editor de videos cortos: escenas con fondo (color, foto o clip), texto acomodable, formato por red y exportación.
@@ -120,6 +120,7 @@ export default function Video({ profile, plan }) {
 
   // Cuando no se reproduce, el lienzo muestra el instante elegido.
   useEffect(() => { if (!playing && !exporting) redraw(t); }, [scenes, t, format, watermark, playing, exporting, redraw]);
+  useEffect(() => { loadWatermarkLogo().then(() => redraw()); }, []); // eslint-disable-line
   useEffect(() => { document.fonts?.load('800 40px "Plus Jakarta Sans"').then(() => redraw()).catch(() => {}); }, []); // eslint-disable-line
   useEffect(() => () => { runRef.current++; scenesRef.current.forEach((s) => s.media && URL.revokeObjectURL(s.media.url)); }, []);
 
@@ -237,7 +238,7 @@ export default function Video({ profile, plan }) {
         <h1>Videos cortos</h1>
         <p className="sub">Arma un video corto con tus fotos o clips y frases en pantalla. Elige el formato de cada red, acomoda el texto y descárgalo. Es un editor sencillo, pensado para videos de 15 a 30 segundos.</p>
       </div>
-      <Alert kind="info">MYOS todavía no publica videos por ti: descarga el video y súbelo a la red que quieras. {watermark ? 'Con el plan Gratis el video lleva la marca de agua «Hecho con MYOS».' : 'Con el plan Pro el video sale sin marca de agua.'}</Alert>
+      <Alert kind="info">MYOS todavía no publica videos por ti: descarga el video y súbelo a la red que quieras. {watermark ? 'Con el plan Gratis el video lleva la marca de agua del logo de MYOS.' : 'Con el plan Pro el video sale sin marca de agua.'}</Alert>
 
       <div className="card stack">
         <h2>1. Formato</h2>

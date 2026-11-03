@@ -44,28 +44,45 @@ function loadImage(src) {
 // Formato de cada red: Facebook 1.91:1, Instagram 4:5 (vertical), LinkedIn 1.91:1 y X 16:9.
 export const FORMATS = { facebook: [1200, 630], instagram: [1080, 1350], linkedin: [1200, 627], x: [1200, 675] };
 
-/** Marca de agua pequeña de MYOS (plan Gratis): una pastilla discreta en la esquina inferior derecha. */
-export function drawWatermark(ctx, W, H, text = 'Hecho con MYOS') {
-  const size = Math.max(12, Math.round(Math.min(W, H) * 0.024));
+let wmLogo = null;
+let wmLogoPromise = null;
+/** Carga (una sola vez) el logo de MYOS que se usa como marca de agua. */
+export function loadWatermarkLogo() {
+  if (wmLogo) return Promise.resolve(wmLogo);
+  wmLogoPromise ||= new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => { wmLogo = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = '/logo-myos.png';
+  });
+  return wmLogoPromise;
+}
+
+/** Marca de agua pequeña (plan Gratis): el logo de MYOS sobre una pastilla blanca en la esquina inferior derecha. */
+export function drawWatermark(ctx, W, H) {
+  const lh = Math.max(16, Math.round(Math.min(W, H) * 0.04));
+  const pad = lh * 0.45;
   ctx.save();
-  ctx.font = `600 ${size}px Inter, Arial, sans-serif`;
-  ctx.textBaseline = 'middle';
-  const tw = ctx.measureText(text).width;
-  const padX = size * 0.8;
-  const h = size * 1.9;
-  const w = tw + padX * 2;
-  const x = W - w - size * 0.9;
-  const y = H - h - size * 0.9;
-  ctx.fillStyle = 'rgba(17,24,39,.72)';
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, h / 2);
-  ctx.fill();
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(text, x + padX, y + h / 2 + 1);
+  if (wmLogo) {
+    const lw = lh * (wmLogo.naturalWidth / wmLogo.naturalHeight);
+    const w = lw + pad * 2; const h = lh + pad * 2;
+    const x = W - w - lh * 0.7; const y = H - h - lh * 0.7;
+    ctx.fillStyle = 'rgba(255,255,255,.88)';
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2.4); ctx.fill();
+    ctx.drawImage(wmLogo, x + pad, y + pad, lw, lh);
+  } else {
+    const text = 'MYOS';
+    ctx.font = `800 ${lh}px Inter, Arial, sans-serif`; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(text).width + pad * 2; const h = lh + pad * 2;
+    const x = W - w - lh * 0.7; const y = H - h - lh * 0.7;
+    ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2.4); ctx.fill();
+    ctx.fillStyle = '#111827'; ctx.fillText(text, x + pad, y + h / 2 + 1);
+  }
   ctx.restore();
 }
 
 export async function renderPostImage({ headline, subline, cta, colors, logo, platform, watermark = false }) {
+  if (watermark) await loadWatermarkLogo();
   const c = { ...DEFAULT, ...(colors || {}) };
   const [W, H] = FORMATS[platform] || [1080, 1080];
   const wide = W > H;

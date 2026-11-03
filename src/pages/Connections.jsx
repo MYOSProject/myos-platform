@@ -31,7 +31,7 @@ function PlanCard({ plan, onChanged }) {
     <div className="card stack">
       <div className="row"><h2 className="grow">Plan del proyecto</h2>
         {pro ? <span className="tag ok"><span aria-hidden="true">★</span>Plan Pro</span> : <span className="tag draft"><span aria-hidden="true">◌</span>Plan Gratis</span>}</div>
-      <p className="muted">En el plan <b>Gratis</b>, las imágenes y videos de Facebook e Instagram llevan una marca de agua pequeña «Hecho con MYOS». En el plan <b>Pro</b> salen sin marca de agua. Por ahora el cambio es manual y no hace ningún cobro.</p>
+      <p className="muted">En el plan <b>Gratis</b>, las imágenes y videos de Facebook e Instagram llevan una marca de agua pequeña con el logo de MYOS. En el plan <b>Pro</b> salen sin marca de agua. Por ahora el cambio es manual y no hace ningún cobro.</p>
       <div className="row">
         <button className={`btn ${pro ? 'secondary' : ''}`} disabled={busy || !pro} onClick={() => set('free')}>Plan Gratis</button>
         <button className={`btn ${pro ? '' : 'secondary'}`} disabled={busy || pro} onClick={() => set('pro')}>Plan Pro (sin marca de agua)</button>

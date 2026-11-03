@@ -44,7 +44,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .badge { margin-left: auto; background: var(--coral); color: #fff; border-radius: 99px; font-size: 12px; padding: 0 8px; font-weight: 700; min-width: 22px; text-align: center; }
 .user { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); word-break: break-all; }
 .user b { color: var(--navy); font-weight: 600; display: block; }
-.main { padding: 32px 40px 56px; min-width: 0; max-width: 1180px; }
+.main { padding: 32px 40px 56px; min-width: 0; max-width: 1760px; }
 .sub { color: var(--muted); margin-top: 4px; margin-bottom: 24px; max-width: 720px; }
 
 /* Componentes */
