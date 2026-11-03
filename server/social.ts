@@ -120,7 +120,7 @@ export function createPost(store: Store, input: PostInput, user: AuthUser, site?
   return post;
 }
 
-/** Crea los borradores de Facebook e Instagram a partir de lo que generó la IA para un sitio. */
+/** Crea los borradores de Facebook, Instagram y X (si la IA lo escribió) a partir de lo que generó la IA para un sitio. */
 export function createDraftsFromSite(store: Store, site: ContentItem, user: AuthUser, baseUrl: string): SocialPost[] {
   const sp = site.content?.social_posts || {};
   const link = site.status === 'APPROVED' || site.status === 'PUBLISHED' ? `${baseUrl.replace(/\/+$/, '')}/site/${site.id}` : '';
@@ -131,6 +131,9 @@ export function createDraftsFromSite(store: Store, site: ContentItem, user: Auth
   }
   if (sp.instagram?.copy) {
     made.push(createPost(store, { platform: 'instagram', copy: sp.instagram.copy, hashtags: sp.instagram.hashtags, image_prompt: site.content?.prompt_imagen, site_id: site.id }, user, site));
+  }
+  if (sp.x?.copy) {
+    made.push(createPost(store, { platform: 'x', copy: sp.x.copy, hashtags: sp.x.hashtags, image_prompt: site.content?.prompt_imagen, site_id: site.id }, user, site));
   }
   if (!made.length) throw new HttpError(422, 'NO_SOCIAL_CONTENT', 'Este sitio no tiene texto de redes sociales que convertir en publicaciones.');
   return made;

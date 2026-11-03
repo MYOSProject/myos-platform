@@ -28,6 +28,8 @@ export interface GeneratedWebsite {
   social_posts: {
     facebook: { copy: string; cta: string };
     instagram: { copy: string; hashtags: string };
+    /** Opcional: versión corta para X (máx. 240 caracteres). */
+    x?: { copy: string; hashtags: string };
   };
   resumen_web: string;
   copy_redes: string;
@@ -123,7 +125,7 @@ export type SocialStatus =
   | 'REJECTED';
 
 export interface PublishResult {
-  mode: 'webhook' | 'graph' | 'dry-run';
+  mode: 'webhook' | 'graph' | 'x-api' | 'dry-run';
   ok: boolean;
   at: string;
   http_status?: number;
@@ -195,6 +197,9 @@ export interface ProjectConnection {
   webhook_url: string;
   /** Cifrado AES-256-GCM (formato iv.tag.datos en base64). */
   page_token_enc: string;
+  /** Cuenta de X (sin @) y sus 4 llaves de la API de X (JSON cifrado con AES-256-GCM). */
+  x_handle?: string;
+  x_keys_enc?: string;
   /** Hasta que la persona lo active, todo se queda en simulación. */
   live: boolean;
   tested_at?: string | null;

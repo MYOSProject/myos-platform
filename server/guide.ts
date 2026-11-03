@@ -487,7 +487,7 @@ export function regeneratePost(store: Store, user: AuthUser, post: SocialPost): 
 // ------------------------------------------------------------------------------------------
 // Contenido 100 % automático: la IA decide temas, textos, fechas e imágenes; la persona solo aprueba y publica.
 // ------------------------------------------------------------------------------------------
-const AUTO_PLATFORMS = ['facebook', 'instagram'] as const;
+const AUTO_PLATFORMS = ['facebook', 'instagram', 'x'] as const;
 
 function needInfo(store: Store, user: AuthUser): void {
   if (!profileOf(store, user).business_name && guideView(store, user).done === 0) {
@@ -514,7 +514,7 @@ export async function autoCreate(store: Store, user: AuthUser, count = 6): Promi
   const n = Math.min(8, Math.max(2, Math.round(count) || 6));
   const existing = projectPosts(store, user).slice(-12).map((p) => `- (${platformLabel(p.platform)}) ${p.copy.slice(0, 110)}`).join('\n') || '(ninguna todavía)';
   const system = `Eres el estratega de contenido de MYOS y tienes el control total: decides tú los temas, el orden y los textos. La persona NO te dará instrucciones; solo revisará, aprobará y publicará.
-Crea un plan de ${n} publicaciones variadas para las próximas 2 semanas, alternando ${AUTO_PLATFORMS.map(platformLabel).join(' e ')}. Mezcla objetivos (dar a conocer, mostrar el producto o servicio, confianza, cercanía con la comunidad, invitar a comprar o contactar) y cuida que ninguna repita el tema de otra. Para cada una indica day_offset (1 a 14: días desde hoy).
+Crea un plan de ${n} publicaciones variadas para las próximas 2 semanas, alternando ${AUTO_PLATFORMS.map(platformLabel).join(', ')}. Mezcla objetivos (dar a conocer, mostrar el producto o servicio, confianza, cercanía con la comunidad, invitar a comprar o contactar) y cuida que ninguna repita el tema de otra. Para cada una indica day_offset (1 a 14: días desde hoy).
 ${POST_FIELDS_RULES}
 ${RULES}
 Si falta un dato (precio, teléfono, promoción), NO lo menciones ni lo inventes: habla de lo que sí se sabe.

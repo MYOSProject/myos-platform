@@ -190,7 +190,8 @@ export const SITE_SCHEMA = {
       type: 'object',
       properties: {
         facebook: { type: 'object', properties: { copy: str, cta: str }, required: ['copy', 'cta'] },
-        instagram: { type: 'object', properties: { copy: str, hashtags: str }, required: ['copy', 'hashtags'] }
+        instagram: { type: 'object', properties: { copy: str, hashtags: str }, required: ['copy', 'hashtags'] },
+        x: { type: 'object', properties: { copy: str, hashtags: str }, required: ['copy', 'hashtags'] }
       },
       required: ['facebook', 'instagram']
     },
@@ -234,7 +235,7 @@ REGLAS DE CONTENIDO
 7. services: entre 3 y 6 productos o servicios concretos, con beneficios reales. "icon" debe ser exactamente uno de: ${ICON_NAMES.join(', ')}.
 8. hero.title: titular de alta conversión (máx. 90 caracteres). hero.subtitle: 1-2 frases. trust_badges: 3 sellos breves y creíbles (sin certificaciones inventadas).
 9. blog_posts: 2 artículos útiles para el cliente final (título + extracto de 1-2 frases). read_time como "3 min"; date como "Esta semana" o "Hace unos días".
-10. social_posts.facebook.copy y social_posts.instagram.copy: textos listos para publicar, con tono cercano, emojis moderados y un llamado a la acción. instagram.hashtags: 5 a 8 hashtags relevantes en una sola cadena. copy_redes: una versión corta (máx. 200 caracteres). prompt_imagen: descripción fotográfica en inglés para generar la imagen de la publicación.
+10. social_posts.facebook.copy y social_posts.instagram.copy: textos listos para publicar, con tono cercano, emojis moderados y un llamado a la acción. instagram.hashtags: 5 a 8 hashtags relevantes en una sola cadena. social_posts.x.copy: tuit breve y directo, máximo 240 caracteres incluyendo emojis, sin hashtags dentro del texto; social_posts.x.hashtags: 1 o 2 hashtags. copy_redes: una versión corta (máx. 200 caracteres). prompt_imagen: descripción fotográfica en inglés para generar la imagen de la publicación.
 11. No uses HTML ni markdown dentro de los textos. Cadenas planas.
 12. Nada se publica automáticamente: un humano revisará todo lo que escribas.`;
 
@@ -327,6 +328,8 @@ export function normalizeSite(raw: any): GeneratedWebsite {
   const tagline = clean(raw.tagline, 160);
   const fbCopy = clean(social.facebook?.copy, 1500, true);
   const igCopy = clean(social.instagram?.copy, 1500, true);
+  const xCopy = clean(social.x?.copy, 240, true);
+  const xTags = (typeof social.x?.hashtags === 'string' ? social.x.hashtags : '').replace(TAG, '').split(/[\s,]+/).filter(Boolean).map((h: string) => (h.startsWith('#') ? h : '#' + h)).map((h: string) => h.replace(/[^#\p{L}\p{N}_]/gu, '')).filter((h: string) => h.length > 1).slice(0, 2).join(' ');
   const hashtags = (typeof social.instagram?.hashtags === 'string' ? social.instagram.hashtags : '')
     .replace(TAG, '')
     .split(/[\s,]+/)
@@ -382,7 +385,8 @@ export function normalizeSite(raw: any): GeneratedWebsite {
     },
     social_posts: {
       facebook: { copy: fbCopy, cta: clean(social.facebook?.cta, 30) },
-      instagram: { copy: igCopy, hashtags }
+      instagram: { copy: igCopy, hashtags },
+      ...(xCopy ? { x: { copy: xCopy, hashtags: xTags } } : {})
     },
     resumen_web: clean(raw.resumen_web, 400) || tagline,
     copy_redes: clean(raw.copy_redes, 300) || fbCopy.slice(0, 200),

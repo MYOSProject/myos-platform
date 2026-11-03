@@ -12,6 +12,13 @@ const GUIDE = [
   ['Pega, prueba y activa', 'Pega los datos abajo, pulsa «Probar conexión» (no publica nada) y, si sale bien, activa la publicación real. Hasta que la actives, todo se queda en simulación.']
 ];
 
+const GUIDE_X = [
+  ['Entra al portal de X', 'Abre developer.x.com con la cuenta de X del negocio y crea un proyecto y una app (el plan gratuito permite publicar una cantidad limitada de tuits al mes).'],
+  ['Da permiso de escritura', 'En la app, entra a «User authentication settings», actívalo y elige permisos «Read and write» (leer y escribir). Sin este permiso X no deja publicar.'],
+  ['Copia las 4 llaves', 'En «Keys and tokens» copia la API Key y el API Key Secret. Luego genera el Access Token y el Access Token Secret (deben decir «Read and Write») y cópialos.'],
+  ['Pega, prueba y activa', 'Pega las 4 llaves abajo y pulsa «Probar conexión» (no publica nada). Si sale bien, activa la publicación real. Las imágenes todavía no se envían a X: sale solo el texto.']
+];
+
 function DriveCard() {
   const [d, setD] = useState(null);
   const [folder, setFolder] = useState('');
@@ -63,13 +70,14 @@ function DriveCard() {
 
 export default function Connections() {
   const [c, setC] = useState(null);
-  const [form, setForm] = useState({ page_id: '', ig_user_id: '', webhook_url: '', page_token: '' });
+  const [form, setForm] = useState({ page_id: '', ig_user_id: '', webhook_url: '', page_token: '', x_handle: '', x_api_key: '', x_api_secret: '', x_access_token: '', x_access_secret: '' });
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const [msg, setMsg] = useState('');
   const [help, setHelp] = useState(false);
+  const [helpX, setHelpX] = useState(false);
 
-  const apply = (d) => { setC(d); setForm({ page_id: d.page_id || '', ig_user_id: d.ig_user_id || '', webhook_url: d.webhook_url || '', page_token: '' }); };
+  const apply = (d) => { setC(d); setForm({ page_id: d.page_id || '', ig_user_id: d.ig_user_id || '', webhook_url: d.webhook_url || '', page_token: '', x_handle: d.x_handle || '', x_api_key: '', x_api_secret: '', x_access_token: '', x_access_secret: '' }); };
   useEffect(() => { api('GET', '/api/connections').then(apply).catch((e) => setErr(errText(e))); }, []);
 
   const run = async (name, fn, okMsg) => {
@@ -86,7 +94,7 @@ export default function Connections() {
     <div className="stack" style={{ maxWidth: 820 }}>
       <div>
         <h1>Conexiones</h1>
-        <p className="sub">Conecta la página de Facebook y la cuenta de Instagram de este proyecto. Aun conectadas, <b>nada se publica sin que una persona lo apruebe</b>.</p>
+        <p className="sub">Conecta la página de Facebook, la cuenta de Instagram y la cuenta de X de este proyecto. Aun conectadas, <b>nada se publica sin que una persona lo apruebe</b>.</p>
       </div>
 
       <div className="card stack">
@@ -116,6 +124,21 @@ export default function Connections() {
           <small className="muted">Se guarda cifrado y no vuelve a mostrarse.</small></div>
         <div className="field"><label htmlFor="cw">Webhook de Make o Zapier (opcional)</label><input id="cw" type="text" value={form.webhook_url} onChange={(e) => setForm({ ...form, webhook_url: e.target.value })} placeholder="https://hook.make.com/…" />
           <small className="muted">Si lo pones, las publicaciones aprobadas se envían ahí en lugar de directo a Meta.</small></div>
+      <div className="stack x-block" style={{ borderTop: '1px solid var(--line)', paddingTop: 16 }}>
+        <div className="row">
+          <h2 className="grow">Datos de X (Twitter)</h2>
+          {c.x_has_keys ? <span className="tag ok"><span aria-hidden="true">✓</span>Llaves guardadas {c.x_hint}</span> : <span className="tag draft"><span aria-hidden="true">◌</span>Sin conectar</span>}
+        </div>
+        <p className="muted">Opcional. Con las 4 llaves de la API de X, las publicaciones de X aprobadas se publican directo. Sin ellas, quedan en simulación (o salen por el webhook, si lo pones arriba).</p>
+        <button className="btn secondary" aria-expanded={helpX} onClick={() => setHelpX((h) => !h)}>{helpX ? 'Ocultar la guía de X' : '¿Cómo consigo las llaves de X? (paso a paso)'}</button>
+        {helpX && <ol className="howto">{GUIDE_X.map(([t, d]) => <li key={t}><b>{t}</b><p>{d}</p></li>)}</ol>}
+        <div className="field"><label htmlFor="xh">Usuario de X (opcional)</label><input id="xh" type="text" value={form.x_handle} onChange={(e) => setForm({ ...form, x_handle: e.target.value })} placeholder="@TuNegocio" /></div>
+        <div className="field"><label htmlFor="xk">API Key</label><input id="xk" type="password" autoComplete="off" value={form.x_api_key} onChange={(e) => setForm({ ...form, x_api_key: e.target.value })} placeholder={c.x_has_keys ? 'Guardada. Pega una nueva solo si cambió.' : 'Pégala aquí'} /></div>
+        <div className="field"><label htmlFor="xs">API Key Secret</label><input id="xs" type="password" autoComplete="off" value={form.x_api_secret} onChange={(e) => setForm({ ...form, x_api_secret: e.target.value })} placeholder={c.x_has_keys ? 'Guardado' : 'Pégalo aquí'} /></div>
+        <div className="field"><label htmlFor="xt">Access Token</label><input id="xt" type="password" autoComplete="off" value={form.x_access_token} onChange={(e) => setForm({ ...form, x_access_token: e.target.value })} placeholder={c.x_has_keys ? 'Guardado' : 'Pégalo aquí'} /></div>
+        <div className="field"><label htmlFor="xa">Access Token Secret</label><input id="xa" type="password" autoComplete="off" value={form.x_access_secret} onChange={(e) => setForm({ ...form, x_access_secret: e.target.value })} placeholder={c.x_has_keys ? 'Guardado' : 'Pégalo aquí'} />
+          <small className="muted">Se guardan cifradas y no vuelven a mostrarse. Pulsa «Guardar» y después «Probar conexión».</small></div>
+      </div>
         <div className="row">
           <button className="btn" disabled={Boolean(busy)} onClick={save}>{busy === 'save' ? 'Guardando…' : 'Guardar'}</button>
           <button className="btn secondary" disabled={Boolean(busy) || !c.configured} onClick={test}>{busy === 'test' ? 'Probando…' : 'Probar conexión'}</button>

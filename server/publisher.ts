@@ -10,10 +10,10 @@
 // Este módulo SOLO envía. Quién puede llamarlo y en qué estado lo decide social.ts (aprobación humana).
 import crypto from 'crypto';
 import type { PublishResult, SocialPost } from './types.js';
-import type { ResolvedConnection } from './connections.js';
+import type { ResolvedConnection, XKeys } from './connections.js';
 
 const PLATFORM_NAMES: Record<string, string> = { facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', x: 'X' };
-export type PublishMode = 'webhook' | 'graph' | 'dry-run';
+export type PublishMode = 'webhook' | 'graph' | 'x-api' | 'dry-run';
 
 export function composeMessage(p: Pick<SocialPost, 'copy' | 'cta' | 'link_url' | 'hashtags'>): string {
   const parts = [p.copy.trim()];
@@ -27,9 +27,10 @@ export function publisherConfig(platform: SocialPost['platform'], conn?: Resolve
   // Si el proyecto tiene su propia conexión se usa SOLO esa (y solo cuando la persona la activó).
   // Si la tiene sin activar, todo queda en simulación aunque haya llaves globales: nada sale por accidente.
   if (conn) {
+    const xReady = platform === 'x' && Boolean(conn.x_keys);
     const graphReady = (platform === 'linkedin' || platform === 'x') ? false : Boolean(conn.token && (platform === 'facebook' ? conn.page_id : conn.ig_user_id));
     let mode: PublishMode = 'dry-run';
-    if (conn.live && forced !== 'dry-run') mode = conn.webhook_url ? 'webhook' : graphReady ? 'graph' : 'dry-run';
+    if (conn.live && forced !== 'dry-run') mode = conn.webhook_url ? 'webhook' : xReady ? 'x-api' : graphReady ? 'graph' : 'dry-run';
     return { mode, webhook: conn.webhook_url || undefined, token: conn.token, pageId: conn.page_id, igId: conn.ig_user_id, graphReady };
   }
   const webhook = process.env.MAKE_WEBHOOK_URL?.trim();
@@ -186,6 +187,58 @@ export async function publishToGraph(post: SocialPost, conn?: ResolvedConnection
   }
 }
 
+// ---- X (Twitter): API v2, publicar un tuit con autenticación OAuth 1.0a (4 llaves) ----
+export function xBase() {
+  return (process.env.X_API_BASE || 'https://api.x.com').replace(/\/+$/, '');
+}
+
+const pct = (s: string) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+
+/** Cabecera Authorization OAuth 1.0a (HMAC-SHA1). En peticiones con cuerpo JSON el cuerpo no entra en la firma. */
+export function oauth1Header(method: string, url: string, keys: XKeys, nonce = crypto.randomBytes(16).toString('hex'), timestamp = String(Math.floor(Date.now() / 1000)), extra: Array<[string, string]> = []): string {
+  const u = new URL(url);
+  const oauth: Record<string, string> = {
+    oauth_consumer_key: keys.ck,
+    oauth_nonce: nonce,
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: timestamp,
+    oauth_token: keys.at,
+    oauth_version: '1.0'
+  };
+  const all: Array<[string, string]> = [...Object.entries(oauth), ...[...u.searchParams.entries()], ...extra];
+  const norm = all.map(([k, v]) => [pct(k), pct(v)]).sort((a, b) => (a[0] === b[0] ? (a[1] < b[1] ? -1 : 1) : a[0] < b[0] ? -1 : 1)).map(([k, v]) => `${k}=${v}`).join('&');
+  const base = [method.toUpperCase(), pct(u.origin + u.pathname), pct(norm)].join('&');
+  const signature = crypto.createHmac('sha1', `${pct(keys.cs)}&${pct(keys.as)}`).update(base).digest('base64');
+  return 'OAuth ' + Object.entries({ ...oauth, oauth_signature: signature }).map(([k, v]) => `${pct(k)}="${pct(v)}"`).join(', ');
+}
+
+export async function xRequest(method: 'GET' | 'POST', pathname: string, keys: XKeys, body?: unknown) {
+  const url = `${xBase()}${pathname}`;
+  const res = await fetch(url, {
+    method,
+    headers: { Authorization: oauth1Header(method, url, keys), 'Content-Type': 'application/json', 'User-Agent': 'myos-platform' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(20000)
+  });
+  const data = await readJson(res);
+  if (!res.ok) {
+    const msg = data?.detail || data?.title || data?.errors?.[0]?.message || JSON.stringify(data).slice(0, 200);
+    throw new Error(`X ${res.status}: ${msg}`);
+  }
+  return data;
+}
+
+export async function publishToX(post: SocialPost, conn?: ResolvedConnection | null): Promise<PublishResult> {
+  if (!conn?.x_keys) return { mode: 'x-api', ok: false, at: now(), error: 'Faltan las llaves de la API de X en «Conexiones».' };
+  try {
+    const data = await xRequest('POST', '/2/tweets', conn.x_keys, { text: composeMessage(post) });
+    const id = data?.data?.id ? String(data.data.id) : undefined;
+    return { mode: 'x-api', ok: true, at: now(), http_status: 200, external_id: id, note: post.image_url ? 'Se publicó el texto; la imagen no se envía a X todavía.' : undefined };
+  } catch (e: any) {
+    return { mode: 'x-api', ok: false, at: now(), error: e?.message || String(e) };
+  }
+}
+
 export function dryRun(post: SocialPost, projectConn = false): PublishResult {
   return {
     mode: 'dry-run',
@@ -198,6 +251,7 @@ export function dryRun(post: SocialPost, projectConn = false): PublishResult {
 export async function publish(post: SocialPost, conn?: ResolvedConnection | null): Promise<PublishResult> {
   const cfg = publisherConfig(post.platform, conn);
   if (cfg.mode === 'webhook') return publishToWebhook(post, cfg.webhook!);
+  if (cfg.mode === 'x-api') return publishToX(post, conn);
   if (cfg.mode === 'graph') return publishToGraph(post, conn);
   return dryRun(post, Boolean(conn));
 }

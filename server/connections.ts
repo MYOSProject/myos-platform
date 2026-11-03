@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import type { AuthUser, ProjectConnection } from './types.js';
 import { HttpError } from './http.js';
 import { isProd } from './env.js';
-import { graphBase } from './publisher.js';
+import { graphBase, xRequest } from './publisher.js';
 import type { Store } from './store.js';
 
 export interface ResolvedConnection {
@@ -13,7 +13,12 @@ export interface ResolvedConnection {
   webhook_url: string;
   token: string;
   live: boolean;
+  x_handle: string;
+  /** Llaves de la API de X (OAuth 1.0a) ya descifradas, o null si faltan. */
+  x_keys: XKeys | null;
 }
+
+export interface XKeys { ck: string; cs: string; at: string; as: string }
 
 function encKey(): Buffer {
   const k = process.env.CONNECTIONS_KEY?.trim();
@@ -48,21 +53,40 @@ export function resolveConnection(store: Store, projectId: number | null | undef
   } catch {
     token = '';
   }
-  return { page_id: c.page_id, ig_user_id: c.ig_user_id, webhook_url: c.webhook_url, token, live: c.live };
+  let x_keys: XKeys | null = null;
+  try {
+    const k = c.x_keys_enc ? JSON.parse(decrypt(c.x_keys_enc)) : null;
+    if (k?.ck && k?.cs && k?.at && k?.as) x_keys = k;
+  } catch {
+    x_keys = null;
+  }
+  return { page_id: c.page_id, ig_user_id: c.ig_user_id, webhook_url: c.webhook_url, token, live: c.live, x_handle: c.x_handle || '', x_keys };
 }
 
 export function connectionView(store: Store, projectId: number) {
   const c = store.connections[String(projectId)];
-  if (!c) return { configured: false, live: false, page_id: '', ig_user_id: '', webhook_url: '', has_token: false, token_hint: '', tested_ok: null, tested_at: null, test_note: null };
+  if (!c) return { configured: false, live: false, page_id: '', ig_user_id: '', webhook_url: '', has_token: false, token_hint: '', x_handle: '', x_has_keys: false, x_hint: '', tested_ok: null, tested_at: null, test_note: null };
   let hint = '';
   try {
     hint = c.page_token_enc ? `…${decrypt(c.page_token_enc).slice(-4)}` : '';
   } catch {
     hint = '(no se pudo leer; vuelve a pegarlo)';
   }
+  let xHint = '';
+  let xHas = false;
+  try {
+    const k = c.x_keys_enc ? JSON.parse(decrypt(c.x_keys_enc)) : null;
+    xHas = Boolean(k?.ck && k?.cs && k?.at && k?.as);
+    xHint = k?.at ? `…${String(k.at).slice(-4)}` : '';
+  } catch {
+    xHint = '(no se pudo leer; vuelve a pegarlas)';
+  }
   return {
     configured: true,
     live: c.live,
+    x_handle: c.x_handle || '',
+    x_has_keys: xHas,
+    x_hint: xHint,
     page_id: c.page_id,
     ig_user_id: c.ig_user_id,
     webhook_url: c.webhook_url,
@@ -88,7 +112,25 @@ export function saveConnection(store: Store, user: AuthUser, projectId: number, 
   if (webhook && !/^https:\/\/[^\s"'<>]+$/.test(webhook)) throw new HttpError(400, 'BAD_URL', 'El webhook debe empezar con https://');
   const tokenIn = typeof input.page_token === 'string' ? input.page_token.trim() : '';
   if (tokenIn && !/^[\w\-.|]{20,600}$/.test(tokenIn)) throw new HttpError(400, 'BAD_TOKEN', 'El token no parece válido. Cópialo completo, sin espacios.');
+  // Cuenta de X y sus llaves: se guardan cifradas; lo que no se envíe se conserva.
+  let xHandle = prev?.x_handle || '';
+  if (input.x_handle !== undefined) {
+    xHandle = String(input.x_handle || '').trim().replace(/^@/, '');
+    if (xHandle && !/^\w{1,15}$/.test(xHandle)) throw new HttpError(400, 'BAD_X_HANDLE', 'El usuario de X solo lleva letras, números y guion bajo (máximo 15), por ejemplo: TaqueriaDonPastor.');
+  }
+  let xKeys: Partial<XKeys> = {};
+  try { xKeys = prev?.x_keys_enc ? JSON.parse(decrypt(prev.x_keys_enc)) : {}; } catch { xKeys = {}; }
+  let xChanged = false;
+  for (const [field, key, label] of [['x_api_key', 'ck', 'La llave de la API de X'], ['x_api_secret', 'cs', 'El secreto de la API de X'], ['x_access_token', 'at', 'El token de acceso de X'], ['x_access_secret', 'as', 'El secreto del token de X']] as const) {
+    const v = typeof input[field] === 'string' ? input[field].trim() : '';
+    if (!v) continue;
+    if (!/^[\w\-]{8,200}$/.test(v)) throw new HttpError(400, 'BAD_X_KEY', `${label} no parece válido. Cópialo completo, sin espacios.`);
+    xKeys[key] = v;
+    xChanged = true;
+  }
   const next: ProjectConnection = {
+    x_handle: xHandle,
+    x_keys_enc: Object.keys(xKeys).length ? encrypt(JSON.stringify(xKeys)) : prev?.x_keys_enc || '',
     page_id: input.page_id !== undefined ? ids(input.page_id, 'El ID de la página') : prev?.page_id || '',
     ig_user_id: input.ig_user_id !== undefined ? ids(input.ig_user_id, 'El ID de Instagram') : prev?.ig_user_id || '',
     webhook_url: webhook,
@@ -101,7 +143,7 @@ export function saveConnection(store: Store, user: AuthUser, projectId: number, 
     updated_by: `${user.name} <${user.email}>`
   };
   // Si cambió algo que afecta a la conexión, hay que volver a probarla y volver a activarla.
-  const changed = !prev || prev.page_id !== next.page_id || prev.ig_user_id !== next.ig_user_id || prev.webhook_url !== next.webhook_url || Boolean(tokenIn);
+  const changed = !prev || prev.page_id !== next.page_id || prev.ig_user_id !== next.ig_user_id || prev.webhook_url !== next.webhook_url || Boolean(tokenIn) || xChanged || (prev.x_handle || '') !== xHandle;
   if (!changed) {
     next.live = prev!.live;
     next.tested_ok = prev!.tested_ok ?? null;
@@ -128,11 +170,11 @@ async function graphGet(pathname: string, fields: string, token: string) {
 }
 
 /** Comprueba con Meta que el token y los IDs sirven. No publica nada. */
-export async function testConnection(store: Store, projectId: number): Promise<{ ok: boolean; facebook?: string; instagram?: string; webhook?: boolean; errors: string[] }> {
+export async function testConnection(store: Store, projectId: number): Promise<{ ok: boolean; facebook?: string; instagram?: string; x?: string; webhook?: boolean; errors: string[] }> {
   const c = store.connections[String(projectId)];
   const r = resolveConnection(store, projectId);
   if (!c || !r) throw new HttpError(409, 'NO_CONNECTION', 'Primero guarda los datos de conexión.');
-  const out: { ok: boolean; facebook?: string; instagram?: string; webhook?: boolean; errors: string[] } = { ok: false, errors: [] };
+  const out: { ok: boolean; facebook?: string; instagram?: string; x?: string; webhook?: boolean; errors: string[] } = { ok: false, errors: [] };
   if (r.token && r.page_id) {
     try {
       const d = await graphGet(r.page_id, 'name', r.token);
@@ -149,13 +191,23 @@ export async function testConnection(store: Store, projectId: number): Promise<{
       out.errors.push(`Instagram: ${e.message}`);
     }
   }
+  if (r.x_keys) {
+    try {
+      const d = await xRequest('GET', '/2/users/me', r.x_keys);
+      out.x = d?.data?.username ? `@${d.data.username}` : 'cuenta conectada';
+    } catch (e: any) {
+      out.errors.push(`X: ${e.message}`);
+    }
+  } else if (c.x_keys_enc) {
+    out.errors.push('X: faltan llaves (se necesitan las 4: llave y secreto de la API, token y secreto de acceso).');
+  }
   if (r.webhook_url) out.webhook = true;
-  if (!r.token && !r.webhook_url) out.errors.push('Falta el token de acceso de la página (o un webhook de Make/Zapier).');
+  if (!r.token && !r.webhook_url && !r.x_keys) out.errors.push('Falta el token de acceso de la página (o un webhook de Make/Zapier).');
   if (r.token && !r.page_id && !r.ig_user_id) out.errors.push('Falta el ID de la página de Facebook o el ID de la cuenta de Instagram.');
-  out.ok = out.errors.length === 0 && Boolean(out.facebook || out.instagram || out.webhook);
+  out.ok = out.errors.length === 0 && Boolean(out.facebook || out.instagram || out.x || out.webhook);
   c.tested_at = new Date().toISOString();
   c.tested_ok = out.ok;
-  c.test_note = out.ok ? [out.facebook && `Facebook: ${out.facebook}`, out.instagram && `Instagram: ${out.instagram}`, out.webhook && 'Webhook configurado'].filter(Boolean).join(' · ') : out.errors.join(' | ');
+  c.test_note = out.ok ? [out.facebook && `Facebook: ${out.facebook}`, out.instagram && `Instagram: ${out.instagram}`, out.x && `X: ${out.x}`, out.webhook && 'Webhook configurado'].filter(Boolean).join(' · ') : out.errors.join(' | ');
   if (!out.ok) c.live = false;
   store.save();
   return out;
