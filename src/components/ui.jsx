@@ -17,5 +17,5 @@ export function Tag({ s }) {
   return <span className={`tag ${cls}`}><span aria-hidden="true">{icon}</span>{label}</span>;
 }
 
-export const PLATFORM = { facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn' };
+export const PLATFORM = { facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', x: 'X' };
 export const fmt = (d) => (d ? new Date(d).toLocaleString('es-MX') : '');

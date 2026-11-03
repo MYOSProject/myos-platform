@@ -29,7 +29,7 @@ export default function Status({ health }) {
       </div>
       <div className="card stack">
         <h2>Publicación en redes</h2>
-        <p>Facebook: <b>{mode(h.social?.facebook)}</b><br />Instagram: <b>{mode(h.social?.instagram)}</b><br />LinkedIn: <b>{mode(h.social?.linkedin)}</b></p>
+        <p>Facebook: <b>{mode(h.social?.facebook)}</b><br />Instagram: <b>{mode(h.social?.instagram)}</b><br />LinkedIn: <b>{mode(h.social?.linkedin)}</b><br />X: <b>{mode(h.social?.x)}</b></p>
         {h.social?.facebook === 'dry-run' && <Alert kind="info">Hasta que se configure Make/Zapier (MAKE_WEBHOOK_URL) o las llaves de Meta, las publicaciones aprobadas NO se envían a las redes reales.</Alert>}
         <h2>Datos</h2>
         <p className="muted">{h.persistence === 'firestore' ? 'Se guardan en Firestore (base de datos permanente).' : h.persistence === 'file' ? 'Se guardan en un archivo local.' : h.persistence === 'ephemeral' ? 'ATENCIÓN: almacenamiento temporal; los datos se pierden. Hace falta una base de datos real.' : 'Solo en memoria.'}</p>

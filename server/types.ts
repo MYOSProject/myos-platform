@@ -113,7 +113,7 @@ export interface ContentItem {
   history: AuditEvent[];
 }
 
-export type SocialPlatform = 'facebook' | 'instagram' | 'linkedin';
+export type SocialPlatform = 'facebook' | 'instagram' | 'linkedin' | 'x';
 export type SocialStatus =
   | 'DRAFT'
   | 'PENDING_APPROVAL'

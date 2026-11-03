@@ -483,3 +483,26 @@ test('validaciones de entrada: brief vacío o enorme, id inválido, JSON roto', 
   const broken = await fetch(base + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-dev-user': ANA }, body: '{roto' });
   assert.equal(broken.status, 400);
 });
+
+test('redes: X acepta borradores de hasta 280 caracteres, queda en simulación y exige aprobación', async () => {
+  const mk = (copy: string) => api('POST', '/api/social', { user: ANA, body: { platform: 'x', copy, hashtags: '#tacos' } });
+  const ok = await mk('Pastor recién cortado hoy en Ciudad Juárez.');
+  assert.equal(ok.status, 201, ok.text);
+  assert.equal(ok.json.platform, 'x');
+  assert.equal(ok.json.status, 'DRAFT');
+  // sin aprobar no se publica
+  assert.equal((await api('POST', `/api/social/${ok.json.id}/publish`, { user: LUIS })).json.error.code, 'NOT_APPROVED');
+  // más de 280 caracteres: no pasa a aprobación
+  const largo = await mk('a'.repeat(300));
+  assert.equal(largo.status, 201, largo.text);
+  const sub = await api('POST', `/api/social/${largo.json.id}/submit`, { user: ANA });
+  assert.equal(sub.status, 422);
+  assert.match(sub.json.error.message, /280/);
+  // aprobado: X queda en simulación (no hay conexión real con X) y deja evidencia
+  await api('POST', `/api/social/${ok.json.id}/submit`, { user: ANA });
+  assert.equal((await api('POST', `/api/social/${ok.json.id}/approve`, { user: LUIS, body: { confirm_review: true } })).status, 200);
+  const pub = await api('POST', `/api/social/${ok.json.id}/publish`, { user: LUIS });
+  assert.equal(pub.status, 200, pub.text);
+  assert.equal(pub.json.status, "APPROVED");
+  assert.match(pub.json.last_dry_run.note, /NO se envió nada a X/);
+});

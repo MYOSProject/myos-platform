@@ -43,8 +43,9 @@ function loadImage(src) {
 
 export async function renderPostImage({ headline, subline, cta, colors, logo, platform }) {
   const c = { ...DEFAULT, ...(colors || {}) };
-  const W = platform === 'linkedin' ? 1200 : 1080;
-  const H = platform === 'linkedin' ? 627 : 1080;
+  const wide = platform === 'linkedin' || platform === 'x';
+  const W = wide ? 1200 : 1080;
+  const H = platform === 'x' ? 675 : platform === 'linkedin' ? 627 : 1080;
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -72,7 +73,7 @@ export async function renderPostImage({ headline, subline, cta, colors, logo, pl
   ctx.restore();
 
   const pad = Math.round(W * 0.08);
-  const maxW = W - pad * 2 - (platform === 'linkedin' ? 160 : 120);
+  const maxW = W - pad * 2 - (wide ? 160 : 120);
   let y = pad;
 
   const logoImg = await loadImage(logo);
@@ -93,7 +94,7 @@ export async function renderPostImage({ headline, subline, cta, colors, logo, pl
   }
 
   // Titular
-  const hSize = Math.round(W * (platform === 'linkedin' ? 0.056 : 0.075));
+  const hSize = Math.round(W * (wide ? 0.056 : 0.075));
   ctx.fillStyle = fg;
   ctx.textBaseline = 'top';
   ctx.font = `800 ${hSize}px "Plus Jakarta Sans", Inter, Arial, sans-serif`;
@@ -102,7 +103,7 @@ export async function renderPostImage({ headline, subline, cta, colors, logo, pl
   y += hLines.length * hSize * 1.12 + Math.round(H * 0.035);
 
   // Apoyo
-  const sSize = Math.round(W * (platform === 'linkedin' ? 0.028 : 0.036));
+  const sSize = Math.round(W * (wide ? 0.028 : 0.036));
   ctx.fillStyle = sub;
   ctx.font = `500 ${sSize}px Inter, Arial, sans-serif`;
   const sLines = wrap(ctx, subline || '', maxW).slice(0, 3);

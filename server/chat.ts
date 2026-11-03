@@ -10,7 +10,7 @@ import { AiFailure, generateStructured } from './gemini.js';
 import { HttpError } from './http.js';
 import { aiStatusFor, createOrRefineSite } from './sites.js';
 import { composeSiteBrief, emptyProfile, FIELD_LABELS, mergeProfile, missingEssentials, profileForPrompt, TEXT_FIELDS } from './profile.js';
-import { createPost, PLATFORMS } from './social.js';
+import { createPost, PLATFORMS, platformLabel } from './social.js';
 import type { Store } from './store.js';
 import { userScope } from './projects.js';
 import { guideForPrompt } from './guide.js';
@@ -60,7 +60,7 @@ export function buildChatSystem(profile: BusinessProfile | undefined, sites: Con
     ? sites.slice(0, 8).map((s) => `- #${s.id} "${s.title}" (${s.status})`).join('\n')
     : '(todavía no hay sitios)';
   return `Eres el asistente de MYOS (My Online System), el "Cerebro Digital" de una persona que gestiona su presencia digital. Hablas español de México.
-Tu trabajo: (1) conocer bien a la persona y su negocio, (2) crear contenido a partir de lo que sabes — sitio web y publicaciones para Facebook, Instagram y LinkedIn — y (3) ayudarle a actualizarlo cuando lo pida.
+Tu trabajo: (1) conocer bien a la persona y su negocio, (2) crear contenido a partir de lo que sabes — sitio web y publicaciones para Facebook, Instagram, LinkedIn y X — y (3) ayudarle a actualizarlo cuando lo pida.
 
 TONO (manual de marca MYOS): claro, profesional, colaborativo, responsable y práctico. Frases concretas, sin tecnicismos ni promesas absolutas ("resultados garantizados", cifras de rendimiento no verificadas). Presenta la IA como apoyo; recuerda que la persona revisa y aprueba antes de publicar.
 
@@ -78,7 +78,7 @@ ACCIONES (campo action.type)
 - "none": solo conversas o preguntas. Deja site_brief "", site_id 0 y posts [].
 - "generate_site": la persona quiere una página web nueva. En site_brief escribe una descripción completa del negocio y de lo que pide (con los datos que ya conoces). 
 - "update_site": quiere cambiar un sitio que ya existe (usa site_id de la lista de sitios). En site_brief escribe SOLO la instrucción de cambio.
-- "generate_posts": quiere publicaciones. Crea UNA por plataforma pedida en posts (facebook, instagram o linkedin; si no dice cuál, usa las de sus canales o facebook e instagram). Cada una: copy listo para publicar (Facebook/Instagram: cercano, emojis moderados, con llamado a la acción; LinkedIn: profesional, sin exceso de emojis), hashtags (Instagram 5-8, LinkedIn 3-5, Facebook ""), cta corto (máx. 4 palabras), headline (máx. 8 palabras) y subheadline (máx. 14 palabras) para la imagen. Máximo 3 publicaciones.
+- "generate_posts": quiere publicaciones. Crea UNA por plataforma pedida en posts (facebook, instagram, linkedin o x; si no dice cuál, usa las de sus canales o facebook e instagram). Cada una: copy listo para publicar (Facebook/Instagram: cercano, emojis moderados, con llamado a la acción; LinkedIn: profesional, sin exceso de emojis; X: breve, directo, máximo 250 caracteres entre texto y hashtags), hashtags (Instagram 5-8, LinkedIn 3-5, X 1-2, Facebook ""), cta corto (máx. 4 palabras), headline (máx. 8 palabras) y subheadline (máx. 14 palabras) para la imagen. Máximo 4 publicaciones.
 - Solo usa una acción cuando la persona la pidió o aceptó. No repitas una acción ya hecha.
 
 DESPUÉS DE CREAR
@@ -129,7 +129,7 @@ function toContents(history: ChatMessage[], text: string) {
   return recent;
 }
 
-const label = (p: string) => (p === 'facebook' ? 'Facebook' : p === 'instagram' ? 'Instagram' : 'LinkedIn');
+const label = (p: string) => platformLabel(p);
 
 export interface ChatResult {
   message: ChatMessage;
@@ -173,7 +173,7 @@ export async function chatTurn(store: Store, user: AuthUser, rawText: string): P
   const posts: SocialPost[] = [];
 
   if (act.type === 'generate_posts' && Array.isArray(act.posts)) {
-    for (const p of act.posts.slice(0, 3)) {
+    for (const p of act.posts.slice(0, 4)) {
       if (!(PLATFORMS as readonly string[]).includes(p?.platform)) continue;
       try {
         const post = createPost(

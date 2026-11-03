@@ -12,6 +12,7 @@ import crypto from 'crypto';
 import type { PublishResult, SocialPost } from './types.js';
 import type { ResolvedConnection } from './connections.js';
 
+const PLATFORM_NAMES: Record<string, string> = { facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', x: 'X' };
 export type PublishMode = 'webhook' | 'graph' | 'dry-run';
 
 export function composeMessage(p: Pick<SocialPost, 'copy' | 'cta' | 'link_url' | 'hashtags'>): string {
@@ -26,7 +27,7 @@ export function publisherConfig(platform: SocialPost['platform'], conn?: Resolve
   // Si el proyecto tiene su propia conexión se usa SOLO esa (y solo cuando la persona la activó).
   // Si la tiene sin activar, todo queda en simulación aunque haya llaves globales: nada sale por accidente.
   if (conn) {
-    const graphReady = platform === 'linkedin' ? false : Boolean(conn.token && (platform === 'facebook' ? conn.page_id : conn.ig_user_id));
+    const graphReady = (platform === 'linkedin' || platform === 'x') ? false : Boolean(conn.token && (platform === 'facebook' ? conn.page_id : conn.ig_user_id));
     let mode: PublishMode = 'dry-run';
     if (conn.live && forced !== 'dry-run') mode = conn.webhook_url ? 'webhook' : graphReady ? 'graph' : 'dry-run';
     return { mode, webhook: conn.webhook_url || undefined, token: conn.token, pageId: conn.page_id, igId: conn.ig_user_id, graphReady };
@@ -35,7 +36,7 @@ export function publisherConfig(platform: SocialPost['platform'], conn?: Resolve
   const token = process.env.META_PAGE_ACCESS_TOKEN?.trim();
   const pageId = process.env.META_PAGE_ID?.trim();
   const igId = process.env.META_IG_USER_ID?.trim();
-  const graphReady = platform === 'linkedin' ? false : Boolean(token && (platform === 'facebook' ? pageId : igId));
+  const graphReady = (platform === 'linkedin' || platform === 'x') ? false : Boolean(token && (platform === 'facebook' ? pageId : igId));
 
   let mode: PublishMode = 'dry-run';
   if (forced === 'dry-run') mode = 'dry-run';
@@ -49,10 +50,12 @@ export function publisherStatus() {
   const fb = publisherConfig('facebook');
   const ig = publisherConfig('instagram');
   const li = publisherConfig('linkedin');
+  const xx = publisherConfig('x');
   return {
     facebook: fb.mode,
     instagram: ig.mode,
     linkedin: li.mode,
+    x: xx.mode,
     webhook_configured: Boolean(fb.webhook),
     webhook_signed: Boolean(process.env.MAKE_WEBHOOK_SECRET?.trim()),
     graph_facebook_ready: fb.graphReady,
@@ -188,7 +191,7 @@ export function dryRun(post: SocialPost, projectConn = false): PublishResult {
     mode: 'dry-run',
     ok: true,
     at: now(),
-    note: `Simulación: NO se envió nada a ${post.platform === 'facebook' ? 'Facebook' : post.platform === 'instagram' ? 'Instagram' : 'LinkedIn'}. ${projectConn ? 'Entra a «Conexiones», prueba la conexión y activa la publicación real.' : 'Entra a «Conexiones» para conectar tu página, o configura MAKE_WEBHOOK_URL / las llaves de Meta en el servidor.'}`
+    note: `Simulación: NO se envió nada a ${PLATFORM_NAMES[post.platform] || post.platform}. ${projectConn ? 'Entra a «Conexiones», prueba la conexión y activa la publicación real.' : 'Entra a «Conexiones» para conectar tu página, o configura MAKE_WEBHOOK_URL / las llaves de Meta en el servidor.'}`
   };
 }
 

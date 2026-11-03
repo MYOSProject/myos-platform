@@ -20,9 +20,9 @@ import { isProd } from './env.js';
 import { resolveConnection } from './connections.js';
 import { saveEvidence } from './drive.js';
 
-const LIMITS = { facebook: 5000, instagram: 2200, linkedin: 3000 } as const;
-export const PLATFORMS = ['facebook', 'instagram', 'linkedin'] as const;
-export const platformLabel = (p: string) => (p === 'facebook' ? 'Facebook' : p === 'instagram' ? 'Instagram' : p === 'linkedin' ? 'LinkedIn' : p);
+const LIMITS = { facebook: 5000, instagram: 2200, linkedin: 3000, x: 280 } as const;
+export const PLATFORMS = ['facebook', 'instagram', 'linkedin', 'x'] as const;
+export const platformLabel = (p: string) => (p === 'facebook' ? 'Facebook' : p === 'instagram' ? 'Instagram' : p === 'linkedin' ? 'LinkedIn' : p === 'x' ? 'X' : p);
 
 /** https en producción; en desarrollo también se acepta localhost (Meta igual exige https al publicar de verdad). */
 const LOCAL_HTTP = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i;
@@ -87,7 +87,7 @@ function cleanSchedule(v: unknown): string | null {
 }
 
 export function createPost(store: Store, input: PostInput, user: AuthUser, site?: ContentItem | null): SocialPost {
-  if (!input.platform || !(PLATFORMS as readonly string[]).includes(input.platform)) throw new HttpError(400, 'BAD_PLATFORM', 'La plataforma debe ser facebook, instagram o linkedin.');
+  if (!input.platform || !(PLATFORMS as readonly string[]).includes(input.platform)) throw new HttpError(400, 'BAD_PLATFORM', 'La plataforma debe ser facebook, instagram, linkedin o x.');
   const now = new Date().toISOString();
   const post: SocialPost = {
     id: store.nextId('social'),

@@ -5,7 +5,7 @@ import { Alert } from '../components/ui';
 
 const STARTERS = [
   'Quiero crear mi página web',
-  'Prepárame publicaciones para Instagram, Facebook y LinkedIn',
+  'Prepárame publicaciones para Instagram, Facebook, LinkedIn y X',
   'Quiero que me conozcas: te cuento de mi negocio'
 ];
 

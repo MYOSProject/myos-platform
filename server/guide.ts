@@ -143,7 +143,7 @@ export const STEPS: GuideStepDef[] = [
     minAnswers: 2,
     questions: [
       { id: 'goals', label: '¿Qué quieres lograr con tu contenido?', example: 'Más pedidos por WhatsApp y darme a conocer', long: true, profileField: 'goals' },
-      { id: 'channels', label: '¿Dónde quieres publicar?', example: 'Facebook, Instagram, LinkedIn', profileField: 'channels' },
+      { id: 'channels', label: '¿Dónde quieres publicar?', example: 'Facebook, Instagram, LinkedIn, X', profileField: 'channels' },
       { id: 'frequency', label: '¿Cada cuánto puedes publicar?', example: '3 veces por semana' },
       { id: 'events', label: '¿Hay promociones, fechas o novedades próximas? (opcional)', long: true }
     ]
@@ -361,7 +361,7 @@ const POST_PROPS = {
   headline: str,
   subheadline: str
 };
-const POST_FIELDS_RULES = `Cada publicación: copy listo para publicar (Facebook/Instagram: cercano, emojis moderados, con llamado a la acción; LinkedIn: profesional, sin exceso de emojis), hashtags (Instagram 5-8, LinkedIn 3-5, Facebook ""), cta corto (máx. 4 palabras), headline para la imagen (máx. 8 palabras) y subheadline (máx. 14 palabras).`;
+const POST_FIELDS_RULES = `Cada publicación: copy listo para publicar (Facebook/Instagram: cercano, emojis moderados, con llamado a la acción; LinkedIn: profesional, sin exceso de emojis; X: breve y directo, máximo 250 caracteres entre texto y hashtags), hashtags (Instagram 5-8, LinkedIn 3-5, X 1-2, Facebook ""), cta corto (máx. 4 palabras), headline para la imagen (máx. 8 palabras) y subheadline (máx. 14 palabras).`;
 
 function context(store: Store, user: AuthUser): string {
   return `LO QUE SE SABE DEL NEGOCIO (dato):
@@ -401,7 +401,7 @@ ${context(store, user)}`;
 
 export async function createPosts(store: Store, user: AuthUser, input: { platforms?: unknown; topic?: unknown; details?: unknown }): Promise<SocialPost[]> {
   const platforms = (Array.isArray(input.platforms) ? input.platforms : []).filter((p): p is string => typeof p === 'string' && (PLATFORMS as readonly string[]).includes(p));
-  const uniq = [...new Set(platforms)].slice(0, 3);
+  const uniq = [...new Set(platforms)].slice(0, 4);
   if (!uniq.length) throw new HttpError(400, 'PLATFORM_REQUIRED', 'Elige al menos una red social.');
   const topic = clean(input.topic, 600);
   if (!topic) throw new HttpError(400, 'TOPIC_REQUIRED', 'Cuéntame de qué quieres que trate.');
