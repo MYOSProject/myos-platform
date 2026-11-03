@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, errText } from '../api';
 import { PostCard, SiteCard } from '../components/Cards';
-import { Alert } from '../components/ui';
+import { Alert, PLATFORM, TONES } from '../components/ui';
 
 const pendingOf = (p) => ['DRAFT', 'PENDING_APPROVAL', 'REJECTED', 'APPROVED', 'FAILED'].includes(p.status);
 
@@ -12,6 +12,8 @@ export default function Content({ profile, setPage, onChanged }) {
   const [note, setNote] = useState('');
   const [err, setErr] = useState('');
   const [errCode, setErrCode] = useState('');
+  const [tone, setTone] = useState('');
+  const [net, setNet] = useState('all');
   const [fresh, setFresh] = useState({}); // id -> versión: obliga a rehacer la imagen de lo que la IA acaba de escribir
 
   const load = useCallback(async () => {
@@ -31,7 +33,7 @@ export default function Content({ profile, setPage, onChanged }) {
   const generate = async () => {
     setBusy('create'); setErr(''); setErrCode(''); setNote('');
     try {
-      const made = await api('POST', '/api/content/auto-create', { count: 6 });
+      const made = await api('POST', '/api/content/auto-create', { count: 6, tone: tone || undefined });
       markFresh(made);
       setPosts((x) => [...made, ...(x || [])]);
       setNote(`La IA creó ${made.length} publicaciones con la información de tu negocio. Revísalas y aprueba las que quieras publicar.`);
@@ -59,7 +61,8 @@ export default function Content({ profile, setPage, onChanged }) {
   };
 
   if (!posts) return err ? <Alert>{err}</Alert> : <p className="muted">Cargando…</p>;
-  const todo = posts.filter(pendingOf);
+  const todoAll = posts.filter(pendingOf);
+  const todo = net === 'all' ? todoAll : todoAll.filter((p) => p.platform === net);
   const done = posts.filter((p) => p.status === 'PUBLISHED');
   const pendingSites = sites.filter((s) => s.status === 'PENDING');
   const aiBusy = Boolean(busy);
@@ -81,6 +84,11 @@ export default function Content({ profile, setPage, onChanged }) {
           <button className="btn big" disabled={aiBusy} onClick={generate}>{busy === 'create' ? 'La IA está creando…' : '✨ Generar contenido con IA'}</button>
           <button className="btn secondary big" disabled={aiBusy || !posts.length} onClick={update}>{busy === 'update' ? 'La IA está actualizando…' : '↻ Actualizar con IA'}</button>
         </div>
+        <div className="tone-row" role="group" aria-label="Tono de las publicaciones nuevas" style={{ color: '#dbe2f1' }}>
+          <span style={{ color: '#b8c3dc' }}>Tono de las nuevas:</span>
+          <button type="button" className={`tone-btn${tone === '' ? ' on' : ''}`} aria-pressed={tone === ''} onClick={() => setTone('')}>Automático</button>
+          {TONES.map(([k, l]) => <button key={k} type="button" className={`tone-btn${tone === k ? ' on' : ''}`} aria-pressed={tone === k} onClick={() => setTone(k)}>{l}</button>)}
+        </div>
         {aiBusy && <p className="muted" role="status">{busy === 'site' ? 'Armando tu sitio; puede tardar hasta un minuto.' : 'Pensando y escribiendo; puede tardar unos segundos…'}</p>}
       </section>
 
@@ -91,8 +99,16 @@ export default function Content({ profile, setPage, onChanged }) {
       {pendingSites.length > 0 && <div className="stack"><h2>Sitio web por aprobar</h2><div className="stack">{pendingSites.map((s) => <SiteCard key={s.id} site={s} defaultOpen onChange={(n) => { setSites((x) => x.map((i) => (i.id === n.id ? n : i))); load(); }} />)}</div></div>}
 
       <div className="stack">
-        <h2>Por aprobar y publicar {todo.length > 0 && <span className="count">{todo.length}</span>}</h2>
-        {todo.length === 0 ? <div className="card"><p className="muted">No hay nada pendiente. Pulsa «Generar contenido con IA» y la IA arma las publicaciones por ti.</p></div> : <div className="grid">{todo.map(card)}</div>}
+        <h2>Por aprobar y publicar {todoAll.length > 0 && <span className="count">{todoAll.length}</span>}</h2>
+        {todoAll.length > 0 && (
+          <div className="net-tabs" role="tablist" aria-label="Separar por red social">
+            {[['all', 'Todas'], ...Object.entries(PLATFORM)].map(([k, l]) => {
+              const n = k === 'all' ? todoAll.length : todoAll.filter((p) => p.platform === k).length;
+              return <button key={k} type="button" role="tab" aria-selected={net === k} className={`net-tab${net === k ? ' on' : ''}`} onClick={() => setNet(k)}>{l}<small>{n}</small></button>;
+            })}
+          </div>
+        )}
+        {todo.length === 0 ? <div className="card"><p className="muted">{todoAll.length ? `No hay publicaciones de ${PLATFORM[net]} por aprobar.` : 'No hay nada pendiente. Pulsa «Generar contenido con IA» y la IA arma las publicaciones por ti.'}</p></div> : <div className="grid">{todo.map(card)}</div>}
       </div>
 
       {done.length > 0 && <div className="stack"><h2>Ya publicadas</h2><div className="grid">{done.map(card)}</div></div>}

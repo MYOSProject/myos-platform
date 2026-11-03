@@ -149,6 +149,10 @@ export interface SocialPost {
   image_headline?: string;
   image_subline?: string;
   has_media?: boolean;
+  /** Tono con el que se escribió o reescribió (casual, profesional…). */
+  tone?: string;
+  /** La imagen guardada ya lleva la marca de agua de MYOS (plan Gratis). */
+  image_wm?: boolean;
   scheduled_at: string | null;
   status: SocialStatus;
   created_at: string;
@@ -186,6 +190,8 @@ export interface Project {
   name: string;
   description: string;
   owner_email: string;
+  /** Plan del proyecto: en «free» las imágenes de Facebook e Instagram llevan marca de agua. Cambio manual, sin cobro real. */
+  plan?: 'free' | 'pro';
   created_at: string;
   updated_at: string;
 }

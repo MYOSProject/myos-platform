@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, apiBlobUrl, errText } from '../api';
 import { renderPostImage } from '../graphic';
-import { Alert, PLATFORM, Tag, fmt } from './ui';
+import NetworkPreview, { FORMAT_NOTE } from './NetworkPreview';
+import { Alert, PLATFORM, TONES, Tag, fmt, toneLabel } from './ui';
 
 // ------------------------------------------------------------------ Vista previa de sitio
 const WIDTHS = { Móvil: 390, Tableta: 768, Escritorio: '100%' };
@@ -146,9 +147,10 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
         cta: p.cta,
         colors: profile?.brand_colors || undefined,
         logo: profile?.logo || undefined,
-        platform: p.platform
+        platform: p.platform,
+        watermark: Boolean(p.wm_needed)
       });
-      onChange(await api('POST', `/api/social/${p.id}/image`, { data_url: dataUrl }));
+      onChange(await api('POST', `/api/social/${p.id}/image`, { data_url: dataUrl, watermark: Boolean(p.wm_needed) }));
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
 
@@ -161,14 +163,14 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
     // eslint-disable-next-line
   }, [autoImage, post.id]);
 
-  // mode 'now': aprueba y publica ya. mode 'schedule': aprueba y deja que se publique sola en su fecha.
+  // mode 'only': solo autoriza (queda aprobada, no se publica). 'now': autoriza y publica ya. 'schedule': autoriza y se publica sola en su fecha.
   const approveAndPublish = async (mode = 'now') => {
-    setBusy(mode === 'schedule' ? 'schedule' : 'publish'); setErr('');
+    setBusy(mode === 'schedule' ? 'schedule' : mode === 'only' ? 'authorize' : 'publish'); setErr('');
     try {
       let p = post;
       if (p.status === 'DRAFT' || p.status === 'REJECTED') { p = await api('POST', `/api/social/${p.id}/submit`); onChange(p); }
       if (p.status === 'PENDING_APPROVAL') { p = await api('POST', `/api/social/${p.id}/approve`, { confirm_review: true, schedule: mode === 'schedule' }); onChange(p); }
-      if (mode !== 'schedule' && (p.status === 'APPROVED' || p.status === 'FAILED')) { p = await api('POST', `/api/social/${p.id}/publish`); onChange(p); }
+      if (mode !== 'schedule' && mode !== 'only' && (p.status === 'APPROVED' || p.status === 'FAILED')) { p = await api('POST', `/api/social/${p.id}/publish`); onChange(p); }
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
   };
   const canSchedule = post.scheduled_at && new Date(post.scheduled_at).getTime() > Date.now() && ['DRAFT', 'PENDING_APPROVAL', 'REJECTED'].includes(post.status);
@@ -179,6 +181,14 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
     try {
       const p = await api('POST', `/api/social/${post.id}/revise`, { instruction: ask });
       setAsk('');
+      if (p.is_new_version) onNewVersion?.(p); else onChange(p);
+      await makeImage(p);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
+  };
+  const changeTone = async (tone) => {
+    setBusy('tone'); setErr('');
+    try {
+      const p = await api('POST', `/api/social/${post.id}/revise`, { tone });
       if (p.is_new_version) onNewVersion?.(p); else onChange(p);
       await makeImage(p);
     } catch (e) { setErr(errText(e)); } finally { setBusy(''); }
@@ -224,10 +234,12 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
     <article className="piece">
       <div className="piece-head">
         <span className="grow">{name}{post.site_name ? ` · ${post.site_name}` : ''}{auto && post.scheduled_at && post.status !== 'PUBLISHED' ? ` · sugerida ${new Date(post.scheduled_at).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}` : ''}</span>
+        {post.tone && <span className="tag info">{toneLabel(post.tone)}</span>}
         <Tag s={post.status} />
       </div>
       <div className="piece-body">
-        {imgUrl ? <img className="piece-img" src={imgUrl} alt={`Imagen de la publicación de ${name}`} /> : (
+        {editing && imgUrl && <img className="piece-img" src={imgUrl} alt={`Imagen de la publicación de ${name}`} />}
+        {!imgUrl && (
           <div className="row">
             <button className="btn secondary small" disabled={busy === 'image'} onClick={() => makeImage()}>{busy === 'image' ? 'Creando imagen…' : 'Crear imagen'}</button>
             {post.platform === 'instagram' && <span className="muted">Instagram necesita una imagen.</span>}
@@ -247,8 +259,17 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
           </div>
         ) : (
           <>
-            <p className="piece-text">{post.copy}</p>
-            {post.hashtags && <p className="muted">{post.hashtags}</p>}
+            <NetworkPreview post={post} imgUrl={imgUrl} profile={profile} />
+            <p className="np-fmt">{FORMAT_NOTE[post.platform]}</p>
+            {pending && (
+              <div className="tone-row" role="group" aria-label="Tono de la publicación">
+                <span>Tono:</span>
+                {TONES.map(([k, l]) => <button key={k} type="button" className={`tone-btn${post.tone === k ? ' on' : ''}`} aria-pressed={post.tone === k} disabled={Boolean(busy)} onClick={() => changeTone(k)}>{busy === 'tone' && post.tone === k ? 'Cambiando…' : l}</button>)}
+              </div>
+            )}
+            {pending && post.has_media && post.wm_stale && (
+              <Alert kind="info">{post.wm_needed ? 'Tu plan es Gratis: esta imagen aún no lleva la marca de agua.' : 'Tu plan es Pro: esta imagen todavía lleva la marca de agua.'} <button type="button" className="btn small secondary" disabled={Boolean(busy)} onClick={() => makeImage()}>Actualizar imagen</button></Alert>
+            )}
           </>
         )}
         {post.problems?.length > 0 && pending && <Alert kind="warn">{post.problems.join(' · ')}</Alert>}
@@ -282,12 +303,13 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
         )}
         {!done && !editing && (
           <>
-            <p className="ask">{post.status === 'APPROVED' ? '¿La publico ahora?' : '¿La apruebas y la publico?'}</p>
-            {post.status !== 'APPROVED' && <p className="muted">Al continuar confirmas que revisaste el texto y la imagen. Se registrará tu correo como persona que aprueba.</p>}
+            <p className="ask">{post.status === 'APPROVED' ? '¿La publico ahora?' : '¿La autorizas?'}</p>
+            {post.status !== 'APPROVED' && <p className="muted">Al autorizar confirmas que revisaste el texto y la imagen. Se registrará tu correo como persona que autoriza. Autorizar no publica: tú decides cuándo.</p>}
             <div className="row">
-              {canSchedule && <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('schedule')}>{busy === 'schedule' ? 'Programando…' : `Aprobar y programar (${when})`}</button>}
-              <button className={canSchedule ? 'btn secondary' : 'btn'} disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('now')}>
-                {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : canSchedule ? 'Aprobar y publicar ya' : 'Aprobar y publicar'}
+              {post.status !== 'APPROVED' && post.status !== 'FAILED' && <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('only')}>{busy === 'authorize' ? 'Autorizando…' : '✓ Autorizar'}</button>}
+              {canSchedule && <button className="btn secondary" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('schedule')}>{busy === 'schedule' ? 'Programando…' : `Autorizar y programar (${when})`}</button>}
+              <button className={post.status === 'APPROVED' || post.status === 'FAILED' ? 'btn' : 'btn secondary'} disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('now')}>
+                {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : 'Autorizar y publicar'}
               </button>
               {!auto && <button className="btn secondary" disabled={Boolean(busy)} onClick={startEdit}>Editar</button>}
               <button className="btn secondary" disabled={Boolean(busy)} onClick={regenerate}>{busy === 'regen' ? 'La IA escribe otra…' : auto ? 'Que la IA haga otra' : 'No me gusta, hazme otra'}</button>

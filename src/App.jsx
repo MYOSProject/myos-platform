@@ -8,6 +8,7 @@ import Guide from './pages/Guide';
 import Content from './pages/Content';
 import Calendar from './pages/Calendar';
 import Connections from './pages/Connections';
+import Video from './pages/Video';
 import Status from './pages/Status';
 import { Alert } from './components/ui';
 
@@ -17,6 +18,7 @@ const NAV = [
   ['guide', 'Empezar', icon('M5 12l5 5L20 7'), true],
   ['content', 'Contenido con IA', icon('M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z'), true],
   ['calendar', 'Calendario', icon('M3 6h18v14H3zM3 10h18M8 3v4M16 3v4'), true],
+  ['video', 'Videos', icon('M4 6h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4zM17 10l4-2v8l-4-2'), true],
   ['connections', 'Conexiones', icon('M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'), true],
   ['chat', 'Asistente', icon('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'), true],
   ['status', 'Estado y auditoría', icon('M22 12h-4l-3 9L9 3l-3 9H2'), false]
@@ -82,7 +84,8 @@ export default function App() {
     guide: <Guide onProfile={setProfile} setPage={go} />,
     content: <Content profile={profile} setPage={go} onChanged={refreshPending} />,
     calendar: <Calendar profile={profile} setPage={go} />,
-    connections: <Connections setPage={go} />,
+    video: <Video profile={profile} plan={active?.plan} setPage={go} />,
+    connections: <Connections plan={active?.plan} onChanged={refreshPending} setPage={go} />,
     chat: <Chat me={me} onProfile={setProfile} onSitesChanged={refreshPending} setPage={go} />,
     status: <Status health={health} />
   };
@@ -114,6 +117,7 @@ export default function App() {
               <li className="chip" title="Pasos del recorrido «Empezar» confirmados"><span aria-hidden="true">🧭</span>Recorrido {active.steps_confirmed}/8</li>
               <li className={`chip ${pending ? 'warn' : ''}`}><span aria-hidden="true">⏳</span>{pending ? `${pending} por aprobar` : 'Nada por aprobar'}</li>
               <li className="chip"><span aria-hidden="true">📣</span>{active.posts_published} publicadas</li>
+              <li className={`chip ${active.plan === 'pro' ? 'ok' : ''}`} title="Cambia el plan en «Conexiones»"><span aria-hidden="true">{active.plan === 'pro' ? '★' : '◌'}</span>Plan {active.plan === 'pro' ? 'Pro' : 'Gratis'}</li>
               <li className={`chip ${active.connected ? 'ok' : ''}`}><span aria-hidden="true">🔗</span>{active.connected ? 'Redes conectadas' : 'Redes en simulación'}</li>
             </ul>
             <button className="btn small" onClick={() => go(active.steps_confirmed || active.business_name ? 'content' : 'guide')}>{active.steps_confirmed || active.business_name ? '✨ Generar con IA' : 'Completar «Empezar»'}</button>

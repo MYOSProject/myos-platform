@@ -18,4 +18,6 @@ export function Tag({ s }) {
 }
 
 export const PLATFORM = { facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', x: 'X' };
+export const TONES = [['casual', 'Casual'], ['profesional', 'Profesional'], ['cercano', 'Cercano'], ['divertido', 'Divertido'], ['inspirador', 'Inspirador'], ['promocional', 'Promocional']];
+export const toneLabel = (t) => (TONES.find(([k]) => k === t) || [])[1] || '';
 export const fmt = (d) => (d ? new Date(d).toLocaleString('es-MX') : '');

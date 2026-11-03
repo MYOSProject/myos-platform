@@ -6,7 +6,7 @@ import { AiFailure, generateStructured } from './gemini.js';
 import { HttpError } from './http.js';
 import { aiStatusFor } from './sites.js';
 import { emptyProfile, mergeProfile, profileForPrompt, type TextField } from './profile.js';
-import { createPost, editPost, PLATFORMS, platformLabel } from './social.js';
+import { cleanTone, createPost, editPost, PLATFORMS, platformLabel, toneText } from './social.js';
 import type { Store } from './store.js';
 import { userScope } from './projects.js';
 import { driveForPrompt } from './drive.js';
@@ -399,7 +399,8 @@ ${context(store, user)}`;
   }
 }
 
-export async function createPosts(store: Store, user: AuthUser, input: { platforms?: unknown; topic?: unknown; details?: unknown }): Promise<SocialPost[]> {
+export async function createPosts(store: Store, user: AuthUser, input: { platforms?: unknown; topic?: unknown; details?: unknown; tone?: unknown }): Promise<SocialPost[]> {
+  const tone = cleanTone(input.tone);
   const platforms = (Array.isArray(input.platforms) ? input.platforms : []).filter((p): p is string => typeof p === 'string' && (PLATFORMS as readonly string[]).includes(p));
   const uniq = [...new Set(platforms)].slice(0, 4);
   if (!uniq.length) throw new HttpError(400, 'PLATFORM_REQUIRED', 'Elige al menos una red social.');
@@ -407,6 +408,7 @@ export async function createPosts(store: Store, user: AuthUser, input: { platfor
   if (!topic) throw new HttpError(400, 'TOPIC_REQUIRED', 'Cuéntame de qué quieres que trate.');
   const details = clean(input.details, 800);
   const system = `Eres el asistente de MYOS. Crea UNA publicación por cada plataforma pedida (${uniq.map(platformLabel).join(', ')}), sobre el tema indicado, con la voz de la marca. ${POST_FIELDS_RULES}
+${toneText(tone)}
 ${RULES}
 Fecha de hoy: ${new Date().toISOString().slice(0, 10)}.
 
@@ -426,9 +428,9 @@ ${context(store, user)}`;
   }
   const name = profileOf(store, user).business_name || undefined;
   const made: SocialPost[] = [];
-  for (const p of (Array.isArray(data?.posts) ? data.posts : []).slice(0, 3)) {
+  for (const p of (Array.isArray(data?.posts) ? data.posts : []).slice(0, 4)) {
     if (!uniq.includes(p?.platform) || made.some((m) => m.platform === p.platform)) continue;
-    const post = createPost(store, { platform: p.platform, copy: p.copy, hashtags: p.hashtags, cta: p.cta, image_headline: p.headline, image_subline: p.subheadline }, user);
+    const post = createPost(store, { tone, platform: p.platform, copy: p.copy, hashtags: p.hashtags, cta: p.cta, image_headline: p.headline, image_subline: p.subheadline }, user);
     post.site_name = name;
     made.push(post);
   }
@@ -441,10 +443,12 @@ ${context(store, user)}`;
  * Aplica un cambio pedido en lenguaje natural. Una publicación sin publicar se modifica (y su aprobación anterior
  * queda sin efecto); una ya publicada no se toca: se crea una nueva versión como borrador.
  */
-export async function revisePost(store: Store, user: AuthUser, post: SocialPost, instruction: unknown): Promise<SocialPost> {
-  const ask = clean(instruction, 800);
+export async function revisePost(store: Store, user: AuthUser, post: SocialPost, instruction: unknown, toneIn?: unknown): Promise<SocialPost> {
+  const tone = cleanTone(toneIn);
+  const ask = clean(instruction, 800) || (tone ? `Reescribe esta publicación con otro tono, conservando los mismos datos reales.` : '');
   if (!ask) throw new HttpError(400, 'INSTRUCTION_REQUIRED', 'Dime qué quieres cambiar.');
   const system = `Eres el asistente de MYOS. Te paso una publicación de ${platformLabel(post.platform)} y un cambio que pide la persona. Aplica SOLO ese cambio y conserva el resto. ${POST_FIELDS_RULES}
+${toneText(tone)}
 ${RULES}
 
 ${context(store, user)}`;
@@ -471,8 +475,9 @@ CAMBIO PEDIDO: ${ask}`;
   }
   if (!clean(d?.copy, 5000)) throw new HttpError(502, 'AI_FAILED', 'Gemini no devolvió el texto actualizado. Inténtalo otra vez.');
   const input = { copy: d.copy, hashtags: d.hashtags, cta: d.cta, image_headline: d.headline, image_subline: d.subheadline };
+  if (tone) post.tone = tone;
   if (post.status === 'PUBLISHED') {
-    const v = createPost(store, { platform: post.platform, ...input, link_url: post.link_url }, user);
+    const v = createPost(store, { tone: tone || post.tone, platform: post.platform, ...input, link_url: post.link_url }, user);
     v.site_name = post.site_name;
     return v;
   }
@@ -509,13 +514,15 @@ function projectPosts(store: Store, user: AuthUser): SocialPost[] {
 }
 
 /** La IA arma sola un paquete de publicaciones (borradores) con lo que se sabe del negocio. */
-export async function autoCreate(store: Store, user: AuthUser, count = 6): Promise<SocialPost[]> {
+export async function autoCreate(store: Store, user: AuthUser, count = 6, toneIn?: unknown): Promise<SocialPost[]> {
+  const tone = cleanTone(toneIn);
   needInfo(store, user);
   const n = Math.min(8, Math.max(2, Math.round(count) || 6));
   const existing = projectPosts(store, user).slice(-12).map((p) => `- (${platformLabel(p.platform)}) ${p.copy.slice(0, 110)}`).join('\n') || '(ninguna todavía)';
   const system = `Eres el estratega de contenido de MYOS y tienes el control total: decides tú los temas, el orden y los textos. La persona NO te dará instrucciones; solo revisará, aprobará y publicará.
 Crea un plan de ${n} publicaciones variadas para las próximas 2 semanas, alternando ${AUTO_PLATFORMS.map(platformLabel).join(', ')}. Mezcla objetivos (dar a conocer, mostrar el producto o servicio, confianza, cercanía con la comunidad, invitar a comprar o contactar) y cuida que ninguna repita el tema de otra. Para cada una indica day_offset (1 a 14: días desde hoy).
 ${POST_FIELDS_RULES}
+${toneText(tone)}
 ${RULES}
 Si falta un dato (precio, teléfono, promoción), NO lo menciones ni lo inventes: habla de lo que sí se sabe.
 Fecha de hoy: ${new Date().toISOString().slice(0, 10)}.
@@ -545,7 +552,7 @@ ${context(store, user)}`;
   const made: SocialPost[] = [];
   for (const p of (Array.isArray(data?.posts) ? data.posts : []).slice(0, n)) {
     if (!(AUTO_PLATFORMS as readonly string[]).includes(p?.platform) || !clean(p?.copy, 5000)) continue;
-    const post = createPost(store, { platform: p.platform, copy: p.copy, hashtags: p.hashtags, cta: p.cta, image_headline: p.headline, image_subline: p.subheadline, scheduled_at: scheduleFor(p.day_offset) }, user);
+    const post = createPost(store, { tone, platform: p.platform, copy: p.copy, hashtags: p.hashtags, cta: p.cta, image_headline: p.headline, image_subline: p.subheadline, scheduled_at: scheduleFor(p.day_offset) }, user);
     post.site_name = name;
     made.push(post);
   }
@@ -610,4 +617,39 @@ ${context(store, user)}`;
   if (!updated.length && !created.length) throw new HttpError(502, 'AI_FAILED', 'La IA no devolvió textos utilizables. Inténtalo otra vez.');
   store.save();
   return { posts: updated, created };
+}
+
+// ------------------------------------------------------------------------------------------
+// Videos cortos: la IA propone el guion (frases cortas por escena). El video se arma en el navegador.
+// ------------------------------------------------------------------------------------------
+export async function videoScript(store: Store, user: AuthUser, input: { topic?: unknown; format?: unknown; tone?: unknown; scenes?: unknown }): Promise<Array<{ text: string; seconds: number }>> {
+  const topic = clean(input.topic, 400);
+  if (!topic) throw new HttpError(400, 'TOPIC_REQUIRED', 'Cuéntame de qué trata el video.');
+  const n = Math.min(6, Math.max(3, Math.round(Number(input.scenes)) || 4));
+  const format = input.format === '16:9' ? 'horizontal (16:9)' : input.format === '1:1' ? 'cuadrado (1:1)' : input.format === '4:5' ? 'vertical para feed (4:5)' : 'vertical (9:16, tipo Reel o Historia)';
+  const system = `Eres el asistente de MYOS. Escribe el guion de un video MUY corto (${n} escenas, unos 15 segundos en total), formato ${format}, con la voz de la marca.
+Cada escena es una frase en pantalla: máximo 60 caracteres, clara y fácil de leer; la primera engancha y la última invita a actuar (sin inventar ofertas). Sin hashtags ni emojis en exceso. seconds: entre 2 y 5 por escena.
+${toneText(input.tone)}
+${RULES}
+
+${context(store, user)}`;
+  let data: any;
+  try {
+    const r = await generateStructured({
+      systemInstruction: system,
+      contents: `Tema del video: ${topic}`,
+      schema: { type: 'object', properties: { scenes: { type: 'array', items: { type: 'object', properties: { text: { type: 'string' }, seconds: { type: 'integer' } }, required: ['text', 'seconds'] } } }, required: ['scenes'] },
+      temperature: 0.8,
+      maxOutputTokens: 1200
+    });
+    data = r.data;
+  } catch (e) {
+    failToHttp(e, 'video');
+  }
+  const scenes = (Array.isArray(data?.scenes) ? data.scenes : [])
+    .map((s: any) => ({ text: clean(s?.text, 60), seconds: Math.min(5, Math.max(2, Math.round(Number(s?.seconds)) || 3)) }))
+    .filter((s: { text: string }) => s.text)
+    .slice(0, n);
+  if (!scenes.length) throw new HttpError(502, 'AI_FAILED', 'La IA no devolvió un guion utilizable. Inténtalo otra vez.');
+  return scenes;
 }

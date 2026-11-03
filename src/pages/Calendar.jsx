@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, errText } from '../api';
+import { PostCard } from '../components/Cards';
 import { Alert, PLATFORM, Tag } from '../components/ui';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -22,7 +23,7 @@ function weeksOf(year, month) {
 }
 const toLocalInput = (iso) => { if (!iso) return ''; const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 
-export default function Calendar({ setPage }) {
+export default function Calendar({ profile, setPage }) {
   const [posts, setPosts] = useState(null);
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(0);
@@ -72,17 +73,18 @@ export default function Calendar({ setPage }) {
   const inMonth = posts.filter((p) => p.scheduled_at && new Date(p.scheduled_at).getFullYear() === cursor.y && new Date(p.scheduled_at).getMonth() === cursor.m).length;
 
   const detail = (p) => (
-    <div key={p.id} className="cal-detail card stack">
+    <div key={p.id} className="stack cal-detail" style={{ maxWidth: 640 }}>
       <div className="row">
         <b className="grow">{PLATFORM[p.platform]}{p.scheduled_at ? ` · ${new Date(p.scheduled_at).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}` : ' · Sin fecha'}</b>
-        <Tag s={p.status} />{p.auto_publish && p.status === 'APPROVED' && <span className="tag ok"><span aria-hidden="true">⏰</span>Programada</span>}
         <button className="btn secondary" onClick={() => setSel(null)}>Cerrar</button>
       </div>
-      <p className="cal-full">{p.copy}</p>
       <label className="row muted">Fecha y hora:
         <input type="datetime-local" aria-label={`Fecha y hora de la publicación ${p.id}`} disabled={p.status === 'PUBLISHED' || saving === p.id} value={toLocalInput(p.scheduled_at)} onChange={(e) => schedule(p, e.target.value)} />
       </label>
-      <span className="muted">Para aprobar o publicar, entra a «Contenido con IA».</span>
+      <PostCard post={p} profile={profile}
+        onChange={(n) => setPosts((l) => l.map((x) => (x.id === n.id ? n : x)))}
+        onNewVersion={(n) => { setPosts((l) => [n, ...l]); setSel(n.id); }}
+        onRemove={(id) => { setPosts((l) => l.filter((x) => x.id !== id)); setSel(null); }} />
     </div>
   );
 
@@ -125,7 +127,7 @@ export default function Calendar({ setPage }) {
             })}
           </div>
         </div>
-        <p className="muted cal-legend">{inMonth ? `${inMonth} publicación(es) este mes.` : 'No hay publicaciones este mes.'} Toca una para ver el texto y cambiar su fecha. <span className="cal-key st-draft">Borrador</span> <span className="cal-key st-pending_approval">Pendiente</span> <span className="cal-key st-approved">Aprobada</span> <span className="cal-key st-published">Publicada</span></p>
+        <p className="muted cal-legend">{inMonth ? `${inMonth} publicación(es) este mes.` : 'No hay publicaciones este mes.'} Toca una para verla, cambiar su tono o fecha y autorizarla. <span className="cal-key st-draft">Borrador</span> <span className="cal-key st-pending_approval">Pendiente</span> <span className="cal-key st-approved">Aprobada</span> <span className="cal-key st-published">Publicada</span></p>
       </section>
       {selected && detail(selected)}
       {undated.length > 0 && (

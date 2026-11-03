@@ -20,6 +20,7 @@ import {
   attachMedia,
   mediaIsPublic,
   platformLabel,
+  needsWatermark,
   approvePost,
   restoreVersion,
   createDraftsFromSite,
@@ -34,7 +35,7 @@ import {
 } from './social.js';
 import { publisherStatus } from './publisher.js';
 import { chatTurn, clearChat, getChat, getProfile, runChatAction, saveProfile } from './chat.js';
-import { autoCreate, autoUpdate, confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas } from './guide.js';
+import { autoCreate, autoUpdate, confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas, videoScript } from './guide.js';
 import { createProject, deleteProject, ensureDefaultProject, getOwnedProject, projectsOf, projectSummary, updateProject } from './projects.js';
 import { connectDrive, disconnectDrive, driveView, syncDrive } from './drive.js';
 import { connectionView, deleteConnection, saveConnection, setLive, testConnection } from './connections.js';
@@ -97,7 +98,9 @@ function detail(item: ContentItem) {
 }
 
 function summarizePost(p: SocialPost) {
-  return { ...p, has_media: Boolean(getStore().media[String(p.id)]), problems: validatePost(p) };
+  const plan = getStore().projects.find((x) => x.id === p.project_id)?.plan === 'pro' ? 'pro' : 'free';
+  const wm = needsWatermark(p.platform, plan);
+  return { ...p, has_media: Boolean(getStore().media[String(p.id)]), problems: validatePost(p), plan, wm_needed: wm, wm_stale: wm !== Boolean(p.image_wm) && Boolean(getStore().media[String(p.id)]) };
 }
 
 function findContent(id: number): ContentItem {
@@ -418,7 +421,7 @@ export function createApp() {
     '/api/social/:id/image',
     requireAuth,
     wrap((req, res) => {
-      const post = attachMedia(getStore(), findPost(intParam(req.params.id)), req.body?.data_url, baseUrl(req), req.user as AuthUser);
+      const post = attachMedia(getStore(), findPost(intParam(req.params.id)), req.body?.data_url, baseUrl(req), req.user as AuthUser, req.body?.watermark === true);
       res.json(summarizePost(post));
     })
   );
@@ -496,8 +499,11 @@ export function createApp() {
     const posts = await createPosts(getStore(), req.user as AuthUser, req.body || {});
     res.status(201).json(posts.map(summarizePost));
   }));
+  app.post('/api/video/script', requireAuth, aiLimit, wrap(async (req, res) => {
+    res.json({ scenes: await videoScript(getStore(), req.user as AuthUser, req.body || {}) });
+  }));
   app.post('/api/content/auto-create', requireAuth, aiLimit, wrap(async (req, res) => {
-    const posts = await autoCreate(getStore(), req.user as AuthUser, Number(req.body?.count) || 6);
+    const posts = await autoCreate(getStore(), req.user as AuthUser, Number(req.body?.count) || 6, req.body?.tone);
     res.status(201).json(posts.map(summarizePost));
   }));
   app.post('/api/content/auto-update', requireAuth, aiLimit, wrap(async (req, res) => {
@@ -525,7 +531,7 @@ export function createApp() {
   }));
   app.post('/api/social/:id/revise', requireAuth, aiLimit, wrap(async (req, res) => {
     const post = findPost(intParam(req.params.id));
-    const out = await revisePost(getStore(), req.user as AuthUser, post, req.body?.instruction);
+    const out = await revisePost(getStore(), req.user as AuthUser, post, req.body?.instruction, req.body?.tone);
     res.json({ ...summarizePost(out), is_new_version: out.id !== post.id });
   }));
 

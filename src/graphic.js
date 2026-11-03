@@ -41,11 +41,34 @@ function loadImage(src) {
   });
 }
 
-export async function renderPostImage({ headline, subline, cta, colors, logo, platform }) {
+// Formato de cada red: Facebook 1.91:1, Instagram 4:5 (vertical), LinkedIn 1.91:1 y X 16:9.
+export const FORMATS = { facebook: [1200, 630], instagram: [1080, 1350], linkedin: [1200, 627], x: [1200, 675] };
+
+/** Marca de agua pequeña de MYOS (plan Gratis): una pastilla discreta en la esquina inferior derecha. */
+export function drawWatermark(ctx, W, H, text = 'Hecho con MYOS') {
+  const size = Math.max(12, Math.round(Math.min(W, H) * 0.024));
+  ctx.save();
+  ctx.font = `600 ${size}px Inter, Arial, sans-serif`;
+  ctx.textBaseline = 'middle';
+  const tw = ctx.measureText(text).width;
+  const padX = size * 0.8;
+  const h = size * 1.9;
+  const w = tw + padX * 2;
+  const x = W - w - size * 0.9;
+  const y = H - h - size * 0.9;
+  ctx.fillStyle = 'rgba(17,24,39,.72)';
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, h / 2);
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(text, x + padX, y + h / 2 + 1);
+  ctx.restore();
+}
+
+export async function renderPostImage({ headline, subline, cta, colors, logo, platform, watermark = false }) {
   const c = { ...DEFAULT, ...(colors || {}) };
-  const wide = platform === 'linkedin' || platform === 'x';
-  const W = wide ? 1200 : 1080;
-  const H = platform === 'x' ? 675 : platform === 'linkedin' ? 627 : 1080;
+  const [W, H] = FORMATS[platform] || [1080, 1080];
+  const wide = W > H;
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -125,5 +148,6 @@ export async function renderPostImage({ headline, subline, cta, colors, logo, pl
     ctx.textBaseline = 'middle';
     ctx.fillText(label, pad + bSize * 0.9, by + bh / 2 + 2);
   }
+  if (watermark) drawWatermark(ctx, W, H);
   return canvas.toDataURL('image/jpeg', 0.9);
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, errText } from '../api';
+import { api, errText, getActiveProject } from '../api';
 import { Alert, fmt } from '../components/ui';
 
 const GUIDE = [
@@ -18,6 +18,29 @@ const GUIDE_X = [
   ['Copia las 4 llaves', 'En «Keys and tokens» copia la API Key y el API Key Secret. Luego genera el Access Token y el Access Token Secret (deben decir «Read and Write») y cópialos.'],
   ['Pega, prueba y activa', 'Pega las 4 llaves abajo y pulsa «Probar conexión» (no publica nada). Si sale bien, activa la publicación real. Las imágenes todavía no se envían a X: sale solo el texto.']
 ];
+
+function PlanCard({ plan, onChanged }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const set = async (p) => {
+    setBusy(true); setErr('');
+    try { await api('PUT', `/api/projects/${getActiveProject()}`, { plan: p }); await onChanged?.(); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  };
+  const pro = plan === 'pro';
+  return (
+    <div className="card stack">
+      <div className="row"><h2 className="grow">Plan del proyecto</h2>
+        {pro ? <span className="tag ok"><span aria-hidden="true">★</span>Plan Pro</span> : <span className="tag draft"><span aria-hidden="true">◌</span>Plan Gratis</span>}</div>
+      <p className="muted">En el plan <b>Gratis</b>, las imágenes y videos de Facebook e Instagram llevan una marca de agua pequeña «Hecho con MYOS». En el plan <b>Pro</b> salen sin marca de agua. Por ahora el cambio es manual y no hace ningún cobro.</p>
+      <div className="row">
+        <button className={`btn ${pro ? 'secondary' : ''}`} disabled={busy || !pro} onClick={() => set('free')}>Plan Gratis</button>
+        <button className={`btn ${pro ? '' : 'secondary'}`} disabled={busy || pro} onClick={() => set('pro')}>Plan Pro (sin marca de agua)</button>
+      </div>
+      <p className="muted">Las imágenes que ya existen se actualizan con el botón «Actualizar imagen» de cada publicación.</p>
+      <Alert>{err}</Alert>
+    </div>
+  );
+}
 
 function DriveCard() {
   const [d, setD] = useState(null);
@@ -68,7 +91,7 @@ function DriveCard() {
   );
 }
 
-export default function Connections() {
+export default function Connections({ plan, onChanged }) {
   const [c, setC] = useState(null);
   const [form, setForm] = useState({ page_id: '', ig_user_id: '', webhook_url: '', page_token: '', x_handle: '', x_api_key: '', x_api_secret: '', x_access_token: '', x_access_secret: '' });
   const [busy, setBusy] = useState('');
@@ -96,6 +119,8 @@ export default function Connections() {
         <h1>Conexiones</h1>
         <p className="sub">Conecta la página de Facebook, la cuenta de Instagram y la cuenta de X de este proyecto. Aun conectadas, <b>nada se publica sin que una persona lo apruebe</b>.</p>
       </div>
+
+      <PlanCard plan={plan} onChanged={onChanged} />
 
       <div className="card stack">
         <div className="row">

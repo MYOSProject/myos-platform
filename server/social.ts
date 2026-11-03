@@ -21,6 +21,21 @@ import { resolveConnection } from './connections.js';
 import { saveEvidence } from './drive.js';
 
 const LIMITS = { facebook: 5000, instagram: 2200, linkedin: 3000, x: 280 } as const;
+/** Tonos disponibles. La clave se guarda en la publicación; la descripción se le pasa a la IA. */
+export const TONES: Record<string, { label: string; prompt: string }> = {
+  casual: { label: 'Casual', prompt: 'casual y relajado, como hablarle a un vecino; frases cortas y emojis moderados' },
+  profesional: { label: 'Profesional', prompt: 'profesional y claro, sin jerga ni exceso de emojis' },
+  cercano: { label: 'Cercano', prompt: 'cálido y cercano, que transmita confianza y trato personal' },
+  divertido: { label: 'Divertido', prompt: 'divertido y con humor ligero, sin ofender a nadie' },
+  inspirador: { label: 'Inspirador', prompt: 'inspirador y motivador, con una idea positiva' },
+  promocional: { label: 'Promocional', prompt: 'directo y orientado a vender, con un llamado a la acción claro y sin inventar ofertas' }
+};
+export const cleanTone = (v: unknown): string | undefined => (typeof v === 'string' && v in TONES ? v : undefined);
+export const toneText = (v: unknown): string => { const t = cleanTone(v); return t ? `Tono pedido: ${TONES[t].label} — ${TONES[t].prompt}.` : ''; };
+
+/** ¿Esta publicación lleva marca de agua? Solo Facebook e Instagram, y solo en el plan Gratis. */
+export const needsWatermark = (platform: string, plan?: string): boolean => (platform === 'facebook' || platform === 'instagram') && plan !== 'pro';
+
 export const PLATFORMS = ['facebook', 'instagram', 'linkedin', 'x'] as const;
 export const platformLabel = (p: string) => (p === 'facebook' ? 'Facebook' : p === 'instagram' ? 'Instagram' : p === 'linkedin' ? 'LinkedIn' : p === 'x' ? 'X' : p);
 
@@ -63,6 +78,7 @@ export function validatePost(p: SocialPost): string[] {
 
 export interface PostInput {
   platform?: SocialPlatform;
+  tone?: string;
   copy?: string;
   hashtags?: string;
   cta?: string;
@@ -95,6 +111,7 @@ export function createPost(store: Store, input: PostInput, user: AuthUser, site?
     project_id: user.project_id ?? site?.project_id ?? null,
     site_name: site ? site.content?.site_name || site.title : undefined,
     platform: input.platform,
+    tone: cleanTone(input.tone),
     copy: cleanText(input.copy, 5000),
     hashtags: cleanText(input.hashtags, 600),
     cta: cleanText(input.cta, 40),
@@ -289,7 +306,7 @@ export function deletePost(store: Store, post: SocialPost, user: AuthUser): void
 }
 
 /** Guarda la pieza gráfica (JPEG dibujado en el navegador) y la enlaza a la publicación. */
-export function attachMedia(store: Store, post: SocialPost, dataUrl: unknown, baseUrl: string, user: AuthUser): SocialPost {
+export function attachMedia(store: Store, post: SocialPost, dataUrl: unknown, baseUrl: string, user: AuthUser, watermark = false): SocialPost {
   if (post.status === 'PUBLISHED') throw new HttpError(409, 'BAD_STATE', 'Una publicación ya publicada no se puede editar.');
   const m = typeof dataUrl === 'string' ? /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl) : null;
   if (!m) throw new HttpError(400, 'BAD_IMAGE', 'La imagen debe ser un JPEG (data URL).');
@@ -298,6 +315,7 @@ export function attachMedia(store: Store, post: SocialPost, dataUrl: unknown, ba
   if (buf[0] !== 0xff || buf[1] !== 0xd8) throw new HttpError(400, 'BAD_IMAGE', 'El archivo no es un JPEG válido.');
   const sha = crypto.createHash('sha256').update(buf).digest('hex');
   store.media[String(post.id)] = { mime: 'image/jpeg', b64: m[1], sha, at: new Date().toISOString() };
+  post.image_wm = watermark === true;
   return editPost(store, post, { image_url: `${baseUrl.replace(/\/+$/, '')}/media/${post.id}.jpg?v=${sha.slice(0, 12)}` }, user);
 }
 

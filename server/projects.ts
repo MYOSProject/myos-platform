@@ -56,8 +56,12 @@ export function getOwnedProject(store: Store, user: AuthUser, id: number): Proje
   return p;
 }
 
-export function updateProject(store: Store, user: AuthUser, id: number, input: { name?: unknown; description?: unknown }): Project {
+export function updateProject(store: Store, user: AuthUser, id: number, input: { name?: unknown; description?: unknown; plan?: unknown }): Project {
   const p = getOwnedProject(store, user, id);
+  if (input.plan !== undefined) {
+    if (input.plan !== 'free' && input.plan !== 'pro') throw new HttpError(400, 'BAD_PLAN', 'El plan debe ser «free» (Gratis) o «pro».');
+    p.plan = input.plan;
+  }
   if (input.name !== undefined) {
     const n = clean(input.name, 80);
     if (!n) throw new HttpError(400, 'NAME_REQUIRED', 'El proyecto necesita un nombre.');
@@ -109,6 +113,7 @@ export function projectSummary(store: Store, p: Project) {
   const conn = store.connections[String(p.id)];
   return {
     ...p,
+    plan: p.plan === 'pro' ? 'pro' : 'free',
     business_name: store.profiles[k]?.business_name || '',
     steps_confirmed: steps.filter((s) => s.status === 'CONFIRMED').length,
     posts: posts.length,
