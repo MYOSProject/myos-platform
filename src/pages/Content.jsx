@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, errText } from '../api';
+import { renderPostImage } from '../graphic';
 import { PostCard, SiteCard } from '../components/Cards';
 import { Alert, PLATFORM, TONES } from '../components/ui';
 
@@ -60,6 +61,21 @@ export default function Content({ profile, setPage, onChanged }) {
     catch (e) { fail(e); } finally { setBusy(''); }
   };
 
+  // Pone o quita la marca de agua en todas las imágenes pendientes (después de pagar el plan Pro o al volver al Gratis).
+  const refreshMarks = async () => {
+    setBusy('marks'); setErr(''); setNote('');
+    try {
+      let n = 0;
+      for (const p of posts.filter((x) => pendingOf(x) && x.has_media && x.wm_stale)) {
+        const dataUrl = await renderPostImage({ headline: p.image_headline || p.copy.slice(0, 60), subline: p.image_subline || '', cta: p.cta, colors: profile?.brand_colors || undefined, logo: profile?.logo || undefined, platform: p.platform, watermark: Boolean(p.wm_needed) });
+        upsert(await api('POST', `/api/social/${p.id}/image`, { data_url: dataUrl, watermark: Boolean(p.wm_needed) }));
+        n++;
+      }
+      setNote(`Listo: ${n} ${n === 1 ? 'imagen actualizada' : 'imágenes actualizadas'}. Las que ya estaban aprobadas piden aprobarse otra vez porque la imagen cambió.`);
+      onChanged?.();
+    } catch (e) { fail(e); } finally { setBusy(''); }
+  };
+
   if (!posts) return err ? <Alert>{err}</Alert> : <p className="muted">Cargando…</p>;
   const todoAll = posts.filter(pendingOf);
   const todo = net === 'all' ? todoAll : todoAll.filter((p) => p.platform === net);
@@ -92,6 +108,12 @@ export default function Content({ profile, setPage, onChanged }) {
         {aiBusy && <p className="muted" role="status">{busy === 'site' ? 'Armando tu sitio; puede tardar hasta un minuto.' : 'Pensando y escribiendo; puede tardar unos segundos…'}</p>}
       </section>
 
+      {posts.some((p) => pendingOf(p) && p.has_media && p.wm_stale) && (
+        <Alert kind="info">
+          {posts.find((p) => p.wm_stale)?.wm_needed ? 'Algunas imágenes aún no llevan la marca de agua del plan Gratis.' : 'Tu plan es Pro: puedes quitar la marca de agua de las imágenes que ya hiciste.'}{' '}
+          <button type="button" className="btn small" disabled={aiBusy} onClick={refreshMarks}>{busy === 'marks' ? 'Actualizando…' : posts.find((p) => p.wm_stale)?.wm_needed ? 'Poner marca de agua a todas' : 'Quitar marca de agua a todas'}</button>
+        </Alert>
+      )}
       <Alert kind="ok">{note}</Alert>
       <Alert>{err}</Alert>
       {errCode === 'NEEDS_INFO' && <div><button className="btn" onClick={() => setPage('guide')}>Ir a «Empezar»</button></div>}

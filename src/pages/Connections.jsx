@@ -50,7 +50,7 @@ function PlanCard({ plan, onChanged }) {
         <>
           <p><b>Prueba gratis por {v.trial_days} días.</b> Configura tu empresa con todo el plan Pro. Registras tu tarjeta ahora y <b>al día {v.trial_days} se cobra el primer mes ({v.price_text})</b>. Si cancelas antes, no pagas nada.</p>
           <div className="row"><button className="btn" disabled={Boolean(busy)} onClick={start}>{busy === 'start' ? 'Un momento…' : `Activar mis ${v.trial_days} días gratis`}</button></div>
-          <p className="muted">Sin la prueba, el plan Gratis agrega una marca de agua pequeña con el logo de MYOS en las imágenes y videos de Facebook e Instagram.</p>
+          <p className="muted">Sin la prueba, el plan Gratis agrega una marca de agua pequeña con el logo de MYOSAPP en todas las imágenes y videos. Al pagar, desaparece.</p>
         </>
       )}
       {st === 'trialing' && (

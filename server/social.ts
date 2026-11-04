@@ -33,8 +33,8 @@ export const TONES: Record<string, { label: string; prompt: string }> = {
 export const cleanTone = (v: unknown): string | undefined => (typeof v === 'string' && v in TONES ? v : undefined);
 export const toneText = (v: unknown): string => { const t = cleanTone(v); return t ? `Tono pedido: ${TONES[t].label} — ${TONES[t].prompt}.` : ''; };
 
-/** ¿Esta publicación lleva marca de agua? Solo Facebook e Instagram, y solo en el plan Gratis. */
-export const needsWatermark = (platform: string, plan?: string): boolean => (platform === 'facebook' || platform === 'instagram') && plan !== 'pro';
+/** ¿La imagen de esta publicación lleva marca de agua? En todas las redes, y solo mientras el proyecto no tenga plan Pro. */
+export const needsWatermark = (_platform: string, plan?: string): boolean => plan !== 'pro';
 
 export const PLATFORMS = ['facebook', 'instagram', 'linkedin', 'x'] as const;
 export const platformLabel = (p: string) => (p === 'facebook' ? 'Facebook' : p === 'instagram' ? 'Instagram' : p === 'linkedin' ? 'LinkedIn' : p === 'x' ? 'X' : p);

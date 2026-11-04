@@ -11,7 +11,7 @@ export default function Login({ health, onDev, authError }) {
   return (
     <main className="login">
       <div className="card">
-        <img src="/logo-myos.png" alt="MYOS · My Online System" />
+        <img src="/logo-myos.png" alt="MYOSAPP · Sitios web y contenido con IA" />
         <p className="lead">Tu presencia digital, organizada en un solo sistema. Crea, revisa y prepara contenido con ayuda de IA, manteniendo el control antes de publicar.</p>
         {health?.auth?.mode === 'dev' && (
           <>

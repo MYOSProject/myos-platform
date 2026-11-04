@@ -53,14 +53,14 @@ test('plan: por defecto es Gratis y se cambia a Pro; valores raros se rechazan o
   await api('PUT', `/api/projects/${p.id}`, { body: { plan: 'free' } });
 });
 
-test('marca de agua: solo Facebook/Instagram en plan Gratis; cambiar de plan marca la imagen como desactualizada', async () => {
+test('marca de agua: en todas las redes en plan Gratis; cambiar de plan marca la imagen como desactualizada', async () => {
   const [p] = (await api('GET', '/api/projects')).json.projects;
   await api('PUT', `/api/projects/${p.id}`, { body: { plan: 'free' } });
   const ig = (await api('POST', '/api/social', { project: p.id, body: { platform: 'instagram', copy: 'Hola', tone: 'casual' } })).json;
   const li = (await api('POST', '/api/social', { project: p.id, body: { platform: 'linkedin', copy: 'Hola' } })).json;
   assert.equal(ig.tone, 'casual');
   assert.equal(ig.wm_needed, true);
-  assert.equal(li.wm_needed, false);
+  assert.equal(li.wm_needed, true);
 
   const up = await api('POST', `/api/social/${ig.id}/image`, { project: p.id, body: { data_url: PX, watermark: true } });
   assert.equal(up.status, 200, up.text);

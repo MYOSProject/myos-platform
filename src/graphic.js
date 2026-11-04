@@ -60,7 +60,7 @@ export function loadWatermarkLogo() {
 
 /** Marca de agua pequeña (plan Gratis): el logo de MYOS sobre una pastilla blanca en la esquina inferior derecha. */
 export function drawWatermark(ctx, W, H) {
-  const lh = Math.max(16, Math.round(Math.min(W, H) * 0.04));
+  const lh = Math.max(16, Math.round(Math.min(W, H) * 0.05));
   const pad = lh * 0.45;
   ctx.save();
   if (wmLogo) {
@@ -71,7 +71,7 @@ export function drawWatermark(ctx, W, H) {
     ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2.4); ctx.fill();
     ctx.drawImage(wmLogo, x + pad, y + pad, lw, lh);
   } else {
-    const text = 'MYOS';
+    const text = 'MYOSAPP';
     ctx.font = `800 ${lh}px Inter, Arial, sans-serif`; ctx.textBaseline = 'middle';
     const w = ctx.measureText(text).width + pad * 2; const h = lh + pad * 2;
     const x = W - w - lh * 0.7; const y = H - h - lh * 0.7;

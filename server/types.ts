@@ -207,7 +207,7 @@ export interface Project {
   name: string;
   description: string;
   owner_email: string;
-  /** Plan del proyecto: en «free» las imágenes de Facebook e Instagram llevan marca de agua. Cambio manual, sin cobro real. */
+  /** Plan del proyecto: en «free» las imágenes y videos llevan marca de agua. Cambio manual, sin cobro real. */
   plan?: 'free' | 'pro';
   /** Prueba gratis de 7 días y suscripción mensual (Stripe, o simulada si no hay llaves). */
   billing?: Billing;
