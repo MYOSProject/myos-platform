@@ -185,6 +185,23 @@ export interface PostVersion {
   note?: string;
 }
 
+export interface Billing {
+  mode: 'stripe' | 'simulated';
+  status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'incomplete';
+  trial_started_at?: string;
+  trial_ends_at?: string;
+  price_cents: number;
+  checkout_session_id?: string;
+  customer_id?: string;
+  subscription_id?: string;
+  current_period_end?: string;
+  cancel_at_period_end?: boolean;
+  card_brand?: string;
+  card_last4?: string;
+  charged_at?: string;
+  history?: Array<{ at: string; event: string }>;
+}
+
 export interface Project {
   id: number;
   name: string;
@@ -192,6 +209,8 @@ export interface Project {
   owner_email: string;
   /** Plan del proyecto: en «free» las imágenes de Facebook e Instagram llevan marca de agua. Cambio manual, sin cobro real. */
   plan?: 'free' | 'pro';
+  /** Prueba gratis de 7 días y suscripción mensual (Stripe, o simulada si no hay llaves). */
+  billing?: Billing;
   created_at: string;
   updated_at: string;
 }

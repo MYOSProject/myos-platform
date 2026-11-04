@@ -105,6 +105,8 @@ export function applyProject(req: Request, user: AuthUser): void {
   user.scope = scopeKey(user.email, p.id);
 }
 
+import { billingBrief, effectivePlan } from './billing.js';
+
 export function projectSummary(store: Store, p: Project) {
   const k = scopeKey(p.owner_email, p.id);
   const steps = Object.values(store.guide[k] || {});
@@ -113,7 +115,8 @@ export function projectSummary(store: Store, p: Project) {
   const conn = store.connections[String(p.id)];
   return {
     ...p,
-    plan: p.plan === 'pro' ? 'pro' : 'free',
+    plan: effectivePlan(p),
+    billing: billingBrief(p),
     business_name: store.profiles[k]?.business_name || '',
     steps_confirmed: steps.filter((s) => s.status === 'CONFIRMED').length,
     posts: posts.length,

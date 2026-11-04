@@ -36,6 +36,11 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [pending, setPending] = useState(0);
 
+  // Al volver de la página de pago, se abre «Conexiones» para mostrar el estado de la prueba.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('billing')) { setPage('connections'); window.history.replaceState({}, '', window.location.pathname); }
+  }, []);
   const go = useCallback((p) => { setVisited((v) => (v.has(p) ? v : new Set(v).add(p))); setPage(p); window.scrollTo({ top: 0 }); }, []);
 
   const loadMe = useCallback(async () => {
@@ -117,7 +122,7 @@ export default function App() {
               <li className="chip" title="Pasos del recorrido «Empezar» confirmados"><span aria-hidden="true">🧭</span>Recorrido {active.steps_confirmed}/8</li>
               <li className={`chip ${pending ? 'warn' : ''}`}><span aria-hidden="true">⏳</span>{pending ? `${pending} por aprobar` : 'Nada por aprobar'}</li>
               <li className="chip"><span aria-hidden="true">📣</span>{active.posts_published} publicadas</li>
-              <li className={`chip ${active.plan === 'pro' ? 'ok' : ''}`} title="Cambia el plan en «Conexiones»"><span aria-hidden="true">{active.plan === 'pro' ? '★' : '◌'}</span>Plan {active.plan === 'pro' ? 'Pro' : 'Gratis'}</li>
+              <li className={`chip ${active.plan === 'pro' ? 'ok' : 'warn'}`} title="Administra tu plan en «Conexiones»"><span aria-hidden="true">{active.plan === 'pro' ? '★' : '◌'}</span>{active.billing?.status === 'trialing' ? `Prueba: ${active.billing.trial_days_left} ${active.billing.trial_days_left === 1 ? 'día' : 'días'}` : active.plan === 'pro' ? 'Plan Pro' : 'Plan Gratis · prueba 7 días'}</li>
               <li className={`chip ${active.connected ? 'ok' : ''}`}><span aria-hidden="true">🔗</span>{active.connected ? 'Redes conectadas' : 'Redes en simulación'}</li>
             </ul>
             <button className="btn small" onClick={() => go(active.steps_confirmed || active.business_name ? 'content' : 'guide')}>{active.steps_confirmed || active.business_name ? '✨ Generar con IA' : 'Completar «Empezar»'}</button>

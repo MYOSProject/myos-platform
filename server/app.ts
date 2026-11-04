@@ -39,6 +39,7 @@ import { autoCreate, autoUpdate, confirmStep, createPosts, generateStep, guideVi
 import { createProject, deleteProject, ensureDefaultProject, getOwnedProject, projectsOf, projectSummary, updateProject } from './projects.js';
 import { connectDrive, disconnectDrive, driveView, syncDrive } from './drive.js';
 import { connectionView, deleteConnection, saveConnection, setLive, testConnection } from './connections.js';
+import { billingView, cancelSimulated, effectivePlan, handleStripeEvent, manageUrl, startTrial, syncBilling, verifyStripeSignature } from './billing.js';
 import { guideForPrompt } from './guide.js';
 import { completeness, composeSiteBrief, missingEssentials, FIELD_LABELS } from './profile.js';
 import type { AuthUser, ContentItem, SocialPost } from './types.js';
@@ -98,7 +99,7 @@ function detail(item: ContentItem) {
 }
 
 function summarizePost(p: SocialPost) {
-  const plan = getStore().projects.find((x) => x.id === p.project_id)?.plan === 'pro' ? 'pro' : 'free';
+  const plan = effectivePlan(getStore().projects.find((x) => x.id === p.project_id));
   const wm = needsWatermark(p.platform, plan);
   return { ...p, has_media: Boolean(getStore().media[String(p.id)]), problems: validatePost(p), plan, wm_needed: wm, wm_stale: wm !== Boolean(p.image_wm) && Boolean(getStore().media[String(p.id)]) };
 }
@@ -123,7 +124,7 @@ export function createApp() {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '12mb' }));
+  app.use(express.json({ limit: '12mb', verify: (req: any, _res, buf) => { if (req.originalUrl?.startsWith('/api/billing/webhook')) req.rawBody = buf; } }));
 
   // Firestore: antes de cada petición se actualiza el estado, y los cambios se guardan ANTES de responder
   // (en serverless la función puede congelarse apenas se responde).
@@ -587,6 +588,37 @@ export function createApp() {
     const p = needProject(req.user as AuthUser);
     deleteConnection(getStore(), p.id);
     res.json(connectionView(getStore(), p.id));
+  }));
+
+
+  // ---------------------------------------------------------------------------------------
+  // Prueba gratis de 7 días y cobro mensual (Stripe)
+  // ---------------------------------------------------------------------------------------
+  app.post('/api/billing/webhook', wrap(async (req, res) => {
+    const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim() || '';
+    const raw: Buffer | undefined = (req as any).rawBody;
+    if (!secret || !raw || !verifyStripeSignature(raw, req.header('stripe-signature'), secret)) throw new HttpError(400, 'BAD_SIGNATURE', 'Firma inválida.');
+    await handleStripeEvent(getStore(), req.body);
+    res.json({ received: true });
+  }));
+  app.get('/api/billing', requireAuth, wrap(async (req, res) => {
+    const p = needProject(req.user as AuthUser);
+    await syncBilling(getStore(), p);
+    res.json(billingView(p));
+  }));
+  app.post('/api/billing/checkout', requireAuth, rateLimit({ windowMs: 60_000, max: 6, name: 'activar prueba' }), wrap(async (req, res) => {
+    const p = needProject(req.user as AuthUser);
+    const out = await startTrial(getStore(), req.user as AuthUser, p, baseUrl(req));
+    res.json({ ...out, billing: billingView(p) });
+  }));
+  app.post('/api/billing/portal', requireAuth, rateLimit({ windowMs: 60_000, max: 10, name: 'portal de pagos' }), wrap(async (req, res) => {
+    const p = needProject(req.user as AuthUser);
+    res.json({ url: await manageUrl(p, baseUrl(req)) });
+  }));
+  app.post('/api/billing/cancel', requireAuth, wrap((req, res) => {
+    const p = needProject(req.user as AuthUser);
+    cancelSimulated(getStore(), p);
+    res.json(billingView(p));
   }));
 
   // ---------------------------------------------------------------------------------------
