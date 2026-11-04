@@ -35,6 +35,7 @@ export default function App() {
   const [projectId, setProjectId] = useState(getActiveProject());
   const [profile, setProfile] = useState(null);
   const [pending, setPending] = useState(0);
+  const [hideUpsell, setHideUpsell] = useState(() => { try { return sessionStorage.getItem('myos_hide_upsell') === '1'; } catch { return false; } });
 
   // Al volver de la página de pago, se abre «Conexiones» para mostrar el estado de la prueba.
   useEffect(() => {
@@ -127,6 +128,15 @@ export default function App() {
             </ul>
             <button className="btn small" onClick={() => go(active.steps_confirmed || active.business_name ? 'content' : 'guide')}>{active.steps_confirmed || active.business_name ? '✨ Generar con IA' : 'Completar «Empezar»'}</button>
           </header>
+        )}
+        {active && active.plan !== 'pro' && !hideUpsell && page !== 'connections' && (
+          <aside className="upsell" role="note" aria-label="Estás usando la versión gratis">
+            <div className="upsell-text">
+              <b>Estás usando la versión gratis.</b> Tus imágenes y videos de Facebook e Instagram salen con la marca de agua de MYOS. Desbloquea el plan Pro para quitarla{active.billing?.status === 'none' ? ': empieza con 7 días gratis y después paga solo US$1 el primer mes.' : '.'}
+            </div>
+            <button className="btn small" onClick={() => go('connections')}>{active.billing?.status === 'none' ? 'Probar 7 días gratis' : 'Desbloquear Pro'}</button>
+            <button className="btn link small" onClick={() => { try { sessionStorage.setItem('myos_hide_upsell', '1'); } catch { /* sin almacenamiento */ } setHideUpsell(true); }} aria-label="Cerrar el anuncio">Ahora no</button>
+          </aside>
         )}
         {!projectId && <p className="muted">Preparando tu espacio…</p>}
         {/* Las páginas visitadas siguen montadas (ocultas) para que no se pierda lo escrito al cambiar de pestaña.
