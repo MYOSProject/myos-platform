@@ -35,7 +35,7 @@ import {
 } from './social.js';
 import { publisherStatus } from './publisher.js';
 import { chatTurn, clearChat, getChat, getProfile, runChatAction, saveProfile } from './chat.js';
-import { autoCreate, autoUpdate, confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas, videoScript } from './guide.js';
+import { autoCreate, autoUpdate, confirmStep, createPosts, generateStep, guideView, regeneratePost, revisePost, saveAnswers, saveReport, suggestIdeas, videoAutoEdit, videoScript } from './guide.js';
 import { createProject, deleteProject, ensureDefaultProject, getOwnedProject, projectsOf, projectSummary, updateProject } from './projects.js';
 import { connectDrive, disconnectDrive, driveView, syncDrive } from './drive.js';
 import { connectionView, deleteConnection, saveConnection, setLive, testConnection } from './connections.js';
@@ -502,6 +502,9 @@ export function createApp() {
   }));
   app.post('/api/video/script', requireAuth, aiLimit, wrap(async (req, res) => {
     res.json({ scenes: await videoScript(getStore(), req.user as AuthUser, req.body || {}) });
+  }));
+  app.post('/api/video/autoedit', requireAuth, aiLimit, wrap(async (req, res) => {
+    res.json({ plan: await videoAutoEdit(getStore(), req.user as AuthUser, req.body || {}) });
   }));
   app.post('/api/content/auto-create', requireAuth, aiLimit, wrap(async (req, res) => {
     const posts = await autoCreate(getStore(), req.user as AuthUser, Number(req.body?.count) || 6, req.body?.tone);

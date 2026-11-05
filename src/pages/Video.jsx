@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, errText } from '../api';
 import { drawWatermark, loadWatermarkLogo } from '../graphic';
 import { Alert, TONES } from '../components/ui';
+import AutoVideo from './AutoVideo';
 
 // Editor de videos cortos: escenas con fondo (color, foto o clip), texto acomodable, formato por red y exportación.
 // Todo se arma en el navegador (canvas + MediaRecorder): no se sube nada al servidor.
@@ -89,7 +90,25 @@ function drawAt(ctx, scenes, t, W, H, watermark) {
 
 const pickMime = () => ['video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find((m) => window.MediaRecorder?.isTypeSupported?.(m)) || '';
 
-export default function Video({ profile, plan }) {
+export default function Video(props) {
+  const [mode, setMode] = useState('auto');
+  return (
+    <div className="stack">
+      <div>
+        <h1>Videos cortos</h1>
+        <p className="sub">Sube un video y deja que la IA lo edite con tu marca, o arma uno desde cero.</p>
+      </div>
+      <div className="net-tabs" role="tablist" aria-label="Modo de edición">
+        <button type="button" role="tab" aria-selected={mode === 'auto'} className={`net-tab${mode === 'auto' ? ' on' : ''}`} onClick={() => setMode('auto')}>✨ Edición automática con IA</button>
+        <button type="button" role="tab" aria-selected={mode === 'manual'} className={`net-tab${mode === 'manual' ? ' on' : ''}`} onClick={() => setMode('manual')}>Armar desde cero</button>
+      </div>
+      <div hidden={mode !== 'auto'}><AutoVideo profile={props.profile} plan={props.plan} /></div>
+      <div hidden={mode !== 'manual'}><ManualVideo {...props} /></div>
+    </div>
+  );
+}
+
+function ManualVideo({ profile, plan }) {
   const brand = { primary: '#111827', secondary: '#E2554F', accent: '#8CCFD9', ...(profile?.brand_colors || {}) };
   const swatches = useMemo(() => [brand.primary, brand.secondary, brand.accent, '#000000', '#FFFFFF'], [brand.primary, brand.secondary, brand.accent]);
   const [format, setFormat] = useState('9:16');
@@ -234,10 +253,6 @@ export default function Video({ profile, plan }) {
   const portrait = H >= W;
   return (
     <div className="stack">
-      <div>
-        <h1>Videos cortos</h1>
-        <p className="sub">Arma un video corto con tus fotos o clips y frases en pantalla. Elige el formato de cada red, acomoda el texto y descárgalo. Es un editor sencillo, pensado para videos de 15 a 30 segundos.</p>
-      </div>
       <Alert kind="info">MYOS todavía no publica videos por ti: descarga el video y súbelo a la red que quieras. {watermark ? 'Con el plan Gratis el video lleva la marca de agua del logo de MYOS.' : 'Con el plan Pro el video sale sin marca de agua.'}</Alert>
 
       <div className="card stack">

@@ -323,3 +323,6 @@ button, input, textarea, select { font: inherit; color: inherit; }
 @media (max-width: 900px) { .checkout { grid-template-columns: 1fr; } }
 .sum { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); } .sum.total { border-bottom: 0; font-size: 18px; }
 small.err { color: #b42318; }
+
+.brand-know { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; background: #F4F6FA; border-radius: var(--r-sm); }
+.brand-logo { height: 28px; max-width: 120px; object-fit: contain; background: #fff; border-radius: 6px; padding: 2px 6px; }
