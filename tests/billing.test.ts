@@ -62,6 +62,7 @@ async function api(method: string, p: string, opts: { project?: number; body?: a
   try { json = JSON.parse(text); } catch { /* no json */ }
   return { status: res.status, json, text };
 }
+const CARD = { card: { brand: 'visa', last4: '4242' } };
 const sign = (raw: string, secret: string, t = Math.floor(Date.now() / 1000)) => `t=${t},v1=${crypto.createHmac('sha256', secret).update(`${t}.${raw}`).digest('hex')}`;
 
 test('firma del webhook: acepta la correcta y rechaza alteraciones, firmas viejas y secretos distintos', () => {
@@ -82,13 +83,13 @@ test('simulado: la prueba de 7 días da plan Pro, no se repite, y al día 7 se �
   assert.equal(v0.price_cents, 100);
   assert.equal(v0.plan, 'free');
 
-  const r = await api('POST', '/api/billing/checkout', { project: p.id });
+  const r = await api('POST', '/api/billing/checkout', { project: p.id, body: CARD });
   assert.equal(r.status, 200, r.text);
   assert.equal(r.json.simulated, true);
   assert.equal(r.json.billing.status, 'trialing');
   assert.equal(r.json.billing.trial_days_left, 7);
   assert.equal(r.json.billing.plan, 'pro');
-  assert.equal((await api('POST', '/api/billing/checkout', { project: p.id })).status, 409, 'no se activa dos veces');
+  assert.equal((await api('POST', '/api/billing/checkout', { project: p.id, body: CARD })).status, 409, 'no se activa dos veces');
 
   const list = (await api('GET', '/api/projects')).json.projects.find((x: any) => x.id === p.id);
   assert.equal(list.plan, 'pro');
@@ -105,11 +106,11 @@ test('simulado: la prueba de 7 días da plan Pro, no se repite, y al día 7 se �
 
 test('simulado: cancelar durante la prueba no cobra y la prueba no se puede reiniciar', async () => {
   const p = (await api('POST', '/api/projects', { body: { name: 'Sim2' } })).json.project;
-  await api('POST', '/api/billing/checkout', { project: p.id });
+  await api('POST', '/api/billing/checkout', { project: p.id, body: CARD });
   const c = await api('POST', '/api/billing/cancel', { project: p.id });
   assert.equal(c.json.status, 'canceled');
   assert.equal(c.json.charged_at, null);
-  assert.equal((await api('POST', '/api/billing/checkout', { project: p.id })).status, 409);
+  assert.equal((await api('POST', '/api/billing/checkout', { project: p.id, body: CARD })).status, 409);
 });
 
 test('el cobro es por proyecto y de su dueño: otra cuenta no puede verlo', async () => {
@@ -167,4 +168,23 @@ test('webhook: sin firma válida se rechaza; con firma válida actualiza el proy
     await api('POST', '/api/billing/webhook', { raw: paid, headers: { 'stripe-signature': sign(paid, 'whsec_prueba') } });
     assert.equal(proj.billing.status, 'active');
   } finally { delete process.env.STRIPE_WEBHOOK_SECRET; }
+});
+
+test('simulado: sin tarjeta no inicia; solo se guardan marca y últimos 4; el plan «a mano» no existe fuera de desarrollo', async () => {
+  const p = (await api('POST', '/api/projects', { body: { name: 'Tarjeta' } })).json.project;
+  assert.equal((await api('POST', '/api/billing/checkout', { project: p.id })).status, 400);
+  assert.equal((await api('POST', '/api/billing/checkout', { project: p.id, body: { card: { brand: 'visa', last4: '4242424242424242' } } })).status, 400, 'no acepta el número completo');
+  const ok = await api('POST', '/api/billing/checkout', { project: p.id, body: { card: { brand: 'visa', last4: '4242', number: '4242424242424242', cvc: '123' } } });
+  assert.equal(ok.status, 200, ok.text);
+  assert.deepEqual(ok.json.billing.card, { brand: 'visa', last4: '4242' });
+  assert.ok(!JSON.stringify(getStore().projects.find((x) => x.id === p.id)).includes('4242424242424242'), 'el número completo no se guarda');
+
+  const { effectivePlan } = await import('../server/billing.ts');
+  const mp = (await api('POST', '/api/projects', { body: { name: 'Manual' } })).json.project;
+  const proj = getStore().projects.find((x) => x.id === mp.id)!;
+  proj.plan = 'pro';
+  assert.equal(effectivePlan(proj), 'pro', 'en desarrollo sirve para probar');
+  const prev = process.env.AUTH_MODE;
+  delete process.env.AUTH_MODE;
+  try { assert.equal(effectivePlan(proj), 'free', 'en producción un «pro» manual no vale'); } finally { process.env.AUTH_MODE = prev; }
 });

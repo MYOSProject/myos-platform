@@ -60,6 +60,7 @@ export function updateProject(store: Store, user: AuthUser, id: number, input: {
   const p = getOwnedProject(store, user, id);
   if (input.plan !== undefined) {
     if (input.plan !== 'free' && input.plan !== 'pro') throw new HttpError(400, 'BAD_PLAN', 'El plan debe ser «free» (Gratis) o «pro».');
+    if (!demoAllowed()) throw new HttpError(403, 'PLAN_PAID', 'El plan Pro es de pago: se activa desde «Conexiones».');
     p.plan = input.plan;
   }
   if (input.name !== undefined) {
@@ -105,7 +106,7 @@ export function applyProject(req: Request, user: AuthUser): void {
   user.scope = scopeKey(user.email, p.id);
 }
 
-import { billingBrief, effectivePlan } from './billing.js';
+import { billingBrief, demoAllowed, effectivePlan } from './billing.js';
 
 export function projectSummary(store: Store, p: Project) {
   const k = scopeKey(p.owner_email, p.id);

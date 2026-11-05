@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, errText, getActiveProject } from '../api';
+import { api, errText } from '../api';
 import { Alert, fmt } from '../components/ui';
 
 const GUIDE = [
@@ -18,71 +18,6 @@ const GUIDE_X = [
   ['Copia las 4 llaves', 'En «Keys and tokens» copia la API Key y el API Key Secret. Luego genera el Access Token y el Access Token Secret (deben decir «Read and Write») y cópialos.'],
   ['Pega, prueba y activa', 'Pega las 4 llaves abajo y pulsa «Probar conexión» (no publica nada). Si sale bien, activa la publicación real. Las imágenes todavía no se envían a X: sale solo el texto.']
 ];
-
-const day = (d) => (d ? new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
-
-function PlanCard({ plan, onChanged }) {
-  const [v, setV] = useState(null);
-  const [busy, setBusy] = useState('');
-  const [err, setErr] = useState('');
-  const load = async () => { try { setV(await api('GET', '/api/billing')); } catch (e) { setErr(errText(e)); } };
-  useEffect(() => { load(); }, [plan]); // eslint-disable-line
-  const run = async (key, fn) => { setBusy(key); setErr(''); try { await fn(); await load(); await onChanged?.(); } catch (e) { setErr(errText(e)); } finally { setBusy(''); } };
-  const start = () => run('start', async () => {
-    const r = await api('POST', '/api/billing/checkout');
-    if (r.url) window.location.assign(r.url); // Stripe pide la tarjeta en su propia página segura
-  });
-  const manage = () => run('manage', async () => { const r = await api('POST', '/api/billing/portal'); window.location.assign(r.url); });
-  const cancel = () => { if (window.confirm('¿Cancelar? Si todavía estás en la prueba, no se te cobrará nada.')) run('cancel', () => api('POST', '/api/billing/cancel')); };
-  const manual = (p) => run('manual', () => api('PUT', `/api/projects/${getActiveProject()}`, { plan: p }));
-  if (!v) return <div className="card stack"><h2>Plan del proyecto</h2><Alert>{err}</Alert>{!err && <p className="muted">Cargando…</p>}</div>;
-  const st = v.status; const sim = !v.configured;
-  const tag = st === 'trialing' ? <span className="tag ok"><span aria-hidden="true">★</span>Prueba gratis · {v.trial_days_left} {v.trial_days_left === 1 ? 'día' : 'días'}</span>
-    : st === 'active' ? <span className="tag ok"><span aria-hidden="true">★</span>Plan Pro activo</span>
-    : st === 'past_due' ? <span className="tag err"><span aria-hidden="true">!</span>Falló el cobro</span>
-    : st === 'canceled' ? <span className="tag draft"><span aria-hidden="true">◌</span>Cancelado</span>
-    : v.plan === 'pro' ? <span className="tag ok"><span aria-hidden="true">★</span>Plan Pro</span> : <span className="tag draft"><span aria-hidden="true">◌</span>Plan Gratis</span>;
-  return (
-    <div className="card stack">
-      <div className="row"><h2 className="grow">Plan del proyecto</h2>{tag}</div>
-      {sim && <Alert kind="info">Modo de demostración: aún no están conectados los cobros reales. La prueba funciona igual, pero no se pide tarjeta ni se cobra nada.</Alert>}
-      {(st === 'none' || (st === 'canceled' && !v.trial_used)) && (
-        <>
-          <p><b>Prueba gratis por {v.trial_days} días.</b> Configura tu empresa con todo el plan Pro. Registras tu tarjeta ahora y <b>al día {v.trial_days} se cobra el primer mes ({v.price_text})</b>. Si cancelas antes, no pagas nada.</p>
-          <div className="row"><button className="btn" disabled={Boolean(busy)} onClick={start}>{busy === 'start' ? 'Un momento…' : `Activar mis ${v.trial_days} días gratis`}</button></div>
-          <p className="muted">Sin la prueba, el plan Gratis agrega una marca de agua pequeña con el logo de MYOSAPP en todas las imágenes y videos. Al pagar, desaparece.</p>
-        </>
-      )}
-      {st === 'trialing' && (
-        <>
-          <p>Te quedan <b>{v.trial_days_left} {v.trial_days_left === 1 ? 'día' : 'días'}</b> de prueba. {v.cancel_at_period_end ? 'Cancelaste: no se hará ningún cobro.' : <>El <b>{day(v.next_charge_at)}</b> se cobrará el primer mes: <b>{v.price_text}</b>.</>}</p>
-          {v.card && <p className="muted">Tarjeta registrada: {v.card.brand} terminada en {v.card.last4}</p>}
-        </>
-      )}
-      {st === 'active' && <p>Tu plan Pro está activo. {v.next_charge_at ? <>Próximo cobro: <b>{day(v.next_charge_at)}</b> ({v.price_text}).</> : null} {v.card ? `Tarjeta: ${v.card.brand} ···· ${v.card.last4}.` : ''}</p>}
-      {st === 'past_due' && <p>No se pudo cobrar el mes. Actualiza tu tarjeta para recuperar el plan Pro.</p>}
-      {st === 'canceled' && v.trial_used && <p>La suscripción está cancelada{v.plan === 'pro' ? ` y sigues con Pro hasta ${day(v.next_charge_at || v.trial_ends_at)}` : ''}. {sim ? 'La prueba gratis ya se usó en este proyecto.' : 'Puedes volver a suscribirte cuando quieras.'}</p>}
-      {(st === 'canceled' && v.trial_used && !sim) && <div className="row"><button className="btn" disabled={Boolean(busy)} onClick={start}>Volver a suscribirme ({v.price_text}/mes)</button></div>}
-      {['trialing', 'active', 'past_due'].includes(st) && (
-        <div className="row">
-          {!sim && <button className="btn secondary" disabled={Boolean(busy)} onClick={manage}>Administrar tarjeta y suscripción</button>}
-          {sim && st !== 'canceled' && <button className="btn secondary" disabled={Boolean(busy)} onClick={cancel}>Cancelar</button>}
-        </div>
-      )}
-      {v.history?.length > 0 && <details><summary className="muted">Historial</summary><ul className="howto">{v.history.slice().reverse().map((h, i) => <li key={i}><small className="muted">{fmt(h.at)}</small> {h.event}</li>)}</ul></details>}
-      {sim && (
-        <details><summary className="muted">Solo demostración: cambiar el plan a mano</summary>
-          <div className="row" style={{ marginTop: 8 }}>
-            <button className="btn secondary small" disabled={Boolean(busy) || v.plan !== 'pro'} onClick={() => manual('free')}>Plan Gratis</button>
-            <button className="btn secondary small" disabled={Boolean(busy) || v.plan === 'pro'} onClick={() => manual('pro')}>Plan Pro</button>
-          </div>
-        </details>
-      )}
-      <p className="muted">Las imágenes que ya existen se actualizan con el botón «Actualizar imagen» de cada publicación.</p>
-      <Alert>{err}</Alert>
-    </div>
-  );
-}
 
 function DriveCard() {
   const [d, setD] = useState(null);
@@ -162,7 +97,6 @@ export default function Connections({ plan, onChanged }) {
         <p className="sub">Conecta la página de Facebook, la cuenta de Instagram y la cuenta de X de este proyecto. Aun conectadas, <b>nada se publica sin que una persona lo apruebe</b>.</p>
       </div>
 
-      <PlanCard plan={plan} onChanged={onChanged} />
 
       <div className="card stack">
         <div className="row">

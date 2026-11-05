@@ -8,6 +8,7 @@ import Guide from './pages/Guide';
 import Content from './pages/Content';
 import Calendar from './pages/Calendar';
 import Connections from './pages/Connections';
+import Plan from './pages/Plan';
 import Video from './pages/Video';
 import Status from './pages/Status';
 import { Alert } from './components/ui';
@@ -20,6 +21,7 @@ const NAV = [
   ['calendar', 'Calendario', icon('M3 6h18v14H3zM3 10h18M8 3v4M16 3v4'), true],
   ['video', 'Videos', icon('M4 6h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4zM17 10l4-2v8l-4-2'), true],
   ['connections', 'Conexiones', icon('M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'), true],
+  ['plan', 'Plan y pago', icon('M3 7h18v12H3zM3 11h18M7 15h3'), true],
   ['chat', 'Asistente', icon('M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'), true],
   ['status', 'Estado y auditoría', icon('M22 12h-4l-3 9L9 3l-3 9H2'), false]
 ];
@@ -42,7 +44,7 @@ export default function App() {
   // Al volver de la página de pago, se abre «Conexiones» para mostrar el estado de la prueba.
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
-    if (q.get('billing')) { setPage('connections'); window.history.replaceState({}, '', window.location.pathname); }
+    if (q.get('billing')) { setPage('plan'); window.history.replaceState({}, '', window.location.pathname); }
   }, []);
   const go = useCallback((p) => { setVisited((v) => (v.has(p) ? v : new Set(v).add(p))); setPage(p); window.scrollTo({ top: 0 }); }, []);
 
@@ -93,6 +95,7 @@ export default function App() {
     content: <Content profile={profile} setPage={go} onChanged={refreshPending} />,
     calendar: <Calendar profile={profile} setPage={go} />,
     video: <Video profile={profile} plan={active?.plan} setPage={go} />,
+    plan: <Plan onChanged={refreshPending} />,
     connections: <Connections plan={active?.plan} onChanged={refreshPending} setPage={go} />,
     chat: <Chat me={me} onProfile={setProfile} onSitesChanged={refreshPending} setPage={go} />,
     status: <Status health={health} />
@@ -125,18 +128,18 @@ export default function App() {
               <li className="chip" title="Pasos del recorrido «Empezar» confirmados"><span aria-hidden="true">🧭</span>Recorrido {active.steps_confirmed}/8</li>
               <li className={`chip ${pending ? 'warn' : ''}`}><span aria-hidden="true">⏳</span>{pending ? `${pending} por aprobar` : 'Nada por aprobar'}</li>
               <li className="chip"><span aria-hidden="true">📣</span>{active.posts_published} publicadas</li>
-              <li className={`chip ${active.plan === 'pro' ? 'ok' : 'warn'}`} title="Administra tu plan en «Conexiones»"><span aria-hidden="true">{active.plan === 'pro' ? '★' : '◌'}</span>{active.billing?.status === 'trialing' ? `Prueba: ${active.billing.trial_days_left} ${active.billing.trial_days_left === 1 ? 'día' : 'días'}` : active.plan === 'pro' ? 'Plan Pro' : 'Plan Gratis · prueba 7 días'}</li>
+              <li className={`chip ${active.plan === 'pro' ? 'ok' : 'warn'}`} title="Administra tu plan en «Plan y pago»"><span aria-hidden="true">{active.plan === 'pro' ? '★' : '◌'}</span>{active.billing?.status === 'trialing' ? `Prueba: ${active.billing.trial_days_left} ${active.billing.trial_days_left === 1 ? 'día' : 'días'}` : active.plan === 'pro' ? 'Plan Pro' : 'Plan Gratis'}</li>
               <li className={`chip ${active.connected ? 'ok' : ''}`}><span aria-hidden="true">🔗</span>{active.connected ? 'Redes conectadas' : 'Redes en simulación'}</li>
             </ul>
             <button className="btn small" onClick={() => go(active.steps_confirmed || active.business_name ? 'content' : 'guide')}>{active.steps_confirmed || active.business_name ? '✨ Generar con IA' : 'Completar «Empezar»'}</button>
           </header>
         )}
-        {active && active.plan !== 'pro' && !hideUpsell && page !== 'connections' && (
+        {active && active.plan !== 'pro' && !hideUpsell && page !== 'plan' && (
           <aside className="upsell" role="note" aria-label="Estás usando la versión gratis">
             <div className="upsell-text">
               <b>Estás usando la versión gratis.</b> Todas tus imágenes y videos salen con la marca de agua de MYOSAPP. Desbloquea el plan Pro para quitarla{active.billing?.status === 'none' ? ': empieza con 7 días gratis y después paga solo US$1 el primer mes.' : '.'}
             </div>
-            <button className="btn small" onClick={() => go('connections')}>{active.billing?.status === 'none' ? 'Probar 7 días gratis' : 'Desbloquear Pro'}</button>
+            <button className="btn small" onClick={() => go('plan')}>{active.billing?.status === 'none' ? 'Probar 7 días gratis' : 'Desbloquear Pro'}</button>
             <button className="btn link small" onClick={() => setHideUpsell(true)} aria-label="Cerrar el anuncio">Ahora no</button>
           </aside>
         )}

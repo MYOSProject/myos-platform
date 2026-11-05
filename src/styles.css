@@ -306,3 +306,20 @@ button, input, textarea, select { font: inherit; color: inherit; }
 /* Anuncio del plan Gratis */
 .upsell { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; background: #FFF6E5; border: 1px solid #F3D9A4; border-left: 4px solid var(--coral); border-radius: var(--r); padding: 12px 16px; margin: -8px 0 24px; color: #5B3F05; }
 .upsell-text { flex: 1 1 320px; min-width: 0; line-height: 1.45; }
+
+.plan-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.plan-compare > div { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; background: #fff; }
+.plan-compare > div.pro { border-color: var(--coral); background: #FFF6F5; }
+.plan-compare span { color: var(--muted); font-size: 14px; }
+@media (max-width: 560px) { .plan-compare { grid-template-columns: 1fr; } }
+
+/* Plan y pago */
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.plan-box { background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.plan-box.pro { border: 2px solid var(--coral); }
+.plan-box.current { box-shadow: 0 0 0 3px rgba(140,207,217,.35); }
+.plan-box h2 { margin: 0; } .price { font-size: 34px; font-weight: 800; margin: 0; } .price small { font-size: 14px; font-weight: 500; color: var(--muted); }
+.checkout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .checkout { grid-template-columns: 1fr; } }
+.sum { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); } .sum.total { border-bottom: 0; font-size: 18px; }
+small.err { color: #b42318; }

@@ -608,7 +608,7 @@ export function createApp() {
   }));
   app.post('/api/billing/checkout', requireAuth, rateLimit({ windowMs: 60_000, max: 6, name: 'activar prueba' }), wrap(async (req, res) => {
     const p = needProject(req.user as AuthUser);
-    const out = await startTrial(getStore(), req.user as AuthUser, p, baseUrl(req));
+    const out = await startTrial(getStore(), req.user as AuthUser, p, baseUrl(req), req.body?.card);
     res.json({ ...out, billing: billingView(p) });
   }));
   app.post('/api/billing/portal', requireAuth, rateLimit({ windowMs: 60_000, max: 10, name: 'portal de pagos' }), wrap(async (req, res) => {

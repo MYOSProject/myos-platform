@@ -13,7 +13,10 @@ export const priceCents = (): number => {
 };
 const stripeKey = () => process.env.STRIPE_SECRET_KEY?.trim() || '';
 const stripeBase = () => (process.env.STRIPE_API_BASE?.trim() || 'https://api.stripe.com').replace(/\/+$/, '');
+/** Cobros reales con Stripe cuando hay llave; sin ella, el flujo corre simulado (no se cobra nada). */
 export const billingMode = (): 'stripe' | 'simulated' => (stripeKey() ? 'stripe' : 'simulated');
+/** Cambiar el plan «a mano» (sin pagar) solo existe en desarrollo. */
+export const demoAllowed = (): boolean => process.env.AUTH_MODE === 'dev';
 const iso = (ms: number) => new Date(ms).toISOString();
 const money = (c: number) => `US$${(c / 100).toFixed(2)}`;
 
@@ -38,9 +41,9 @@ export function effectivePlan(p: Project | undefined): 'free' | 'pro' {
   if (b) {
     if (b.status === 'trialing' || b.status === 'active') return 'pro';
     if (b.status === 'canceled' && (b.current_period_end || b.trial_ends_at) && Date.now() < Date.parse((b.current_period_end || b.trial_ends_at)!)) return 'pro';
-    if (b.status === 'past_due' || b.status === 'incomplete') return p.plan === 'pro' ? 'pro' : 'free';
+    if (b.status === 'past_due' || b.status === 'incomplete') return demoAllowed() && p.plan === 'pro' ? 'pro' : 'free';
   }
-  return p.plan === 'pro' ? 'pro' : 'free';
+  return demoAllowed() && p.plan === 'pro' ? 'pro' : 'free';
 }
 
 export function billingBrief(p: Project) {
@@ -136,16 +139,22 @@ export async function syncBilling(store: Store, p: Project): Promise<void> {
   } catch { /* el estado guardado sigue siendo válido; se reintenta en la siguiente consulta */ }
 }
 
-export async function startTrial(store: Store, user: AuthUser, p: Project, base: string): Promise<{ url?: string; simulated: boolean }> {
+const BRANDS = ['visa', 'mastercard', 'amex', 'discover', 'otra'];
+
+export async function startTrial(store: Store, user: AuthUser, p: Project, base: string, card?: { brand?: unknown; last4?: unknown }): Promise<{ url?: string; simulated: boolean }> {
   const b = p.billing;
   if (b && (b.status === 'trialing' || b.status === 'active')) throw new HttpError(409, 'ALREADY_ACTIVE', 'Este proyecto ya tiene una prueba o suscripción activa.');
   const trialUsed = Boolean(b?.trial_started_at);
   const cents = priceCents();
   if (billingMode() === 'simulated') {
     if (trialUsed) throw new HttpError(409, 'TRIAL_USED', 'La prueba gratis de este proyecto ya se usó.');
+    // Solo se reciben la marca y los últimos 4 dígitos: el número completo y el CVC nunca salen del navegador.
+    const last4 = typeof card?.last4 === 'string' && /^\d{4}$/.test(card.last4) ? card.last4 : '';
+    const brand = typeof card?.brand === 'string' && BRANDS.includes(card.brand) ? card.brand : 'otra';
+    if (!last4) throw new HttpError(400, 'CARD_REQUIRED', 'Registra una tarjeta para iniciar la prueba gratis.');
     const now = Date.now();
-    p.billing = { mode: 'simulated', status: 'trialing', price_cents: cents, trial_started_at: iso(now), trial_ends_at: iso(now + TRIAL_DAYS * DAY), card_brand: 'simulada', card_last4: '0000', history: [] };
-    log(p.billing, `Prueba gratis de ${TRIAL_DAYS} días iniciada (simulación: no se pidió tarjeta)`);
+    p.billing = { mode: 'simulated', status: 'trialing', price_cents: cents, trial_started_at: iso(now), trial_ends_at: iso(now + TRIAL_DAYS * DAY), card_brand: brand, card_last4: last4, history: [] };
+    log(p.billing, `Prueba gratis de ${TRIAL_DAYS} días iniciada con tarjeta ${brand} ····${last4} (pago de demostración: no se cobra nada)`);
     p.updated_at = new Date().toISOString(); store.save();
     return { simulated: true };
   }
