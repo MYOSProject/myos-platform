@@ -43,6 +43,19 @@ export const platformLabel = (p: string) => (p === 'facebook' ? 'Facebook' : p =
 const LOCAL_HTTP = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i;
 const okUrl = (u: string) => /^https:\/\//i.test(u) || (!isProd && LOCAL_HTTP.test(u));
 
+/** Los videos solo pueden vivir en el almacenamiento de MYOS (Vercel Blob o, en desarrollo, la carpeta local). */
+export function videoUrl(v: unknown): string {
+  const s = httpsUrl(v);
+  if (!s) return '';
+  let u: URL;
+  try { u = new URL(s); } catch { throw new HttpError(400, 'BAD_URL', 'La URL del video no es válida.'); }
+  const extra = (process.env.VIDEO_URL_HOSTS || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+  const host = u.hostname.toLowerCase();
+  const ok = host.endsWith('.blob.vercel-storage.com') || extra.includes(host) || (!isProd && /^(localhost|127\.0\.0\.1)$/.test(host) && u.pathname.startsWith('/media-video/'));
+  if (!ok) throw new HttpError(400, 'BAD_VIDEO_URL', 'El video debe subirse desde el editor de videos de MYOS.');
+  return s;
+}
+
 function who(user: AuthUser) {
   return `${user.name} <${user.email}>`;
 }
@@ -50,7 +63,7 @@ function who(user: AuthUser) {
 export function postHash(p: SocialPost): string {
   return crypto
     .createHash('sha256')
-    .update(stableStringify({ platform: p.platform, message: composeMessage(p), image_url: p.image_url, link_url: p.link_url }))
+    .update(stableStringify({ platform: p.platform, message: composeMessage(p), image_url: p.image_url, link_url: p.link_url, ...(p.video_url ? { video_url: p.video_url } : {}) }))
     .digest('hex');
 }
 
@@ -68,7 +81,7 @@ export function validatePost(p: SocialPost): string[] {
   if (!p.copy.trim()) problems.push('El texto de la publicación está vacío.');
   if (message.length > LIMITS[p.platform]) problems.push(`El texto final mide ${message.length} caracteres y ${platformLabel(p.platform)} permite ${LIMITS[p.platform]}.`);
   if (p.platform === 'instagram') {
-    if (!p.image_url) problems.push('Instagram exige una imagen (URL https pública).');
+    if (!p.image_url && !p.video_url) problems.push('Instagram exige una imagen o un video.');
     const tags = (p.hashtags.match(/#/g) || []).length;
     if (tags > 30) problems.push('Instagram permite máximo 30 hashtags.');
   }
@@ -84,6 +97,8 @@ export interface PostInput {
   cta?: string;
   link_url?: string;
   image_url?: string;
+  video_url?: string;
+  video_name?: string;
   image_prompt?: string;
   image_headline?: string;
   image_subline?: string;
@@ -117,6 +132,7 @@ export function createPost(store: Store, input: PostInput, user: AuthUser, site?
     cta: cleanText(input.cta, 40),
     link_url: httpsUrl(input.link_url),
     image_url: httpsUrl(input.image_url),
+    ...(input.video_url ? { video_url: videoUrl(input.video_url), video_name: cleanText(input.video_name, 120) } : {}),
     image_prompt: cleanText(input.image_prompt, 500),
     image_headline: cleanText(input.image_headline, 120),
     image_subline: cleanText(input.image_subline, 200),
@@ -165,6 +181,8 @@ export function editPost(store: Store, post: SocialPost, input: PostInput, user:
   if (input.cta !== undefined) post.cta = cleanText(input.cta, 40);
   if (input.link_url !== undefined) post.link_url = httpsUrl(input.link_url);
   if (input.image_url !== undefined) post.image_url = httpsUrl(input.image_url);
+  if (input.video_url !== undefined) { post.video_url = videoUrl(input.video_url) || undefined; if (!post.video_url) { post.video_name = undefined; post.ig_creation_id = undefined; } }
+  if (input.video_name !== undefined && post.video_url) post.video_name = cleanText(input.video_name, 120);
   if (input.image_prompt !== undefined) post.image_prompt = cleanText(input.image_prompt, 500);
   if (input.image_headline !== undefined) post.image_headline = cleanText(input.image_headline, 120);
   if (input.image_subline !== undefined) post.image_subline = cleanText(input.image_subline, 200);

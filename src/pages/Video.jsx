@@ -102,7 +102,7 @@ export default function Video(props) {
         <button type="button" role="tab" aria-selected={mode === 'auto'} className={`net-tab${mode === 'auto' ? ' on' : ''}`} onClick={() => setMode('auto')}>✨ Edición automática con IA</button>
         <button type="button" role="tab" aria-selected={mode === 'manual'} className={`net-tab${mode === 'manual' ? ' on' : ''}`} onClick={() => setMode('manual')}>Armar desde cero</button>
       </div>
-      <div hidden={mode !== 'auto'}><AutoVideo profile={props.profile} plan={props.plan} /></div>
+      <div hidden={mode !== 'auto'}><AutoVideo profile={props.profile} plan={props.plan} setPage={props.setPage} /></div>
       <div hidden={mode !== 'manual'}><ManualVideo {...props} /></div>
     </div>
   );

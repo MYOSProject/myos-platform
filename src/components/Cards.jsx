@@ -156,7 +156,7 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
 
   useEffect(() => { if (!autoImage) rendered.current = false; }, [autoImage]);
   useEffect(() => {
-    if (autoImage && !post.has_media && !rendered.current && post.status === 'DRAFT') {
+    if (autoImage && !post.video_url && !post.has_media && !rendered.current && post.status === 'DRAFT') {
       rendered.current = true;
       makeImage();
     }
@@ -239,7 +239,7 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
       </div>
       <div className="piece-body">
         {editing && imgUrl && <img className="piece-img" src={imgUrl} alt={`Imagen de la publicación de ${name}`} />}
-        {!imgUrl && (
+        {!imgUrl && !post.video_url && (
           <div className="row">
             <button className="btn secondary small" disabled={busy === 'image'} onClick={() => makeImage()}>{busy === 'image' ? 'Creando imagen…' : 'Crear imagen'}</button>
             {post.platform === 'instagram' && <span className="muted">Instagram necesita una imagen.</span>}
@@ -306,9 +306,9 @@ export function PostCard({ post, profile, onChange, onRemove, onNewVersion, auto
             <p className="ask">{post.status === 'APPROVED' ? '¿La publico ahora?' : '¿La autorizas?'}</p>
             {post.status !== 'APPROVED' && <p className="muted">Al autorizar confirmas que revisaste el texto y la imagen. Se registrará tu correo como persona que autoriza. Autorizar no publica: tú decides cuándo.</p>}
             <div className="row">
-              {post.status !== 'APPROVED' && post.status !== 'FAILED' && <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('only')}>{busy === 'authorize' ? 'Autorizando…' : '✓ Autorizar'}</button>}
-              {canSchedule && <button className="btn secondary" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('schedule')}>{busy === 'schedule' ? 'Programando…' : `Autorizar y programar (${when})`}</button>}
-              <button className={post.status === 'APPROVED' || post.status === 'FAILED' ? 'btn' : 'btn secondary'} disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media)} onClick={() => approveAndPublish('now')}>
+              {post.status !== 'APPROVED' && post.status !== 'FAILED' && <button className="btn" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media && !post.video_url)} onClick={() => approveAndPublish('only')}>{busy === 'authorize' ? 'Autorizando…' : '✓ Autorizar'}</button>}
+              {canSchedule && <button className="btn secondary" disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media && !post.video_url)} onClick={() => approveAndPublish('schedule')}>{busy === 'schedule' ? 'Programando…' : `Autorizar y programar (${when})`}</button>}
+              <button className={post.status === 'APPROVED' || post.status === 'FAILED' ? 'btn' : 'btn secondary'} disabled={Boolean(busy) || (post.platform === 'instagram' && !post.has_media && !post.video_url)} onClick={() => approveAndPublish('now')}>
                 {busy === 'publish' ? 'Procesando…' : post.status === 'APPROVED' ? 'Publicar ahora' : post.status === 'FAILED' ? 'Reintentar' : 'Autorizar y publicar'}
               </button>
               {!auto && <button className="btn secondary" disabled={Boolean(busy)} onClick={startEdit}>Editar</button>}

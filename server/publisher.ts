@@ -87,6 +87,7 @@ export interface PublishPayload {
   cta: string;
   link_url: string;
   image_url: string;
+  video_url: string;
   scheduled_at: string | null;
   site: { id: number | null; name: string };
   approved_by: string;
@@ -106,6 +107,7 @@ export function buildPayload(post: SocialPost): PublishPayload {
     cta: post.cta,
     link_url: post.link_url,
     image_url: post.image_url,
+    video_url: post.video_url || '',
     scheduled_at: post.scheduled_at,
     site: { id: post.site_id, name: post.site_name || '' },
     approved_by: post.approved_by || '',
@@ -160,7 +162,9 @@ export async function publishToGraph(post: SocialPost, conn?: ResolvedConnection
   try {
     if (post.platform === 'facebook') {
       let data;
-      if (post.image_url) {
+      if (post.video_url) {
+        data = await graphPost(`${cfg.pageId}/videos`, { file_url: post.video_url, description: message, access_token: cfg.token! });
+      } else if (post.image_url) {
         data = await graphPost(`${cfg.pageId}/photos`, { url: post.image_url, caption: message, access_token: cfg.token! });
       } else {
         const params: Record<string, string> = { message, access_token: cfg.token! };
@@ -170,17 +174,25 @@ export async function publishToGraph(post: SocialPost, conn?: ResolvedConnection
       return { mode: 'graph', ok: true, at: now(), http_status: 200, external_id: String(data.post_id || data.id || '') || undefined };
     }
     // Instagram: contenedor de medios → esperar → publicar
-    const container = await graphPost(`${cfg.igId}/media`, { image_url: post.image_url, caption: message, access_token: cfg.token! });
-    const creationId = String(container.id);
-    for (let i = 0; i < 6; i++) {
+    let creationId = post.video_url && post.ig_creation_id ? post.ig_creation_id : '';
+    if (!creationId) {
+      const container = await graphPost(`${cfg.igId}/media`, post.video_url
+        ? { media_type: 'REELS', video_url: post.video_url, caption: message, share_to_feed: 'true', access_token: cfg.token! }
+        : { image_url: post.image_url, caption: message, access_token: cfg.token! });
+      creationId = String(container.id);
+      if (post.video_url) post.ig_creation_id = creationId;
+    }
+    const tries = post.video_url ? Number(process.env.META_VIDEO_POLLS ?? 14) : 6;
+    for (let i = 0; i < tries; i++) {
       const res = await fetch(`${graphBase()}/${creationId}?fields=status_code&access_token=${encodeURIComponent(cfg.token!)}`, { signal: AbortSignal.timeout(15000) });
       const st = await readJson(res);
       if (st?.status_code === 'FINISHED') break;
-      if (st?.status_code === 'ERROR' || st?.status_code === 'EXPIRED') throw new Error(`Instagram no pudo procesar la imagen (${st.status_code}).`);
-      if (i === 5) throw new Error('Instagram tardó demasiado en procesar la imagen.');
+      if (st?.status_code === 'ERROR' || st?.status_code === 'EXPIRED') { post.ig_creation_id = undefined; throw new Error(`Instagram no pudo procesar ${post.video_url ? 'el video' : 'la imagen'} (${st.status_code}).`); }
+      if (i === tries - 1) throw new Error(post.video_url ? 'Instagram sigue procesando el video. Espera un minuto y vuelve a pulsar «Publicar»: se retoma sin subirlo otra vez.' : 'Instagram tardó demasiado en procesar la imagen.');
       await new Promise((r) => setTimeout(r, Number(process.env.META_POLL_MS ?? 2000)));
     }
     const published = await graphPost(`${cfg.igId}/media_publish`, { creation_id: creationId, access_token: cfg.token! });
+    post.ig_creation_id = undefined;
     return { mode: 'graph', ok: true, at: now(), http_status: 200, external_id: String(published.id || '') || undefined };
   } catch (e: any) {
     return { mode: 'graph', ok: false, at: now(), error: e?.message || String(e) };
@@ -233,7 +245,7 @@ export async function publishToX(post: SocialPost, conn?: ResolvedConnection | n
   try {
     const data = await xRequest('POST', '/2/tweets', conn.x_keys, { text: composeMessage(post) });
     const id = data?.data?.id ? String(data.data.id) : undefined;
-    return { mode: 'x-api', ok: true, at: now(), http_status: 200, external_id: id, note: post.image_url ? 'Se publicó el texto; la imagen no se envía a X todavía.' : undefined };
+    return { mode: 'x-api', ok: true, at: now(), http_status: 200, external_id: id, note: post.video_url ? 'Se publicó el texto; el video no se envía a X todavía (súbelo desde X).' : post.image_url ? 'Se publicó el texto; la imagen no se envía a X todavía.' : undefined };
   } catch (e: any) {
     return { mode: 'x-api', ok: false, at: now(), error: e?.message || String(e) };
   }

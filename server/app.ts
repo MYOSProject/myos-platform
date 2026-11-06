@@ -40,6 +40,7 @@ import { createProject, deleteProject, ensureDefaultProject, getOwnedProject, pr
 import { connectDrive, disconnectDrive, driveView, syncDrive } from './drive.js';
 import { connectionView, deleteConnection, saveConnection, setLive, testConnection } from './connections.js';
 import { billingView, cancelSimulated, effectivePlan, handleStripeEvent, manageUrl, startTrial, syncBilling, verifyStripeSignature } from './billing.js';
+import { registerVideoStorage } from './videostore.js';
 import { guideForPrompt } from './guide.js';
 import { completeness, composeSiteBrief, missingEssentials, FIELD_LABELS } from './profile.js';
 import type { AuthUser, ContentItem, SocialPost } from './types.js';
@@ -503,6 +504,7 @@ export function createApp() {
   app.post('/api/video/script', requireAuth, aiLimit, wrap(async (req, res) => {
     res.json({ scenes: await videoScript(getStore(), req.user as AuthUser, req.body || {}) });
   }));
+  registerVideoStorage(app, requireAuth, wrap, baseUrl);
   app.post('/api/video/autoedit', requireAuth, aiLimit, wrap(async (req, res) => {
     res.json({ plan: await videoAutoEdit(getStore(), req.user as AuthUser, req.body || {}) });
   }));

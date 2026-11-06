@@ -144,6 +144,11 @@ export interface SocialPost {
   cta: string;
   link_url: string;
   image_url: string;
+  /** Video corto ya subido al almacenamiento de MYOS (URL pública https). Si existe, la publicación es de video. */
+  video_url?: string;
+  video_name?: string;
+  /** Instagram: contenedor del Reel en proceso (para reintentar sin subir el video otra vez). */
+  ig_creation_id?: string;
   image_prompt?: string;
   /** Texto corto para la pieza gráfica (se dibuja en el navegador). */
   image_headline?: string;

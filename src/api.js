@@ -72,3 +72,10 @@ export function fileToSmallDataUrl(file, { max = 1000, png = false } = {}) {
     img.src = url;
   });
 }
+
+/** Cabeceras de autenticación para subidas directas (fuera de `api`). */
+export async function authHeaders() {
+  const h = await headers();
+  delete h['Content-Type'];
+  return h;
+}

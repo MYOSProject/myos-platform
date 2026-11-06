@@ -23,7 +23,7 @@ export default function NetworkPreview({ post, imgUrl, profile }) {
   const user = slug(name);
   const logo = profile?.logo || '';
   const tags = post.hashtags ? ` ${post.hashtags}` : '';
-  const img = (cls) => (imgUrl ? <img className={`np-img ${cls}`} src={imgUrl} alt={`Imagen de la publicación de ${post.platform}`} /> : <div className={`np-img np-ph ${cls}`}>Sin imagen todavía</div>);
+  const img = (cls) => (post.video_url ? <video className={`np-img vid ${cls}`} src={post.video_url} controls playsInline preload="metadata" aria-label={`Video de la publicación de ${post.platform}`} /> : imgUrl ? <img className={`np-img ${cls}`} src={imgUrl} alt={`Imagen de la publicación de ${post.platform}`} /> : <div className={`np-img np-ph ${cls}`}>Sin imagen todavía</div>);
   const p = post.platform;
 
   if (p === 'instagram') {
@@ -59,7 +59,7 @@ export default function NetworkPreview({ post, imgUrl, profile }) {
           <div className="np-xmain">
             <div className="np-xhead"><b>{name}</b> <span>@{user} · ahora</span></div>
             <div className="np-pre">{post.copy}{post.hashtags && <span className="np-xtag">{tags}</span>}</div>
-            {post.has_media && img('r169 rounded')}
+            {(post.has_media || post.video_url) && img('r169 rounded')}
             <div className="np-actions np-text" aria-hidden="true"><span>💬</span><span>↻</span><span>♡</span><span>📊</span></div>
           </div>
         </div>

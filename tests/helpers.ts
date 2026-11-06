@@ -5,6 +5,7 @@ export interface MockRequest {
   url: string;
   headers: http.IncomingHttpHeaders;
   body: any;
+  raw?: string;
 }
 
 /** Servidor que imita la API de Gemini (generateContent). */
@@ -22,7 +23,7 @@ export async function startMockGemini(
       } catch {
         /* ignore */
       }
-      const r: MockRequest = { url: req.url || '', headers: req.headers, body };
+      const r: MockRequest = { url: req.url || '', headers: req.headers, body, raw };
       requests.push(r);
       const out = await handler(r, requests.length);
       res.writeHead(out.status, { 'Content-Type': 'application/json' });
